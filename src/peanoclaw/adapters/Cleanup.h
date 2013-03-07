@@ -16,7 +16,7 @@
 #include "peanoclaw/Cell.h"
 #include "peanoclaw/State.h"
 
-#include "peanoclaw/mappings/Cleanup.h"
+ #include "peanoclaw/mappings/Cleanup.h"
 
 
 

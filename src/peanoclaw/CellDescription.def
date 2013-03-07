@@ -5,7 +5,7 @@ Packed-Type: short int;
 Constant: DIMENSIONS;
 Constant: DIMENSIONS_TIMES_TWO;
 
-class peano::applications::peanoclaw::records::CellDescription {
+class peanoclaw::records::CellDescription {
   parallelise persistent int subdivisionFactor[DIMENSIONS];
   parallelise persistent int ghostLayerWidth;
   persistent parallelise int unknownsPerSubcell;
@@ -120,8 +120,8 @@ class peano::applications::peanoclaw::records::CellDescription {
   /*
    * Heap data indices
    */
-  parallelise persistent int cellDescriptionIndex;
-  parallelise persistent int uOldIndex;
-  parallelise persistent int uNewIndex;
-  parallelise persistent int auxIndex;
+  persistent int cellDescriptionIndex;
+  persistent int uOldIndex;
+  persistent int uNewIndex;
+  persistent int auxIndex;
 };

@@ -4,6 +4,8 @@
 #include "peanoclaw/pyclaw/PyClaw.h"
 #include "peano/utils/Loop.h"
 
+tarch::logging::Log peanoclaw::interSubgridCommunication::Interpolation::_log("peanoclaw::interSubgridCommunication::Interpolation");
+
 void peanoclaw::interSubgridCommunication::Interpolation::interpolateDLinear(
   const tarch::la::Vector<DIMENSIONS, int>&    destinationSize,
   const tarch::la::Vector<DIMENSIONS, int>&    destinationOffset,

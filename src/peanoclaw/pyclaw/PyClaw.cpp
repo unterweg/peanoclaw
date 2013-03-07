@@ -10,6 +10,7 @@
 #include "peanoclaw/Patch.h"
 #include <numpy/arrayobject.h>
 #include "tarch/timing/Watch.h"
+#include "tarch/parallel/Node.h"
 
 tarch::logging::Log peanoclaw::pyclaw::PyClaw::_log("peanoclaw::pyclaw::PyClaw");
 
@@ -57,6 +58,9 @@ peanoclaw::pyclaw::PyClawState::PyClawState(const Patch& patch) {
   }
 }
 
+peanoclaw::pyclaw::PyClawState::~PyClawState() {
+}
+
 peanoclaw::pyclaw::PyClaw::PyClaw(
     InitializationCallback initializationCallback,
     BoundaryConditionCallback boundaryConditionCallback,
@@ -75,13 +79,14 @@ _totalSolverCallbackTime(0.0)
   import_array();
 }
 
-peanoclaw::pyclaw::PyClawState::~PyClawState() {
+peanoclaw::pyclaw::PyClaw::~PyClaw()
+{
 }
 
 double peanoclaw::pyclaw::PyClaw::initializePatch(Patch& patch) {
   logTraceIn( "initializePatch(...)");
   //TODO unterweg debug
-//  std::cout << "INITIALIZE" << std::endl;
+  std::cout << "INITIALIZE on " << tarch::parallel::Node::getInstance().getRank() << std::endl;
 
   PyClawState state(patch);
   double demandedMeshWidth = _initializationCallback(
@@ -114,40 +119,6 @@ double peanoclaw::pyclaw::PyClaw::initializePatch(Patch& patch) {
 
   );
 
-#if 0
-  patch.copyUNewToUOld(); // roland MARK: Y U CAUSE FAIL and Y U SO IMPORTANT!!
- 
-  demandedMeshWidth = _initializationCallback(
-    state._q,
-    state._qbc,
-    state._aux,
-    patch.getSubdivisionFactor()(0),
-    patch.getSubdivisionFactor()(1),
-    #ifdef Dim3
-    patch.getSubdivisionFactor()(2),
-    #else
-      0,
-    #endif
-    patch.getUnknownsPerSubcell(),
-    patch.getAuxiliarFieldsPerSubcell(),
-    patch.getSize()(0),
-    patch.getSize()(1),
-    #ifdef Dim3
-    patch.getSize()(2),
-    #else
-      0,
-    #endif
-    patch.getPosition()(0),
-    patch.getPosition()(1),
-    #ifdef Dim3
-    patch.getPosition()(2)
-    #else
-      0
-    #endif
-
-  );
-#endif
-
   logTraceOutWith1Argument( "initializePatch(...)", demandedMeshWidth);
   return demandedMeshWidth;
 }
@@ -164,9 +135,6 @@ void peanoclaw::pyclaw::PyClaw::fillBoundaryLayerInPyClaw(Patch& patch, int dime
   logTraceOut("fillBoundaryLayerInPyClaw");
 }
 
-peanoclaw::pyclaw::PyClaw::~PyClaw()
-{
-}
 
 double peanoclaw::pyclaw::PyClaw::solveTimestep(Patch& patch, double maximumTimestepSize, bool useDimensionalSplitting) {
   logTraceInWith2Arguments( "solveTimestep(...)", maximumTimestepSize, useDimensionalSplitting);
@@ -214,15 +182,6 @@ double peanoclaw::pyclaw::PyClaw::solveTimestep(Patch& patch, double maximumTime
       patch.getEstimatedNextTimestepSize(),
       useDimensionalSplitting
     );
-
-  // requiredMeshWidth =
-  //    [Steer refinement]
-  //        if not self.refinement_criterion == None:
-  //          return self.refinement_criterion(subgridsolver.solution.state)
-  //        else:
- //           return self.initial_minimal_mesh_width
-  
-
 
   pyclawWatch.stopTimer();
   _totalSolverCallbackTime += pyclawWatch.getCalendarTime();

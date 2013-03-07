@@ -32,9 +32,9 @@ namespace peanoclaw {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 29-11-2012 08:46
+    * 		   build date: 20-02-2013 11:21
     *
-    * @date   10/02/2013 15:38
+    * @date   07/03/2013 08:58
     */
    class peanoclaw::records::State { 
       
@@ -1112,7 +1112,6 @@ namespace peanoclaw {
          
       private: 
          PersistentRecords _persistentRecords;
-         bool _hasWorkerWithWorker;
          
       public:
          /**
@@ -1129,11 +1128,6 @@ namespace peanoclaw {
           * Generated
           */
          State(const int& additionalLevelsForPredefinedRefinement, const bool& isInitializing, const bool& initialRefinmentTriggered, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMinimalMeshWidth, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplitting, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell);
-         
-         /**
-          * Generated
-          */
-         State(const int& additionalLevelsForPredefinedRefinement, const bool& isInitializing, const bool& initialRefinmentTriggered, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMinimalMeshWidth, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplitting, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell, const bool& hasWorkerWithWorker);
          
          /**
           * Generated
@@ -2284,26 +2278,6 @@ namespace peanoclaw {
          }
          
          
-         
-         inline bool getHasWorkerWithWorker() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-            return _hasWorkerWithWorker;
-         }
-         
-         
-         
-         inline void setHasWorkerWithWorker(const bool& hasWorkerWithWorker) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-            _hasWorkerWithWorker = hasWorkerWithWorker;
-         }
-         
-         
          /**
           * Generated
           */
@@ -2336,7 +2310,7 @@ namespace peanoclaw {
          protected:
             static tarch::logging::Log _log;
             
-            int _senderRank;
+            int _senderDestinationRank;
             
          public:
             
@@ -2384,9 +2358,9 @@ namespace peanoclaw {
        * 		   2007-2009 Wolfgang Eckhardt
        * 		   2012      Tobias Weinzierl
        *
-       * 		   build date: 29-11-2012 08:46
+       * 		   build date: 20-02-2013 11:21
        *
-       * @date   10/02/2013 15:38
+       * @date   07/03/2013 08:58
        */
       class peanoclaw::records::StatePacked { 
          
@@ -3464,13 +3438,6 @@ namespace peanoclaw {
          private: 
             PersistentRecords _persistentRecords;
             
-            /** mapping of records:
-            || Member 	|| startbit 	|| length
-             |  hasWorkerWithWorker	| startbit 0	| #bits 1
-             */
-            short int _packedRecords0;
-            
-            
          public:
             /**
              * Generated
@@ -3486,11 +3453,6 @@ namespace peanoclaw {
              * Generated
              */
             StatePacked(const int& additionalLevelsForPredefinedRefinement, const bool& isInitializing, const bool& initialRefinmentTriggered, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMinimalMeshWidth, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplitting, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell);
-            
-            /**
-             * Generated
-             */
-            StatePacked(const int& additionalLevelsForPredefinedRefinement, const bool& isInitializing, const bool& initialRefinmentTriggered, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMinimalMeshWidth, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplitting, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell, const bool& hasWorkerWithWorker);
             
             /**
              * Generated
@@ -4662,29 +4624,6 @@ namespace peanoclaw {
             }
             
             
-            
-            inline bool getHasWorkerWithWorker() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               short int mask = 1 << (0);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   return (tmp != 0);
-            }
-            
-            
-            
-            inline void setHasWorkerWithWorker(const bool& hasWorkerWithWorker) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               short int mask = 1 << (0);
-   _packedRecords0 = static_cast<short int>( hasWorkerWithWorker ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
-            }
-            
-            
             /**
              * Generated
              */
@@ -4717,7 +4656,7 @@ namespace peanoclaw {
             protected:
                static tarch::logging::Log _log;
                
-               int _senderRank;
+               int _senderDestinationRank;
                
             public:
                
@@ -4762,9 +4701,9 @@ namespace peanoclaw {
           * 		   2007-2009 Wolfgang Eckhardt
           * 		   2012      Tobias Weinzierl
           *
-          * 		   build date: 29-11-2012 08:46
+          * 		   build date: 20-02-2013 11:21
           *
-          * @date   10/02/2013 15:38
+          * @date   07/03/2013 08:58
           */
          class peanoclaw::records::State { 
             
@@ -6944,7 +6883,7 @@ namespace peanoclaw {
                protected:
                   static tarch::logging::Log _log;
                   
-                  int _senderRank;
+                  int _senderDestinationRank;
                   
                public:
                   
@@ -6992,9 +6931,9 @@ namespace peanoclaw {
              * 		   2007-2009 Wolfgang Eckhardt
              * 		   2012      Tobias Weinzierl
              *
-             * 		   build date: 29-11-2012 08:46
+             * 		   build date: 20-02-2013 11:21
              *
-             * @date   10/02/2013 15:38
+             * @date   07/03/2013 08:58
              */
             class peanoclaw::records::StatePacked { 
                
@@ -9190,7 +9129,7 @@ namespace peanoclaw {
                   protected:
                      static tarch::logging::Log _log;
                      
-                     int _senderRank;
+                     int _senderDestinationRank;
                      
                   public:
                      

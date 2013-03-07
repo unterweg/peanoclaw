@@ -90,7 +90,9 @@ void peanoclaw::Patch::fillCaches() {
   uNewStrideCache[0] = stride;
 
   //Precompute subcell size
-  _subcellSize = tarch::la::multiplyComponents(_cellDescription->getSize(), tarch::la::invertEntries(subdivisionFactor));
+  for (int d=0; d<DIMENSIONS;d++) {
+      _subcellSize[d] = _cellDescription->getSize()[d] / subdivisionFactor[d];
+  }
 }
 
 void peanoclaw::Patch::switchAreaToMinimalFineGridTimeInterval(
@@ -484,7 +486,13 @@ double peanoclaw::Patch::getValueUNew(
   tarch::la::Vector<DIMENSIONS, double> subcellPosition,
   int unknown
 ) const {
-  tarch::la::Vector<DIMENSIONS, int> subcellIndex = tarch::la::multiplyComponents((subcellPosition - getPosition()), tarch::la::invertEntries(getSubcellSize())).convertScalar<int>();
+  
+  //tarch::la::Vector<DIMENSIONS, int> subcellIndex = ((subcellPosition - getPosition()) / getSubcellSize()).convertScalar<int>();
+  tarch::la::Vector<DIMENSIONS, double> temp = subcellPosition - getPosition();
+  for (int d=0; d < DIMENSIONS; d++) {
+      temp[d] /= getSubcellSize()[d];
+  }
+  tarch::la::Vector<DIMENSIONS, int> subcellIndex = temp.convertScalar<int>();
   return getValueUNew(subcellIndex, unknown);
 }
 

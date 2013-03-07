@@ -312,6 +312,21 @@ void peanoclaw::mappings::SolveTimestep::mergeWithMaster(
 ) {
   logTraceIn( "mergeWithMaster(...)" );
   // @todo Insert your code here
+  std::cout << "mergewithMaster: before timestep: " << masterState.getMinimalTimestep() << std::endl;
+  masterState.updateMinimalTimestep(workerState.getMinimalTimestep());
+  std::cout << "mergewithMaster: after timestep: " << masterState.getMinimalTimestep() << std::endl;
+
+  masterState.updateGlobalTimeIntervals(
+        workerState.getStartMaximumGlobalTimeInterval(),
+        workerState.getStartMinimumGlobalTimeInterval(),
+        workerState.getEndMaximumGlobalTimeInterval(),
+        workerState.getEndMinimumGlobalTimeInterval()
+      );
+
+  bool _allPatchesEvolvedToGlobalTimestep = masterState.getAllPatchesEvolvedToGlobalTimestep();
+  _allPatchesEvolvedToGlobalTimestep &= workerState.getAllPatchesEvolvedToGlobalTimestep();
+  masterState.setAllPatchesEvolvedToGlobalTimestep(_allPatchesEvolvedToGlobalTimestep);
+
   logTraceOut( "mergeWithMaster(...)" );
 }
 
@@ -640,7 +655,7 @@ void peanoclaw::mappings::SolveTimestep::beginIteration(
   _additionalLevelsForPredefinedRefinement = solverState.getAdditionalLevelsForPredefinedRefinement();
   _probeList = solverState.getProbeList();
   _useDimensionalSplitting = solverState.useDimensionalSplitting();
-
+ 
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
 
@@ -670,7 +685,7 @@ void peanoclaw::mappings::SolveTimestep::endIteration(
   _levelStatistics.clear();
 
   _averageGlobalTimeInterval = (solverState.getStartMaximumGlobalTimeInterval() + solverState.getEndMaximumGlobalTimeInterval()) / 2.0;
-
+ 
   logTraceOutWith1Argument( "endIteration(State)", solverState);
 }
 

@@ -115,10 +115,9 @@ class peanoclaw::records::Data {
       protected:
          static tarch::logging::Log _log;
 
-#if 0  
     #ifdef Parallel
         
-         int _senderRank;
+         //int _senderRank;
          
       public:
          
@@ -144,7 +143,6 @@ class peanoclaw::records::Data {
          int getSenderRank() const;
          
    #endif
-#endif
       
    };
    
@@ -242,7 +240,7 @@ class peanoclaw::records::Data {
          protected:
             static tarch::logging::Log _log;
             
-            int _senderRank;
+            //int _senderRank;
             
          public:
             

@@ -80,7 +80,6 @@ peanoclaw::records::DataPacked peanoclaw::records::Data::convert() const{
  
 tarch::logging::Log peanoclaw::records::Data::_log( "peanoclaw::records::Data" );
 
-#if 0
 #ifdef Parallel
    #include "tarch/parallel/Node.h" 
    
@@ -135,7 +134,7 @@ tarch::logging::Log peanoclaw::records::Data::_log( "peanoclaw::records::Data" )
       bool         triggeredTimeoutWarning = false;
       
       #ifdef Asserts
-      _senderRank = -1;
+      //_senderRank = -1;
       #endif
       
       result = MPI_Isend(
@@ -257,7 +256,7 @@ tarch::logging::Log peanoclaw::records::Data::_log( "peanoclaw::records::Data" )
       
       delete sendRequestHandle;
       
-      _senderRank = status.MPI_SOURCE;
+      //_senderRank = status.MPI_SOURCE;
       #ifdef Debug
       _log.debug("receive(int,int)", "received " + toString() ); 
       #endif
@@ -282,12 +281,11 @@ tarch::logging::Log peanoclaw::records::Data::_log( "peanoclaw::records::Data" )
       
    }
    
-   int peanoclaw::records::Data::getSenderRank() const {
+   /*int peanoclaw::records::Data::getSenderRank() const {
       assertion( _senderRank!=-1 );
       return _senderRank;
       
-   }
-#endif
+   }*/
 #endif
 
 
@@ -425,7 +423,7 @@ peanoclaw::records::Data peanoclaw::records::DataPacked::convert() const{
       bool         triggeredTimeoutWarning = false;
       
       #ifdef Asserts
-      _senderRank = -1;
+      //_senderRank = -1;
       #endif
       
       result = MPI_Isend(
@@ -547,7 +545,7 @@ peanoclaw::records::Data peanoclaw::records::DataPacked::convert() const{
       
       delete sendRequestHandle;
       
-      _senderRank = status.MPI_SOURCE;
+      //_senderRank = status.MPI_SOURCE;
       #ifdef Debug
       _log.debug("receive(int,int)", "received " + toString() ); 
       #endif
@@ -572,11 +570,11 @@ peanoclaw::records::Data peanoclaw::records::DataPacked::convert() const{
       
    }
    
-   int peanoclaw::records::DataPacked::getSenderRank() const {
+   /*int peanoclaw::records::DataPacked::getSenderRank() const {
       assertion( _senderRank!=-1 );
       return _senderRank;
       
-   }
+   }*/
 #endif
 
 

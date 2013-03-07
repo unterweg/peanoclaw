@@ -119,7 +119,7 @@ class peanoclaw::State: public peano::grid::State< peanoclaw::records::State > {
 
       double getInitialTimestepSize() const;
 
-      void setPyClaw(peanoclaw::pyclaw::PyClaw& pyClaw);
+      void setPyClaw(peanoclaw::pyclaw::PyClaw* pyClaw);
 
       peanoclaw::pyclaw::PyClaw& getPyClaw() const;
 

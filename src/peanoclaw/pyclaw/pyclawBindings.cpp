@@ -70,7 +70,11 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   bool useDimensionalSplitting,
   InitializationCallback initializationCallback,
   BoundaryConditionCallback boundaryConditionCallback,
-  SolverCallback solverCallback
+  SolverCallback solverCallback,
+  AddPatchToSolutionCallback addPatchToSolutionCallback,
+  InterPatchCommunicationCallback interpolationCallback,
+  InterPatchCommunicationCallback restrictionCallback,
+  int *rank
 ) {
     peano::fillLookupTables();
 
@@ -92,21 +96,33 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
     Py_Initialize();
   }
 
-
   importArrays();
-
+ 
+  // Configure the output
+  tarch::logging::CommandLineLogger::getInstance().clearFilterList();
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "", false ) );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "trace", false ) );
+//  tarch::logging::CommandLineLogger::getInstance().setLogFormat( ... please consult source code documentation );
+  
+  std::ostringstream logFileName;
+  logFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-trace.txt";
+  tarch::logging::CommandLineLogger::getInstance().setLogFormat( " ", false, false, true, false, true, logFileName.str() );
+ 
   //Initialize Logger
   static tarch::logging::Log _log("::pyclawBindings");
   logInfo("pyclaw_peano_new(...)", "Initializing Peano");
 
   //PyClaw - this object is copied to the runner and is stored there.
   peanoclaw::pyclaw::PyClaw *pyClaw = new peanoclaw::pyclaw::PyClaw(
-      initializationCallback,
-      boundaryConditionCallback,
-      solverCallback,
-      0,
-      0,
-      0);
+          initializationCallback, 
+          boundaryConditionCallback, 
+          solverCallback, 
+          addPatchToSolutionCallback,  
+          interpolationCallback,
+          restrictionCallback
+  );
 
   _configuration = new peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid;
   // assertion1(_configuration->isValid(), _configuration);
@@ -136,29 +152,21 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   //Check parameters
   assertion1(tarch::la::greater(domainSizeX0, 0.0) && tarch::la::greater(domainSizeX1, 0.0), domainSize);
   if(initialMinimalMeshWidthScalar > domainSizeX0 || initialMinimalMeshWidthScalar > domainSizeX1) {
-    logError("pyclaw_peano_new(...)", "Domainsize or initialMinimalMeshWidth not set properly.");
+    //logError("pyclaw_peano_new(...)", "Domainsize or initialMinimalMeshWidth not set properly.");
   }
   if(tarch::la::oneGreater(tarch::la::Vector<DIMENSIONS, int>(1), subdivisionFactor) ) {
-    logError("pyclaw_peano_new(...)", "subdivisionFactor not set properly.");
+    //logError("pyclaw_peano_new(...)", "subdivisionFactor not set properly.");
   }
  
-  // Configure the output
-  tarch::logging::CommandLineLogger::getInstance().clearFilterList();
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "", false ) );
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
-//  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "trace", true ) );
-//  tarch::logging::CommandLineLogger::getInstance().setLogFormat( ... please consult source code documentation );
  
-  std::ostringstream logFileName;
-  logFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-trace.txt";
-  tarch::logging::CommandLineLogger::getInstance().setLogFormat( " ", false, false, true, false, true, logFileName.str() );
+
+  std::cout << tarch::parallel::Node::getInstance().getRank() << ": creating peano instance" << std::endl;
 
   //Create runner
   peanoclaw::runners::PeanoClawLibraryRunner* runner
     = new peanoclaw::runners::PeanoClawLibraryRunner(
     *_configuration,
-    *pyClaw,
+    pyClaw,
     domainOffset,
     domainSize,
     initialMinimalMeshWidth,
@@ -170,9 +178,17 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
     useDimensionalSplitting
   );
 
+  std::cout << tarch::parallel::Node::getInstance().getRank() << ": peano instance created" << std::endl;
+
 
   assertion(runner != 0);
  
+#if defined(Parallel) 
+  *rank = tarch::parallel::Node::getInstance().getRank();
+#else
+  *rank = 0;
+#endif
+
   if(_calledFromPython) {
     PyGILState_Release(_pythonState);
   }
@@ -202,14 +218,7 @@ void pyclaw_peano_destroy(peanoclaw::runners::PeanoClawLibraryRunner* runner) {
 }
 
 extern "C"
-void pyclaw_peano_evolveToTime(
-  double time,
-  peanoclaw::runners::PeanoClawLibraryRunner* runner,
-  BoundaryConditionCallback boundaryConditionCallback,
-  SolverCallback solverCallback,
-  InterPatchCommunicationCallback interpolationCallback,
-  InterPatchCommunicationCallback restrictionCallback
-) {
+void pyclaw_peano_evolveToTime(double time, peanoclaw::runners::PeanoClawLibraryRunner* runner) {
   #ifdef USE_VALGRIND
   CALLGRIND_START_INSTRUMENTATION;
   CALLGRIND_ZERO_STATS;
@@ -218,23 +227,12 @@ void pyclaw_peano_evolveToTime(
   static tarch::logging::Log _log("::pyclawBindings");
   logTraceInWith1Argument("pyclaw_peano_evolveToTime", time);
   assertionMsg(runner!=0, "call pyclaw_peano_new before calling pyclaw_peano_run.");
-  assertion(boundaryConditionCallback != 0);
-  assertion(solverCallback != 0);
 
   if(_calledFromPython) {
     _pythonState = PyGILState_Ensure();
   }
 
-  peanoclaw::pyclaw::PyClaw pyClaw(
-    0,
-    boundaryConditionCallback,
-    solverCallback,
-    0,
-    interpolationCallback,
-    restrictionCallback
-  );
-
-  runner->evolveToTime(time, pyClaw);
+  runner->evolveToTime(time);
 
   if(_calledFromPython) {
     PyGILState_Release(_pythonState);
@@ -247,28 +245,22 @@ void pyclaw_peano_evolveToTime(
 }
 
 extern "C"
-void pyclaw_peano_gatherSolution(
-  peanoclaw::runners::PeanoClawLibraryRunner* runner,
-  AddPatchToSolutionCallback addPatchToSolutionCallback
-) {
-
+void pyclaw_peano_gatherSolution(peanoclaw::runners::PeanoClawLibraryRunner* runner) {
   static tarch::logging::Log _log("::pyclawBindings");
   logTraceIn("pyclaw_peano_gatherSolution")
   if(_calledFromPython) {
     _pythonState = PyGILState_Ensure();
   }
-  assertion(addPatchToSolutionCallback != 0)
 
-  peanoclaw::pyclaw::PyClaw pyClaw(
-    0,
-    0,
-    0,
-    addPatchToSolutionCallback,
-    0,
-    0
-  );
+#if defined(Parallel)
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+#endif
 
-  runner->gatherCurrentSolution(pyClaw);
+      runner->gatherCurrentSolution();
+
+#if defined(Parallel)
+  }
+#endif
 
   if(_calledFromPython) {
     PyGILState_Release(_pythonState);
@@ -276,3 +268,18 @@ void pyclaw_peano_gatherSolution(
   logTraceOut("pyclaw_peano_gatherSolution");
 }
 
+extern "C"
+int pyclaw_peano_runWorker(peanoclaw::runners::PeanoClawLibraryRunner* runner)
+{
+  if(_calledFromPython) {
+    _pythonState = PyGILState_Ensure();
+  }
+
+  int result = runner->runWorker();
+
+  if(_calledFromPython) {
+    PyGILState_Release(_pythonState);
+  }
+
+  return result;
+}

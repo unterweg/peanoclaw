@@ -65,11 +65,6 @@
    }
    
    
-   peanoclaw::records::State::State(const int& additionalLevelsForPredefinedRefinement, const bool& isInitializing, const bool& initialRefinmentTriggered, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMinimalMeshWidth, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplitting, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell, const bool& hasWorkerWithWorker):
-   _persistentRecords(additionalLevelsForPredefinedRefinement, isInitializing, initialRefinmentTriggered, unknownsPerSubcell, auxiliarFieldsPerSubcell, initialMinimalMeshWidth, defaultSubdivisionFactor, defaultGhostWidthLayer, initialTimestepSize, useDimensionalSplitting, globalTimestepEndTime, allPatchesEvolvedToGlobalTimestep, domainOffset, domainSize, plotNumber, subPlotNumber, startMaximumGlobalTimeInterval, endMaximumGlobalTimeInterval, startMinimumGlobalTimeInterval, endMinimumGlobalTimeInterval, minimalTimestep, totalNumberOfCellUpdates, minMeshWidth, maxMeshWidth, numberOfInnerVertices, numberOfBoundaryVertices, numberOfOuterVertices, numberOfInnerCells, numberOfOuterCells, maxLevel, hasRefined, hasTriggeredRefinementForNextIteration, hasErased, hasTriggeredEraseForNextIteration, hasChangedVertexOrCellState, isTraversalInverted, loadRebalancingState, reduceStateAndCell),_hasWorkerWithWorker(hasWorkerWithWorker) {
-      
-   }
-   
    peanoclaw::records::State::~State() { }
    
    std::string peanoclaw::records::State::toString(const LoadBalancingState& param) {
@@ -199,8 +194,6 @@
       out << "loadRebalancingState:" << toString(getLoadRebalancingState());
       out << ",";
       out << "reduceStateAndCell:" << getReduceStateAndCell();
-      out << ",";
-      out << "hasWorkerWithWorker:" << getHasWorkerWithWorker();
       out <<  ")";
    }
    
@@ -248,8 +241,7 @@
          getHasChangedVertexOrCellState(),
          getIsTraversalInverted(),
          getLoadRebalancingState(),
-         getReduceStateAndCell(),
-         getHasWorkerWithWorker()
+         getReduceStateAndCell()
       );
    }
    
@@ -264,7 +256,7 @@
          {
             State dummyState[2];
             
-            const int Attributes = 38;
+            const int Attributes = 37;
             MPI_Datatype subtypes[Attributes] = {
                MPI_INT,		 //additionalLevelsForPredefinedRefinement
                MPI_CHAR,		 //isInitializing
@@ -302,7 +294,6 @@
                MPI_CHAR,		 //hasTriggeredEraseForNextIteration
                MPI_CHAR,		 //hasChangedVertexOrCellState
                MPI_CHAR,		 //isTraversalInverted
-               MPI_CHAR,		 //hasWorkerWithWorker
                MPI_UB		 // end/displacement flag
             };
             
@@ -343,7 +334,6 @@
                1,		 //hasTriggeredEraseForNextIteration
                1,		 //hasChangedVertexOrCellState
                1,		 //isTraversalInverted
-               1,		 //hasWorkerWithWorker
                1		 // end/displacement flag
             };
             
@@ -387,8 +377,7 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[0]._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[33] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[0]._persistentRecords._hasChangedVertexOrCellState))), 		&disp[34] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[0]._persistentRecords._isTraversalInverted))), 		&disp[35] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[0]._hasWorkerWithWorker))), 		&disp[36] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[1]._persistentRecords._additionalLevelsForPredefinedRefinement))), 		&disp[37] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[1]._persistentRecords._additionalLevelsForPredefinedRefinement))), 		&disp[36] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -403,7 +392,7 @@
          {
             State dummyState[2];
             
-            const int Attributes = 40;
+            const int Attributes = 39;
             MPI_Datatype subtypes[Attributes] = {
                MPI_INT,		 //additionalLevelsForPredefinedRefinement
                MPI_CHAR,		 //isInitializing
@@ -443,7 +432,6 @@
                MPI_CHAR,		 //isTraversalInverted
                MPI_INT,		 //loadRebalancingState
                MPI_CHAR,		 //reduceStateAndCell
-               MPI_CHAR,		 //hasWorkerWithWorker
                MPI_UB		 // end/displacement flag
             };
             
@@ -486,7 +474,6 @@
                1,		 //isTraversalInverted
                1,		 //loadRebalancingState
                1,		 //reduceStateAndCell
-               1,		 //hasWorkerWithWorker
                1		 // end/displacement flag
             };
             
@@ -532,8 +519,7 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[0]._persistentRecords._isTraversalInverted))), 		&disp[35] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[0]._persistentRecords._loadRebalancingState))), 		&disp[36] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[0]._persistentRecords._reduceStateAndCell))), 		&disp[37] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[0]._hasWorkerWithWorker))), 		&disp[38] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[1]._persistentRecords._additionalLevelsForPredefinedRefinement))), 		&disp[39] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyState[1]._persistentRecords._additionalLevelsForPredefinedRefinement))), 		&disp[38] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -565,9 +551,7 @@
          clock_t      timeOutShutdown  = -1;
          bool         triggeredTimeoutWarning = false;
          
-         #ifdef Asserts
-         _senderRank = -1;
-         #endif
+         _senderDestinationRank = destination;
          
          if (exchangeOnlyAttributesMarkedWithParallelise) {
             result = MPI_Isend(
@@ -709,7 +693,7 @@
          
          delete sendRequestHandle;
          
-         _senderRank = status.MPI_SOURCE;
+         _senderDestinationRank = status.MPI_SOURCE;
          #ifdef Debug
          _log.debug("receive(int,int)", "received " + toString() ); 
          #endif
@@ -740,8 +724,8 @@
       }
       
       int peanoclaw::records::State::getSenderRank() const {
-         assertion( _senderRank!=-1 );
-         return _senderRank;
+         assertion( _senderDestinationRank!=-1 );
+         return _senderDestinationRank;
          
       }
    #endif
@@ -797,7 +781,6 @@
    }
    
    peanoclaw::records::StatePacked::StatePacked() {
-      assertion((1 < (8 * sizeof(short int))));
       assertion((7 < (8 * sizeof(short int))));
       
    }
@@ -805,7 +788,6 @@
    
    peanoclaw::records::StatePacked::StatePacked(const PersistentRecords& persistentRecords):
    _persistentRecords(persistentRecords._additionalLevelsForPredefinedRefinement, persistentRecords._isInitializing, persistentRecords._initialRefinmentTriggered, persistentRecords._unknownsPerSubcell, persistentRecords._auxiliarFieldsPerSubcell, persistentRecords._initialMinimalMeshWidth, persistentRecords._defaultSubdivisionFactor, persistentRecords._defaultGhostWidthLayer, persistentRecords._initialTimestepSize, persistentRecords._useDimensionalSplitting, persistentRecords._globalTimestepEndTime, persistentRecords.getAllPatchesEvolvedToGlobalTimestep(), persistentRecords._domainOffset, persistentRecords._domainSize, persistentRecords._plotNumber, persistentRecords._subPlotNumber, persistentRecords._startMaximumGlobalTimeInterval, persistentRecords._endMaximumGlobalTimeInterval, persistentRecords._startMinimumGlobalTimeInterval, persistentRecords._endMinimumGlobalTimeInterval, persistentRecords._minimalTimestep, persistentRecords._totalNumberOfCellUpdates, persistentRecords._minMeshWidth, persistentRecords._maxMeshWidth, persistentRecords._numberOfInnerVertices, persistentRecords._numberOfBoundaryVertices, persistentRecords._numberOfOuterVertices, persistentRecords._numberOfInnerCells, persistentRecords._numberOfOuterCells, persistentRecords._maxLevel, persistentRecords.getHasRefined(), persistentRecords.getHasTriggeredRefinementForNextIteration(), persistentRecords.getHasErased(), persistentRecords.getHasTriggeredEraseForNextIteration(), persistentRecords.getHasChangedVertexOrCellState(), persistentRecords._isTraversalInverted, persistentRecords._loadRebalancingState, persistentRecords.getReduceStateAndCell()) {
-      assertion((1 < (8 * sizeof(short int))));
       assertion((7 < (8 * sizeof(short int))));
       
    }
@@ -813,19 +795,10 @@
    
    peanoclaw::records::StatePacked::StatePacked(const int& additionalLevelsForPredefinedRefinement, const bool& isInitializing, const bool& initialRefinmentTriggered, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMinimalMeshWidth, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplitting, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell):
    _persistentRecords(additionalLevelsForPredefinedRefinement, isInitializing, initialRefinmentTriggered, unknownsPerSubcell, auxiliarFieldsPerSubcell, initialMinimalMeshWidth, defaultSubdivisionFactor, defaultGhostWidthLayer, initialTimestepSize, useDimensionalSplitting, globalTimestepEndTime, allPatchesEvolvedToGlobalTimestep, domainOffset, domainSize, plotNumber, subPlotNumber, startMaximumGlobalTimeInterval, endMaximumGlobalTimeInterval, startMinimumGlobalTimeInterval, endMinimumGlobalTimeInterval, minimalTimestep, totalNumberOfCellUpdates, minMeshWidth, maxMeshWidth, numberOfInnerVertices, numberOfBoundaryVertices, numberOfOuterVertices, numberOfInnerCells, numberOfOuterCells, maxLevel, hasRefined, hasTriggeredRefinementForNextIteration, hasErased, hasTriggeredEraseForNextIteration, hasChangedVertexOrCellState, isTraversalInverted, loadRebalancingState, reduceStateAndCell) {
-      assertion((1 < (8 * sizeof(short int))));
       assertion((7 < (8 * sizeof(short int))));
       
    }
    
-   
-   peanoclaw::records::StatePacked::StatePacked(const int& additionalLevelsForPredefinedRefinement, const bool& isInitializing, const bool& initialRefinmentTriggered, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMinimalMeshWidth, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplitting, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell, const bool& hasWorkerWithWorker):
-   _persistentRecords(additionalLevelsForPredefinedRefinement, isInitializing, initialRefinmentTriggered, unknownsPerSubcell, auxiliarFieldsPerSubcell, initialMinimalMeshWidth, defaultSubdivisionFactor, defaultGhostWidthLayer, initialTimestepSize, useDimensionalSplitting, globalTimestepEndTime, allPatchesEvolvedToGlobalTimestep, domainOffset, domainSize, plotNumber, subPlotNumber, startMaximumGlobalTimeInterval, endMaximumGlobalTimeInterval, startMinimumGlobalTimeInterval, endMinimumGlobalTimeInterval, minimalTimestep, totalNumberOfCellUpdates, minMeshWidth, maxMeshWidth, numberOfInnerVertices, numberOfBoundaryVertices, numberOfOuterVertices, numberOfInnerCells, numberOfOuterCells, maxLevel, hasRefined, hasTriggeredRefinementForNextIteration, hasErased, hasTriggeredEraseForNextIteration, hasChangedVertexOrCellState, isTraversalInverted, loadRebalancingState, reduceStateAndCell) {
-      setHasWorkerWithWorker(hasWorkerWithWorker);
-      assertion((1 < (8 * sizeof(short int))));
-      assertion((7 < (8 * sizeof(short int))));
-      
-   }
    
    peanoclaw::records::StatePacked::~StatePacked() { }
    
@@ -946,8 +919,6 @@
       out << "loadRebalancingState:" << toString(getLoadRebalancingState());
       out << ",";
       out << "reduceStateAndCell:" << getReduceStateAndCell();
-      out << ",";
-      out << "hasWorkerWithWorker:" << getHasWorkerWithWorker();
       out <<  ")";
    }
    
@@ -995,8 +966,7 @@
          getHasChangedVertexOrCellState(),
          getIsTraversalInverted(),
          getLoadRebalancingState(),
-         getReduceStateAndCell(),
-         getHasWorkerWithWorker()
+         getReduceStateAndCell()
       );
    }
    
@@ -1011,7 +981,7 @@
          {
             StatePacked dummyStatePacked[2];
             
-            const int Attributes = 33;
+            const int Attributes = 32;
             MPI_Datatype subtypes[Attributes] = {
                MPI_INT,		 //additionalLevelsForPredefinedRefinement
                MPI_CHAR,		 //isInitializing
@@ -1043,7 +1013,6 @@
                MPI_DOUBLE,		 //numberOfOuterCells
                MPI_INT,		 //maxLevel
                MPI_CHAR,		 //isTraversalInverted
-               MPI_SHORT,		 //_packedRecords0
                MPI_SHORT,		 //_packedRecords0
                MPI_UB		 // end/displacement flag
             };
@@ -1079,7 +1048,6 @@
                1,		 //numberOfOuterCells
                1,		 //maxLevel
                1,		 //isTraversalInverted
-               1,		 //_packedRecords0
                1,		 //_packedRecords0
                1		 // end/displacement flag
             };
@@ -1119,8 +1087,7 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[0]._persistentRecords._maxLevel))), 		&disp[28] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[0]._persistentRecords._isTraversalInverted))), 		&disp[29] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[30] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[0]._packedRecords0))), 		&disp[31] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[1]._persistentRecords._additionalLevelsForPredefinedRefinement))), 		&disp[32] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[1]._persistentRecords._additionalLevelsForPredefinedRefinement))), 		&disp[31] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -1135,7 +1102,7 @@
          {
             StatePacked dummyStatePacked[2];
             
-            const int Attributes = 34;
+            const int Attributes = 33;
             MPI_Datatype subtypes[Attributes] = {
                MPI_INT,		 //additionalLevelsForPredefinedRefinement
                MPI_CHAR,		 //isInitializing
@@ -1168,7 +1135,6 @@
                MPI_INT,		 //maxLevel
                MPI_CHAR,		 //isTraversalInverted
                MPI_INT,		 //loadRebalancingState
-               MPI_SHORT,		 //_packedRecords0
                MPI_SHORT,		 //_packedRecords0
                MPI_UB		 // end/displacement flag
             };
@@ -1205,7 +1171,6 @@
                1,		 //maxLevel
                1,		 //isTraversalInverted
                1,		 //loadRebalancingState
-               1,		 //_packedRecords0
                1,		 //_packedRecords0
                1		 // end/displacement flag
             };
@@ -1246,8 +1211,7 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[0]._persistentRecords._isTraversalInverted))), 		&disp[29] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[0]._persistentRecords._loadRebalancingState))), 		&disp[30] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[31] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[0]._packedRecords0))), 		&disp[32] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[1]._persistentRecords._additionalLevelsForPredefinedRefinement))), 		&disp[33] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStatePacked[1]._persistentRecords._additionalLevelsForPredefinedRefinement))), 		&disp[32] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -1279,9 +1243,7 @@
          clock_t      timeOutShutdown  = -1;
          bool         triggeredTimeoutWarning = false;
          
-         #ifdef Asserts
-         _senderRank = -1;
-         #endif
+         _senderDestinationRank = destination;
          
          if (exchangeOnlyAttributesMarkedWithParallelise) {
             result = MPI_Isend(
@@ -1423,7 +1385,7 @@
          
          delete sendRequestHandle;
          
-         _senderRank = status.MPI_SOURCE;
+         _senderDestinationRank = status.MPI_SOURCE;
          #ifdef Debug
          _log.debug("receive(int,int)", "received " + toString() ); 
          #endif
@@ -1454,8 +1416,8 @@
       }
       
       int peanoclaw::records::StatePacked::getSenderRank() const {
-         assertion( _senderRank!=-1 );
-         return _senderRank;
+         assertion( _senderDestinationRank!=-1 );
+         return _senderDestinationRank;
          
       }
    #endif
@@ -1981,9 +1943,7 @@
          clock_t      timeOutShutdown  = -1;
          bool         triggeredTimeoutWarning = false;
          
-         #ifdef Asserts
-         _senderRank = -1;
-         #endif
+         _senderDestinationRank = destination;
          
          if (exchangeOnlyAttributesMarkedWithParallelise) {
             result = MPI_Isend(
@@ -2125,7 +2085,7 @@
          
          delete sendRequestHandle;
          
-         _senderRank = status.MPI_SOURCE;
+         _senderDestinationRank = status.MPI_SOURCE;
          #ifdef Debug
          _log.debug("receive(int,int)", "received " + toString() ); 
          #endif
@@ -2156,8 +2116,8 @@
       }
       
       int peanoclaw::records::State::getSenderRank() const {
-         assertion( _senderRank!=-1 );
-         return _senderRank;
+         assertion( _senderDestinationRank!=-1 );
+         return _senderDestinationRank;
          
       }
    #endif
@@ -2656,9 +2616,7 @@
          clock_t      timeOutShutdown  = -1;
          bool         triggeredTimeoutWarning = false;
          
-         #ifdef Asserts
-         _senderRank = -1;
-         #endif
+         _senderDestinationRank = destination;
          
          if (exchangeOnlyAttributesMarkedWithParallelise) {
             result = MPI_Isend(
@@ -2800,7 +2758,7 @@
          
          delete sendRequestHandle;
          
-         _senderRank = status.MPI_SOURCE;
+         _senderDestinationRank = status.MPI_SOURCE;
          #ifdef Debug
          _log.debug("receive(int,int)", "received " + toString() ); 
          #endif
@@ -2831,8 +2789,8 @@
       }
       
       int peanoclaw::records::StatePacked::getSenderRank() const {
-         assertion( _senderRank!=-1 );
-         return _senderRank;
+         assertion( _senderDestinationRank!=-1 );
+         return _senderDestinationRank;
          
       }
    #endif

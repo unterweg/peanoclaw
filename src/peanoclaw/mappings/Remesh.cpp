@@ -451,7 +451,7 @@ void peanoclaw::mappings::Remesh::createCell(
     fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(i, fineGridCell.getCellDescriptionIndex());
   }
 
-  logTraceOutWith1Argument( "createCell(...)", fineGridCell );
+  logTraceOutWith2Arguments( "createCell(...)", fineGridCell, fineGridPatch );
 }
 
 
@@ -478,9 +478,9 @@ void peanoclaw::mappings::Remesh::destroyCell(
     //Fix timestep size
     coarseCellDescription.setTimestepSize(std::max(0.0, coarseCellDescription.getTimestepSize()));
 
-    assertion1(coarseCellDescription.getUNewIndex() != -1, finePatch);
-    assertion1(coarseCellDescription.getUOldIndex() != -1, finePatch);
-
+    assertion2(coarseCellDescription.getUNewIndex() != -1, coarseGridCell, finePatch);
+    assertion2(coarseCellDescription.getUOldIndex() != -1, coarseGridCell, finePatch);
+ 
     //Set indices on coarse adjacent vertices and fill adjacent ghostlayers
     for(int i = 0; i < TWO_POWER_D; i++) {
       fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(i, coarseGridCell.getCellDescriptionIndex());
@@ -494,7 +494,7 @@ void peanoclaw::mappings::Remesh::destroyCell(
     coarseCellDescription.setDemandedMeshWidth(coarseGridVerticesEnumerator.getCellSize()(0) / coarseCellDescription.getSubdivisionFactor()(0));
   } else {
     for(int i = 0; i < TWO_POWER_D; i++) {
-      fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(i, -1);
+        fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(i, -1);
     }
   }
 
@@ -559,6 +559,25 @@ void peanoclaw::mappings::Remesh::prepareCopyToRemoteNode(
 ) {
   logTraceInWith2Arguments( "prepareCopyToRemoteNode(...)", localCell, toRank );
   // @todo Insert your code here
+  if (!tarch::parallel::Node::getInstance().isGlobalMaster()) {
+      //CellDescription* _cellDescription = &peano::heap::Heap<CellDescription>::getInstance().getData(localCell.getCellDescriptionIndex()).at(0);
+      /*Patch patch(*_cellDescription);
+      
+      peano::heap::Heap<peanoclaw::records::CellDescription>::getInstance().sendData(localCell.getCellDescriptionIndex(), toRank, patch.getPosition(), patch.getLevel(), true);
+     
+      if (patch.getUNewIndex() != -1) {
+         peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(patch.getUNewIndex(), toRank, patch.getPosition(), patch.getLevel(), true);
+      }
+
+      if (patch.getUOldIndex() != -1) {
+         peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(patch.getUOldIndex(), toRank, patch.getPosition(), patch.getLevel(), true);
+      }
+
+      if (patch.getAuxIndex() != -1) {
+          peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(patch.getAuxIndex(), toRank, patch.getPosition(), patch.getLevel(), true);
+      }*/
+  }
+
   logTraceOut( "prepareCopyToRemoteNode(...)" );
 }
 
@@ -585,6 +604,16 @@ void peanoclaw::mappings::Remesh::mergeWithRemoteDataDueToForkOrJoin(
 ) {
   logTraceInWith3Arguments( "mergeWithRemoteDataDueToForkOrJoin(...)", localCell, masterOrWorkerCell, fromRank );
   // @todo Insert your code here
+  /*const int globalMasterRank = tarch::parallel::Node::getInstance().getGlobalMasterRank();
+  if (fromRank != globalMasterRank) {
+      peano::heap::Heap<peanoclaw::records::CellDescription>::getInstance().receiveData(fromRank, x, level, true);
+      peano::heap::Heap<peanoclaw::records::Data>::getInstance().receiveData(fromRank, x, level, true);
+
+      localCell.setCellDescriptionIndex(peano::heap::Heap<peanoclaw::records::CellDescription>::getInstance().createData());
+      CellDescription* _localCellDescription = &peano::heap::Heap<CellDescription>::getInstance().getData(localCell.getCellDescriptionIndex()).at(0);
+      CellDescription* _remoteCellDescription = &peano::heap::Heap<CellDescription>::getInstance().getData(masterOrWorkerCell.getCellDescriptionIndex()).at(0);
+      *_localCellDescription = *_remoteCellDescription;
+  }*/
   logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
 
@@ -600,6 +629,51 @@ void peanoclaw::mappings::Remesh::prepareSendToWorker(
 ) {
   logTraceIn( "prepareSendToWorker(...)" );
   // @todo Insert your code here
+#if 0
+  //if (!tarch::parallel::Node::getInstance().isGlobalMaster()) {
+      /*Patch finePatch(
+        fineGridVerticesEnumerator.getVertexPosition(0),
+        fineGridVerticesEnumerator.getCellSize(),
+        fineGridCell
+      );*/
+
+      Patch coarsePatch(
+        coarseGridVerticesEnumerator.getVertexPosition(0),
+        coarseGridVerticesEnumerator.getCellSize(),
+        coarseGridCell
+      );
+
+
+      /*if (finePatch.getUNewIndex() != -1) {
+         peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(finePatch.getUNewIndex(), worker, fineGridVerticesEnumerator.getVertexPosition(0), fineGridVerticesEnumerator.getLevel(), true);
+      }
+
+      if (finePatch.getUOldIndex() != -1) {
+         peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(finePatch.getUOldIndex(), worker, fineGridVerticesEnumerator.getVertexPosition(0), fineGridVerticesEnumerator.getLevel(), true);
+      }
+
+      if (finePatch.getAuxIndex() != -1) {
+          peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(finePatch.getAuxIndex(), worker, fineGridVerticesEnumerator.getVertexPosition(0), fineGridVerticesEnumerator.getLevel(), true);
+      }*/
+
+      if (coarsePatch.getUNewIndex() != -1) {
+         peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(coarsePatch.getUNewIndex(), worker, coarseGridVerticesEnumerator.getVertexPosition(0), coarseGridVerticesEnumerator.getLevel(), true);
+      }
+
+      if (coarsePatch.getUOldIndex() != -1) {
+         peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(coarsePatch.getUOldIndex(), worker, coarseGridVerticesEnumerator.getVertexPosition(0), coarseGridVerticesEnumerator.getLevel(), true);
+      }
+
+      if (coarsePatch.getAuxIndex() != -1) {
+          peano::heap::Heap<peanoclaw::records::Data>::getInstance().sendData(coarsePatch.getAuxIndex(), worker, coarseGridVerticesEnumerator.getVertexPosition(0), coarseGridVerticesEnumerator.getLevel(), true);
+      }
+
+
+      peano::heap::Heap<peanoclaw::records::CellDescription>::getInstance().sendData(coarseGridCell.getCellDescriptionIndex(), worker, coarseGridVerticesEnumerator.getVertexPosition(0), coarseGridVerticesEnumerator.getLevel(), true);
+
+      //peano::heap::Heap<peanoclaw::records::CellDescription>::getInstance().sendData(fineGridCell.getCellDescriptionIndex(), worker, fineGridVerticesEnumerator.getVertexPosition(0), fineGridVerticesEnumerator.getLevel(), true);
+  //}
+#endif
   logTraceOut( "prepareSendToWorker(...)" );
 }
 
@@ -642,6 +716,16 @@ void peanoclaw::mappings::Remesh::receiveDataFromMaster(
 ) {
   logTraceInWith2Arguments( "receiveDataFromMaster(...)", receivedCell.toString(), verticesEnumerator.toString() );
   // @todo Insert your code here
+#if 0
+  const int masterRank = tarch::parallel::NodePool::getInstance().getMasterRank();
+  const int globalMasterRank = tarch::parallel::Node::getInstance().getGlobalMasterRank();
+
+  if (masterRank != globalMasterRank) {
+      peano::heap::Heap<peanoclaw::records::CellDescription>::getInstance().receiveData(masterRank, verticesEnumerator.getVertexPosition(), verticesEnumerator.getLevel(), true);
+      peano::heap::Heap<peanoclaw::records::Data>::getInstance().receiveData(masterRank, verticesEnumerator.getVertexPosition(), verticesEnumerator.getLevel(), true);
+      //Patch patch(verticesEnumerator.getVertexPosition(), verticesEnumerator.getCellSize(), receivedCell);
+  }
+#endif
   logTraceOut( "receiveDataFromMaster(...)" );
 }
 
@@ -740,7 +824,7 @@ void peanoclaw::mappings::Remesh::enterCell(
     _isInitializing
   );
 
-  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
+  logTraceOutWith2Arguments( "enterCell(...)", fineGridCell, patch );
 }
 
 
@@ -870,6 +954,9 @@ void peanoclaw::mappings::Remesh::beginIteration(
       _vertexPositionToIndexMap.erase(i++);
     }
   }
+ 
+  //peano::heap::Heap<peanoclaw::records::Data>::getInstance().startToSendOrReceiveHeapData(solverState.isTraversalInverted());
+  //peano::heap::Heap<CellDescription>::getInstance().startToSendOrReceiveHeapData(solverState.isTraversalInverted());
 
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
@@ -884,11 +971,14 @@ void peanoclaw::mappings::Remesh::endIteration(
   delete _interpolation;
 
   //Todo unterweg debug
-  std::cout << "Minimal time patch: " << _minimalTimePatch.toString() << std::endl;
+  /*std::cout << "Minimal time patch: " << _minimalTimePatch.toString() << std::endl;
   if(_minimalTimePatch.isValid()) {
     std::cout << "is allowed to advance: " << _minimalTimePatch.isAllowedToAdvanceInTime() << std::endl
         << "should skip next grid iteration: " << _minimalTimePatch.shouldSkipNextGridIteration() << std::endl;
-  }
+  }*/
+  
+  //peano::heap::Heap<peanoclaw::records::Data>::getInstance().finishedToSendOrReceiveHeapData();
+  //peano::heap::Heap<peanoclaw::records::CellDescription>::getInstance().finishedToSendOrReceiveHeapData();
 
   logTraceOutWith1Argument( "endIteration(State)", solverState);
 }

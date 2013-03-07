@@ -26,6 +26,10 @@ namespace peanoclaw {
 class peanoclaw::interSubgridCommunication::Interpolation {
 
   private:
+    /**
+      * Logging device
+      */
+    static tarch::logging::Log _log;
 
     const peanoclaw::pyclaw::PyClaw& _pyClaw;
 

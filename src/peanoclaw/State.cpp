@@ -91,8 +91,8 @@ double peanoclaw::State::getInitialTimestepSize() const {
   return _stateData.getInitialTimestepSize();
 }
 
-void peanoclaw::State::setPyClaw(peanoclaw::pyclaw::PyClaw& pyClaw) {
-  _pyClaw = &pyClaw;
+void peanoclaw::State::setPyClaw(peanoclaw::pyclaw::PyClaw* pyClaw) {
+  _pyClaw = pyClaw;
 }
 
 peanoclaw::pyclaw::PyClaw& peanoclaw::State::getPyClaw() const {

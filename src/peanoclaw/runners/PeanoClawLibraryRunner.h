@@ -53,13 +53,15 @@ private:
 
   double _totalRuntime;
 
+  peanoclaw::pyclaw::PyClaw *_pyClaw;
+
 public:
   /**
    * Sets everything up but does not start any grid-traversal, yet.
    */
   PeanoClawLibraryRunner(
     peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid& configuration,
-    peanoclaw::pyclaw::PyClaw& pyClaw,
+    peanoclaw::pyclaw::PyClaw *pyClaw,
     const tarch::la::Vector<DIMENSIONS, double>& domainOffset,
     const tarch::la::Vector<DIMENSIONS, double>& domainSize,
     const tarch::la::Vector<DIMENSIONS, double>& minimalMeshWidth,
@@ -73,16 +75,16 @@ public:
 
   virtual ~PeanoClawLibraryRunner();
 
+  peanoclaw::pyclaw::PyClaw* getPyClaw() { return _pyClaw; }
   /**
    * Evolves the solution up to the given point in time.
    */
-  void evolveToTime(
-    double time,
-    peanoclaw::pyclaw::PyClaw& pyClaw);
+  void evolveToTime( double time  );
 
   /**
    * Gathers the current solution, i.e. all patches, in PyClaw.
    */
-  void gatherCurrentSolution(peanoclaw::pyclaw::PyClaw& pyClaw);
+  void gatherCurrentSolution();
+  int runWorker();
 };
 #endif /* PEANO_APPLICATIONS_PEANOCLAW_RUNNERS_PEANOCLAWLIBRARYRUNNER_H_ */
