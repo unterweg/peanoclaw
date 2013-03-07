@@ -312,21 +312,6 @@ void peanoclaw::mappings::SolveTimestep::mergeWithMaster(
 ) {
   logTraceIn( "mergeWithMaster(...)" );
   // @todo Insert your code here
-  std::cout << "mergewithMaster: before timestep: " << masterState.getMinimalTimestep() << std::endl;
-  masterState.updateMinimalTimestep(workerState.getMinimalTimestep());
-  std::cout << "mergewithMaster: after timestep: " << masterState.getMinimalTimestep() << std::endl;
-
-  masterState.updateGlobalTimeIntervals(
-        workerState.getStartMaximumGlobalTimeInterval(),
-        workerState.getStartMinimumGlobalTimeInterval(),
-        workerState.getEndMaximumGlobalTimeInterval(),
-        workerState.getEndMinimumGlobalTimeInterval()
-      );
-
-  bool _allPatchesEvolvedToGlobalTimestep = masterState.getAllPatchesEvolvedToGlobalTimestep();
-  _allPatchesEvolvedToGlobalTimestep &= workerState.getAllPatchesEvolvedToGlobalTimestep();
-  masterState.setAllPatchesEvolvedToGlobalTimestep(_allPatchesEvolvedToGlobalTimestep);
-
   logTraceOut( "mergeWithMaster(...)" );
 }
 

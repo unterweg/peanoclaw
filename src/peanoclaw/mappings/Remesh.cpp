@@ -704,7 +704,20 @@ void peanoclaw::mappings::Remesh::mergeWithMaster(
   peanoclaw::State&                masterState
 ) {
   logTraceIn( "mergeWithMaster(...)" );
-  // @todo Insert your code here
+  masterState.updateGlobalTimeIntervals(
+        workerState.getStartMaximumGlobalTimeInterval(),
+        workerState.getEndMaximumGlobalTimeInterval(),
+        workerState.getStartMinimumGlobalTimeInterval(),
+        workerState.getEndMinimumGlobalTimeInterval()
+  );
+
+  masterState.updateMinimalTimestep(workerState.getMinimalTimestep());
+
+  bool allPatchesEvolvedToGlobalTimestep = workerState.getAllPatchesEvolvedToGlobalTimestep();
+  allPatchesEvolvedToGlobalTimestep &= masterState.getAllPatchesEvolvedToGlobalTimestep();
+
+  masterState.setAllPatchesEvolvedToGlobalTimestep(allPatchesEvolvedToGlobalTimestep);
+
   logTraceOut( "mergeWithMaster(...)" );
 }
 
