@@ -22,11 +22,10 @@
 #include "peano/parallel/SendReceiveBufferPool.h"
 #include "peano/parallel/JoinDataBufferPool.h"
 #include "peano/parallel/messages/ForkMessage.h"
-#endif
-
 #include "tarch/parallel/FCFSNodePoolStrategy.h"
 #include "peano/parallel/loadbalancing/Oracle.h"
 #include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
+#endif
 
 #include "peano/datatraversal/autotuning/Oracle.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhaseDummy.h"
@@ -35,7 +34,7 @@ tarch::logging::Log peanoclaw::runners::PeanoClawLibraryRunner::_log("peanoclaw:
 
 peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid& configuration,
-  peanoclaw::pyclaw::PyClaw* pyClaw,
+  peanoclaw::Numerics* numerics,
   const tarch::la::Vector<DIMENSIONS, double>& domainOffset,
   const tarch::la::Vector<DIMENSIONS, double>& domainSize,
   const tarch::la::Vector<DIMENSIONS, double>& initialMinimalMeshWidth,
@@ -49,8 +48,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _plotNumber(1),
   _configuration(configuration),
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
-  _totalRuntime(0.0),
-  _pyClaw(pyClaw) {
+  _totalRuntime(0.0) {
 
   peano::utils::UserInterface userInterface;
   userInterface.writeHeader();
@@ -71,15 +69,11 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   );
  
   // have to be the same for all ranks
-  peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(2048);
-  peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(2048);
+  peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(64);
+  peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(64);
 #endif
 
   peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
-
-#if defined(Parallel)
-  std::cout << tarch::parallel::Node::getInstance().getRank() << ": peano instance: parallel setup done" << std::endl;
-#endif
 
   //Initialize pseudo geometry
   _geometry =
@@ -87,11 +81,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
       domainSize,  // width
       domainOffset // offset
     );
-
-#if defined(Parallel)
-   std::cout << tarch::parallel::Node::getInstance().getRank() << ": peano instance: domain initialization done" << std::endl;
-#endif
-
   _repository =
     peanoclaw::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
       *_geometry,
@@ -102,9 +91,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 //  UserInterface userInterface;
 //  userInterface.writeHeader();
  
-#if defined(Parallel)
-  std::cout << tarch::parallel::Node::getInstance().getRank() << ": peano instance: repository initialization done" << std::endl;
-#endif
 
   logInfo("PeanoClawLibraryRunner", "Initial values: "
       << "Domain size = [" << domainSize << "]"
@@ -120,7 +106,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setAuxiliarFieldsPerSubcell(auxiliarFieldsPerSubcell);
   tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = tarch::la::multiplyComponents(initialMinimalMeshWidth, subdivisionFactor.convertScalar<double>());
   state.setInitialMinimalMeshWidth(initialMinimalSubcellSize);
-  state.setPyClaw(pyClaw);
+  state.setNumerics(numerics);
   state.resetTotalNumberOfCellUpdates();
   state.setInitialTimestepSize(initialTimestepSize);
   state.setDomain(domainOffset, domainSize);
@@ -129,32 +115,26 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
   //Initialise Grid (two iterations needed to set the initial ghostlayers of patches neighboring refined patches)
   state.setIsInitializing(true);
-  
+
 #ifdef Parallel
   std::cout << tarch::parallel::Node::getInstance().getRank() << ": peano instance: state initialization done" << std::endl;
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-     tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();
-  
+     tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();  
 #endif
 
-      _repository->switchToInitialiseGrid(); _repository->iterate();
-      if (_repository->getState().getIsInitializing()) {
-          do {
-            _repository->getState().setInitialRefinementTriggered(false);
-            _repository->iterate();
-          } while(_repository->getState().getInitialRefinementTriggered());
-          _repository->getState().setIsInitializing(false);
 
-          _repository->getState().setPlotNumber(0);
-          if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
-            _repository->switchToPlot(); _repository->iterate();
-          }
-      }
+  _repository->switchToInitialiseGrid(); _repository->iterate();
+  do {
+    state.setInitialRefinementTriggered(false);
+    _repository->iterate();
+  } while(state.getInitialRefinementTriggered());
+  state.setIsInitializing(false);
 
-#ifdef Parallel
-    } // belongs to Global Master check
-#endif
+  _repository->getState().setPlotNumber(0);
+  if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
+    _repository->switchToPlot(); _repository->iterate();
+  }
 }
 
 peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
@@ -197,33 +177,32 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
   double time
 ) {
   logTraceIn("evolveToTime");
-  std::cout << "evolveToTime: " << time << std::endl;
+  
+  bool plotSubsteps = _configuration.plotSubsteps()
+      || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);
 
-      bool plotSubsteps = _configuration.plotSubsteps()
-          || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);
+  _repository->getState().setGlobalTimestepEndTime(time);
+  _repository->getState().setNumerics(numerics);
+  _repository->getState().setPlotNumber(_plotNumber);
+  do {
+    logInfo("evolveToTime", "Solving timestep " << (_plotNumber-1) << " with maximum global time interval ("
+        << _repository->getState().getStartMaximumGlobalTimeInterval() << ", " << _repository->getState().getEndMaximumGlobalTimeInterval() << ")"
+        << " and minimum global time interval (" << _repository->getState().getStartMinimumGlobalTimeInterval() << ", " << _repository->getState().getEndMinimumGlobalTimeInterval() << ")");
+    _iterationTimer.startTimer();
 
-      _repository->getState().setGlobalTimestepEndTime(time);
-      _repository->getState().setPyClaw(_pyClaw);
+    _repository->getState().resetGlobalTimeIntervals();
+    _repository->getState().resetMinimalTimestep();
+    _repository->getState().setAllPatchesEvolvedToGlobalTimestep(true);
+
+    if(plotSubsteps) {
       _repository->getState().setPlotNumber(_plotNumber);
-      do {
-        logInfo("evolveToTime", "Solving timestep " << (_plotNumber-1) << " with maximum global time interval ("
-            << _repository->getState().getStartMaximumGlobalTimeInterval() << ", " << _repository->getState().getEndMaximumGlobalTimeInterval() << ")"
-            << " and minimum global time interval (" << _repository->getState().getStartMinimumGlobalTimeInterval() << ", " << _repository->getState().getEndMinimumGlobalTimeInterval() << ")");
-        _iterationTimer.startTimer();
+      _repository->switchToSolveTimestepAndPlot(); _repository->iterate();
+      _plotNumber++;
+    } else {
+      _repository->switchToSolveTimestep(); _repository->iterate();
+    }
 
-        _repository->getState().resetGlobalTimeIntervals();
-        _repository->getState().resetMinimalTimestep();
-        _repository->getState().setAllPatchesEvolvedToGlobalTimestep(true);
-
-        if(plotSubsteps) {
-          _repository->getState().setPlotNumber(_plotNumber);
-          _repository->switchToSolveTimestepAndPlot(); _repository->iterate();
-          _plotNumber++;
-        } else {
-          _repository->switchToSolveTimestep(); _repository->iterate();
-        }
-
-        _repository->getState().plotStatisticsForLastGridIteration();
+    _repository->getState().plotStatisticsForLastGridIteration();
 
     _iterationTimer.stopTimer();
     _totalRuntime += _iterationTimer.getCPUTicks() / CLOCKS_PER_SEC;
@@ -231,55 +210,22 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
     logInfo("evolveToTime", "Minimal timestep for this grid iteration: " << _repository->getState().getMinimalTimestep());
   } while(!_repository->getState().getAllPatchesEvolvedToGlobalTimestep());
 
-      if(_configuration.plotAtOutputTimes() && !plotSubsteps) {
-        _repository->getState().setPlotNumber(_plotNumber);
-        _repository->switchToPlot(); _repository->iterate();
-        _plotNumber++;
-      } else if (!_configuration.plotAtOutputTimes() && !plotSubsteps) {
-        _plotNumber++;
-      }
-
-  std::cout << "evolveToTime" << std::endl;
+  if(_configuration.plotAtOutputTimes() && !plotSubsteps) {
+    _repository->getState().setPlotNumber(_plotNumber);
+    _repository->switchToPlot(); _repository->iterate();
+    _plotNumber++;
+  } else if (!_configuration.plotAtOutputTimes() && !plotSubsteps) {
+    _plotNumber++;
+  }
   logTraceOut("evolveToTime");
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::gatherCurrentSolution() {
   logTraceIn("gatherCurrentSolution");
   assertion(_repository != 0);
-  _repository->getState().setPyClaw(_pyClaw);
- 
-  std::cout << "gatherCurrentSolution: " << _repository->getState() << std::endl;
-  
+  _repository->getState().setNumerics(numerics);
+
   _repository->switchToGatherCurrentSolution();
   _repository->iterate();
- 
   logTraceOut("gatherCurrentSolution");
-}
-
-int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
-#if defined(Parallel)
-  while ( tarch::parallel::NodePool::getInstance().waitForJob() >= tarch::parallel::NodePool::JobRequestMessageAnswerValues::NewMaster ) {
-    peano::parallel::messages::ForkMessage forkMessage;
-    forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true);
-
-    _repository->restart(
-      forkMessage.getH(),
-      forkMessage.getDomainOffset(),
-      forkMessage.getLevel()
-    );
-  
-    _repository->getState().setPyClaw(_pyClaw);
-    while (_repository->continueToIterate()) {
-      _repository->iterate();
-    }
-
-    // insert your postprocessing here
-    // -------------------------------
-
-    // -------------------------------
-
-    _repository->terminate();
-  }
-#endif
-  return 0;
 }

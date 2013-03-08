@@ -15,7 +15,8 @@
 #include <list>
 #include <numpy/arrayobject.h>
 
-#include "PyClaw.h"
+#include "peanoclaw/Numerics.h"
+#include "peanoclaw/pyclaw/NumericsFactory.h"
 #include "peanoclaw/configurations/PeanoClawConfigurationForSpacetreeGrid.h"
 #include "peanoclaw/runners/PeanoClawLibraryRunner.h"
 #include "tarch/tests/TestCaseRegistry.h"
@@ -74,6 +75,7 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   AddPatchToSolutionCallback addPatchToSolutionCallback,
   InterPatchCommunicationCallback interpolationCallback,
   InterPatchCommunicationCallback restrictionCallback,
+  InterPatchCommunicationCallback fluxCorrectionCallback,
   int *rank
 ) {
     peano::fillLookupTables();
@@ -96,32 +98,23 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
     Py_Initialize();
   }
 
+
   importArrays();
- 
-  // Configure the output
-  tarch::logging::CommandLineLogger::getInstance().clearFilterList();
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "", false ) );
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "trace", false ) );
-//  tarch::logging::CommandLineLogger::getInstance().setLogFormat( ... please consult source code documentation );
-  
-  std::ostringstream logFileName;
-  logFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-trace.txt";
-  tarch::logging::CommandLineLogger::getInstance().setLogFormat( " ", false, false, true, false, true, logFileName.str() );
- 
+
   //Initialize Logger
   static tarch::logging::Log _log("::pyclawBindings");
   logInfo("pyclaw_peano_new(...)", "Initializing Peano");
 
   //PyClaw - this object is copied to the runner and is stored there.
-  peanoclaw::pyclaw::PyClaw *pyClaw = new peanoclaw::pyclaw::PyClaw(
+  peanoclaw::pyclaw::NumericsFactory numericsFactory;
+  peanoclaw::Numerics* numerics = numericsFactory.createPyClawNumerics(
           initializationCallback, 
           boundaryConditionCallback, 
           solverCallback, 
           addPatchToSolutionCallback,  
           interpolationCallback,
-          restrictionCallback
+          restrictionCallback,
+		  fluxCorrectionCallback
   );
 
   _configuration = new peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid;
@@ -152,21 +145,29 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   //Check parameters
   assertion1(tarch::la::greater(domainSizeX0, 0.0) && tarch::la::greater(domainSizeX1, 0.0), domainSize);
   if(initialMinimalMeshWidthScalar > domainSizeX0 || initialMinimalMeshWidthScalar > domainSizeX1) {
-    //logError("pyclaw_peano_new(...)", "Domainsize or initialMinimalMeshWidth not set properly.");
+    logError("pyclaw_peano_new(...)", "Domainsize or initialMinimalMeshWidth not set properly.");
   }
   if(tarch::la::oneGreater(tarch::la::Vector<DIMENSIONS, int>(1), subdivisionFactor) ) {
-    //logError("pyclaw_peano_new(...)", "subdivisionFactor not set properly.");
+    logError("pyclaw_peano_new(...)", "subdivisionFactor not set properly.");
   }
  
+  // Configure the output
+  tarch::logging::CommandLineLogger::getInstance().clearFilterList();
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "", false ) );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
+//  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "trace", true ) );
+//  tarch::logging::CommandLineLogger::getInstance().setLogFormat( ... please consult source code documentation );
  
-
-  std::cout << tarch::parallel::Node::getInstance().getRank() << ": creating peano instance" << std::endl;
+  std::ostringstream logFileName;
+  logFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-trace.txt";
+  tarch::logging::CommandLineLogger::getInstance().setLogFormat( " ", false, false, true, false, true, logFileName.str() );
 
   //Create runner
   peanoclaw::runners::PeanoClawLibraryRunner* runner
     = new peanoclaw::runners::PeanoClawLibraryRunner(
     *_configuration,
-    pyClaw,
+    *numerics,
     domainOffset,
     domainSize,
     initialMinimalMeshWidth,
@@ -178,8 +179,9 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
     useDimensionalSplitting
   );
 
+#if defined(Parallel) 
   std::cout << tarch::parallel::Node::getInstance().getRank() << ": peano instance created" << std::endl;
-
+#endif
 
   assertion(runner != 0);
  
@@ -232,7 +234,7 @@ void pyclaw_peano_evolveToTime(double time, peanoclaw::runners::PeanoClawLibrary
     _pythonState = PyGILState_Ensure();
   }
 
-  runner->evolveToTime(time);
+  runner->evolveToTime(time, *numerics);
 
   if(_calledFromPython) {
     PyGILState_Release(_pythonState);
