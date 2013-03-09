@@ -48,7 +48,9 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _plotNumber(1),
   _configuration(configuration),
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
-  _totalRuntime(0.0) {
+  _totalRuntime(0.0),
+  _numerics(numerics)
+{
 
   peano::utils::UserInterface userInterface;
   userInterface.writeHeader();
