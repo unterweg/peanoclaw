@@ -117,8 +117,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setIsInitializing(true);
 
 #ifdef Parallel
-  std::cout << tarch::parallel::Node::getInstance().getRank() << ": peano instance: state initialization done" << std::endl;
-
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
      tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();  
 #endif
@@ -135,6 +133,10 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
     _repository->switchToPlot(); _repository->iterate();
   }
+
+#ifdef Parallel
+  }
+#endif
 }
 
 peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
@@ -182,7 +184,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
       || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);
 
   _repository->getState().setGlobalTimestepEndTime(time);
-  _repository->getState().setNumerics(numerics);
+  _repository->getState().setNumerics(_numerics);
   _repository->getState().setPlotNumber(_plotNumber);
   do {
     logInfo("evolveToTime", "Solving timestep " << (_plotNumber-1) << " with maximum global time interval ("
@@ -223,9 +225,30 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
 void peanoclaw::runners::PeanoClawLibraryRunner::gatherCurrentSolution() {
   logTraceIn("gatherCurrentSolution");
   assertion(_repository != 0);
-  _repository->getState().setNumerics(numerics);
 
   _repository->switchToGatherCurrentSolution();
   _repository->iterate();
   logTraceOut("gatherCurrentSolution");
+}
+
+int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
+#if defined(Parallel)
+    while ( tarch::parallel::NodePool::getInstance().waitForJob() >= tarch::parallel::NodePool::JobRequestMessageAnswerValues::NewMaster ) {
+        peano::parallel::messages::ForkMessage forkMessage;
+        forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true);
+        
+        _repository->restart(
+            forkMessage.getH(),
+            forkMessage.getDomainOffset(),
+            forkMessage.getLevel()
+        );
+         
+        _repository->getState().setNumerics(_numerics);
+        while (_repository->continueToIterate()) {
+            _repository->iterate();
+        }
+        _repository->terminate();
+    }
+#endif
+    return 0;
 }

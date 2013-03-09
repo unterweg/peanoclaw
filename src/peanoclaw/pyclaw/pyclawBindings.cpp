@@ -75,7 +75,7 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   AddPatchToSolutionCallback addPatchToSolutionCallback,
   InterPatchCommunicationCallback interpolationCallback,
   InterPatchCommunicationCallback restrictionCallback,
-  InterPatchCommunicationCallback fluxCorrectionCallback,
+  InterPatchCommunicationCallback fluxCorrectionCallback,
   int *rank
 ) {
     peano::fillLookupTables();
@@ -167,7 +167,7 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   peanoclaw::runners::PeanoClawLibraryRunner* runner
     = new peanoclaw::runners::PeanoClawLibraryRunner(
     *_configuration,
-    *numerics,
+    numerics,
     domainOffset,
     domainSize,
     initialMinimalMeshWidth,
@@ -234,7 +234,7 @@ void pyclaw_peano_evolveToTime(double time, peanoclaw::runners::PeanoClawLibrary
     _pythonState = PyGILState_Ensure();
   }
 
-  runner->evolveToTime(time, *numerics);
+  runner->evolveToTime(time);
 
   if(_calledFromPython) {
     PyGILState_Release(_pythonState);
@@ -258,7 +258,7 @@ void pyclaw_peano_gatherSolution(peanoclaw::runners::PeanoClawLibraryRunner* run
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 #endif
 
-      runner->gatherCurrentSolution();
+    runner->gatherCurrentSolution();
 
 #if defined(Parallel)
   }

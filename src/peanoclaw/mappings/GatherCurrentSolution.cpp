@@ -408,7 +408,7 @@ void peanoclaw::mappings::GatherCurrentSolution::beginIteration(
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
   
-  _numerics = &solverState.getNumerics();
+  _numerics = solverState.getNumerics();
 
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }

@@ -625,7 +625,7 @@ void peanoclaw::mappings::SolveTimestep::beginIteration(
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
  
-  _numerics = &solverState.getNumerics();
+  _numerics = solverState.getNumerics();
   _globalTimestepEndTime = solverState.getGlobalTimestepEndTime();
   _allPatchesEvolvedToGlobalTimestep = solverState.getAllPatchesEvolvedToGlobalTimestep();
   _startMaximumLocalTimeInterval = std::numeric_limits<double>::max();

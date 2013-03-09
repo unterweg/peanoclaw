@@ -485,7 +485,7 @@ void peanoclaw::mappings::InitialiseGrid::beginIteration(
 
   _initialTimestepSize = solverState.getInitialTimestepSize();
 
-  _numerics = &solverState.getNumerics();
+  _numerics = solverState.getNumerics();
 
   _additionalLevelsForPredefinedRefinement = solverState.getAdditionalLevelsForPredefinedRefinement();
 

@@ -929,7 +929,7 @@ void peanoclaw::mappings::Remesh::beginIteration(
 
   _initialTimestepSize      = solverState.getInitialTimestepSize();
 
-  _numerics                   = &solverState.getNumerics();
+  _numerics                   = solverState.getNumerics();
 
   _domainOffset             = solverState.getDomainOffset();
 
