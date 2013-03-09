@@ -9,11 +9,17 @@ set(PEANOCLAW_SOURCES
     src/peanoclaw/Vertex.cpp
  
     src/peanoclaw/pyclaw/PyClaw.cpp
+    src/peanoclaw/pyclaw/PyClawState.cpp
     src/peanoclaw/pyclaw/pyclawBindings.cpp
+    src/peanoclaw/pyclaw/FluxCorrectionCallbackWrapper.cpp
+    src/peanoclaw/pyclaw/InterpolationCallbackWrapper.cpp
+    src/peanoclaw/pyclaw/NumericsFactory.cpp
+    src/peanoclaw/pyclaw/RestrictionCallbackWrapper.cpp
 
     src/peanoclaw/interSubgridCommunication/GhostLayerCompositor.cpp
-    src/peanoclaw/interSubgridCommunication/Restriction.cpp
-    src/peanoclaw/interSubgridCommunication/Interpolation.cpp
+    src/peanoclaw/interSubgridCommunication/DefaultRestriction.cpp
+    src/peanoclaw/interSubgridCommunication/DefaultInterpolation.cpp
+    src/peanoclaw/interSubgridCommunication/DefaultFluxCorrection.cpp
     src/peanoclaw/interSubgridCommunication/GridLevelTransfer.cpp
 
     src/peanoclaw/adapters/Cleanup.cpp
