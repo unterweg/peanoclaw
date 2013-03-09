@@ -26,6 +26,11 @@ class peanoclaw::interSubgridCommunication::DefaultFluxCorrection
 
   private:
     /**
+     * Logging device for the trace macros.
+     */
+    static tarch::logging::Log  _log;
+
+    /**
      * Returns the area of the region where the two given
      * patches overlap.
      * This overload projects the patches along the given projection axis

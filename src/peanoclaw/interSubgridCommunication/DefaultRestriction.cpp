@@ -12,6 +12,8 @@
 
 #include "peano/utils/Loop.h"
 
+tarch::logging::Log peanoclaw::interSubgridCommunication::DefaultRestriction::_log( "peanoclaw::interSubgridCommunication::DefaultRestriction" ); 
+
 void peanoclaw::interSubgridCommunication::DefaultRestriction::restrictArea (
   const peanoclaw::Patch& source,
   peanoclaw::Patch&       destination,

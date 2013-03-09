@@ -26,6 +26,12 @@ namespace peanoclaw {
 class peanoclaw::interSubgridCommunication::DefaultInterpolation
   : public peanoclaw::interSubgridCommunication::Interpolation {
 
+  private:
+    /**
+     * Logging device for the trace macros.
+     */
+    static tarch::logging::Log  _log;
+
   public:
     /**
      * @see peanoclaw::interSubgridCommunication::Interpolation

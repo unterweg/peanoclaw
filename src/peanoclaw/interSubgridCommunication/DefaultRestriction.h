@@ -23,6 +23,11 @@ class peanoclaw::interSubgridCommunication::DefaultRestriction
 
   private:
     /**
+     * Logging device for the trace macros.
+     */
+    static tarch::logging::Log  _log;
+
+    /**
      * Returns the area of the region where the two given patches overlap.
      */
     inline double calculateOverlappingArea(
