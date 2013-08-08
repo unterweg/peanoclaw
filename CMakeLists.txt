@@ -33,7 +33,6 @@ set(PEANOCLAW_SOURCES
     src/peanoclaw/adapters/InitialiseGrid.cpp
     src/peanoclaw/adapters/InitialiseAndValidateGrid.cpp
     src/peanoclaw/adapters/Plot.cpp
-    src/peanoclaw/adapters/Query.cpp
     src/peanoclaw/adapters/Remesh.cpp
     src/peanoclaw/adapters/SolveTimestep.cpp
     src/peanoclaw/adapters/SolveTimestepAndValidateGrid.cpp
@@ -45,7 +44,6 @@ set(PEANOCLAW_SOURCES
     src/peanoclaw/mappings/GatherCurrentSolution.cpp
     src/peanoclaw/mappings/InitialiseGrid.cpp
     src/peanoclaw/mappings/Plot.cpp
-    src/peanoclaw/mappings/Query.cpp
     src/peanoclaw/mappings/Remesh.cpp
     src/peanoclaw/mappings/SolveTimestep.cpp
     src/peanoclaw/mappings/ValidateGrid.cpp
