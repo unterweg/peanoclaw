@@ -61,6 +61,8 @@ tarch::logging::Log                peanoclaw::mappings::SolveTimestep::_log( "pe
 bool peanoclaw::mappings::SolveTimestep::shouldAdvanceInTime(
   const peanoclaw::Patch&                  patch,
   double                                   maximumTimestepDueToGlobalTimestep,
+  peanoclaw::Vertex * const                fineGridVertices,
+  const peano::grid::VertexEnumerator&     fineGridVerticesEnumerator,
   peanoclaw::Vertex * const                coarseGridVertices,
   const peano::grid::VertexEnumerator&     coarseGridVerticesEnumerator
 ) {
@@ -86,6 +88,13 @@ bool peanoclaw::mappings::SolveTimestep::shouldAdvanceInTime(
                             peanoclaw::records::Vertex::Refining
                           );
 
+  //Are all adjacent vertices set correctly?
+  bool allAdjacentVerticesValid = true;
+  for(int i = 0; i < TWO_POWER_D; i++) {
+    peanoclaw::Vertex& vertex = fineGridVertices[fineGridVerticesEnumerator(i)];
+    allAdjacentVerticesValid &= !vertex.wasCreatedInThisIteration() || vertex.isHangingNode();
+  }
+
   //Statistics
   if(!tarch::la::greater(maximumTimestepDueToGlobalTimestep, 0.0)) {
     _subgridStatistics.addBlockedPatchDueToGlobalTimestep(patch);
@@ -101,7 +110,8 @@ bool peanoclaw::mappings::SolveTimestep::shouldAdvanceInTime(
     tarch::la::greater(maximumTimestepDueToGlobalTimestep, 0.0)
     && patch.isAllowedToAdvanceInTime()
     && !patch.shouldSkipNextGridIteration()
-    && !patchCoarsening;
+    && !patchCoarsening
+    && allAdjacentVerticesValid;
 }
 
 void peanoclaw::mappings::SolveTimestep::fillBoundaryLayers(
@@ -557,6 +567,8 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
     if(shouldAdvanceInTime(
       patch,
       maximumTimestepDueToGlobalTimestep,
+      fineGridVertices,
+      fineGridVerticesEnumerator,
       coarseGridVertices,
       coarseGridVerticesEnumerator
     )) {
@@ -611,6 +623,12 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
       _subgridStatistics.processSubgrid(
         patch,
         coarseGridCell.getCellDescriptionIndex()
+      );
+      _subgridStatistics.updateMinimalSubgridBlockReason(
+        patch,
+        coarseGridVertices,
+        coarseGridVerticesEnumerator,
+        _globalTimestepEndTime
       );
     }
 
@@ -726,6 +744,11 @@ void peanoclaw::mappings::SolveTimestep::endIteration(
   logTraceInWith1Argument( "endIteration(State)", solverState );
  
   _subgridStatistics.finalizeIteration(solverState);
+
+//  if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
+//    static int counter = 0;
+//    assertion(counter++ < 50);
+//  }
 
   logTraceOutWith1Argument( "endIteration(State)", solverState);
 }

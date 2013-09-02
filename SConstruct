@@ -264,7 +264,7 @@ if solver == 'pyclaw':
   cppdefines.append('PYCLAW')
 elif solver == 'swe':
   #Configure SWE-Sources
-  swePath = 'src/peanoclaw/native/SWE/src'
+  swePath = '../SWE/src'
   try:
     import sweConfiguration
     swePath = sweConfiguration.getSWEPath()
@@ -296,7 +296,7 @@ buildpath = join(buildpath, solver)
 if scalasca == 'yes' or scalasca == 'scalasca_yes':
    buildpath = join(buildpath, 'scalasca')
 
-buildpath = join(buildpath, '.') + '/'
+buildpath = buildpath + '/'
    
 ##### Specify build settings
 #
@@ -311,7 +311,12 @@ print "Buildpath: " + buildpath
 print
 
 VariantDir (buildpath, './src', duplicate=0)  # Set build directory for PeanoClaw sources
-VariantDir (buildpath + 'kernel', p3Path, duplicate=0)  # Set build directory for Peano sources
+VariantDir (join(buildpath, 'kernel'), p3Path, duplicate=0)  # Set build directory for Peano sources
+if solver == 'swe':
+  
+  print "VariantDir(", join(buildpath, 'swe'), ",", swePath, ")"
+  
+  VariantDir (join(buildpath, 'swe'), swePath, duplicate=0)  # Set build directory for SWE sources
 
 ##### Setup construction environment:
 #
@@ -552,8 +557,7 @@ sourcesPeanoClaw = [
 if solver == 'swe':
   sourcesSolver = [
     Glob(join(buildpath, 'peanoclaw/native/*.cpp')),
-    #Glob(join(buildpath, '..', swePath, './blocks/*.cpp'))            
-    Glob(join(buildpath, './peanoclaw/native/SWE/src/blocks/*.cpp'))
+    Glob(join(buildpath, 'swe/blocks/*.cpp'))            
     ]
 elif solver == 'pyclaw':
   sourcesSolver = [
