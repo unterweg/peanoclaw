@@ -100,8 +100,8 @@ add_definitions(-std=c++0x)
 add_library (peanoclaw SHARED ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
 add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
 
-target_link_libraries (peanoclaw peano_shared peano_tarch_shared ${PYTHON_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)
-target_link_libraries (peanoclaw_static peano_static peano_tarch_static ${PYTHON_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)
+target_link_libraries (peanoclaw peano_shared peano_tarch_shared peano_toolboxes_shared ${PYTHON_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)
+target_link_libraries (peanoclaw_static peano_static peano_tarch_static peano_toolboxes_static ${PYTHON_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)
 
 
 SET_TARGET_PROPERTIES(peanoclaw PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")

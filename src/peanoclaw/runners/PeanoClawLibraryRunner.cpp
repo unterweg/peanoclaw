@@ -38,6 +38,7 @@
 
 #include "peano/datatraversal/autotuning/Oracle.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhaseDummy.h"
+#include "sharedmemoryoracles/OracleForOnePhaseWithShrinkingGrainSize.h"
 
 tarch::logging::Log peanoclaw::runners::PeanoClawLibraryRunner::_log("peanoclaw::runners::PeanoClawLibraryRunner");
 
@@ -72,8 +73,8 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   #endif
 
   //Multicore configuration
-  #ifdef SharedMemoryParallelisation
-  tarch::multicore::tbb::Core::getInstance().configure(1);
+  #ifdef SharedTBB
+  tarch::multicore::tbb::Core::getInstance().configure(8);
   #endif
 
   //User interface
@@ -88,7 +89,11 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
   initializeParallelEnvironment();
 
-  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
+  //peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
+  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( 
+          new sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize()
+          //new sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize( peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid  )
+  );
 
   //Initialize pseudo geometry
   _geometry =

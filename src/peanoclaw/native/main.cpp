@@ -101,10 +101,11 @@ class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenari
           
             double demandedMeshWidth = 0;
             if (max_gradient > 0.05) {
-                //demandedMeshWidth = 1.0/243;
-                demandedMeshWidth = 1.0/81;
+                demandedMeshWidth = 1.0/243;
+                //demandedMeshWidth = 1.0/81;
             } else {
-                demandedMeshWidth = 1.0/81;
+                demandedMeshWidth = 1.0/243;
+                //demandedMeshWidth = 1.0/81;
             }
 
             return demandedMeshWidth;
@@ -197,7 +198,7 @@ int main(int argc, char **argv) {
   tarch::la::Vector<DIMENSIONS, double> domainOffset(0);
   tarch::la::Vector<DIMENSIONS, double> domainSize(1.0);
   tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(0.05);
-  tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(9);
+  tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(36);
   int ghostlayerWidth = 1;
   int unknownsPerSubcell = 3;
   int auxiliarFieldsPerSubcell = 0;
@@ -238,16 +239,22 @@ int main(int argc, char **argv) {
   assertion(runner != 0);
  
   // run experiment
-  double timestep = 0.01;
-  double endtime = 2.0;
+  double timestep = 0.001;
+  double endtime = 0.5;
 #if defined(Parallel)
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 #endif
+
+      double start_meas_time = MPI_Wtime();
+
       for (double time=0.0; time < endtime; time+=timestep) {
         runner->evolveToTime(time);
         //runner->gatherCurrentSolution();
         std::cout << "time " << time << " done " << std::endl;
       }
+
+      double stop_meas_time = MPI_Wtime();
+      std::cout << "total simulation time " << stop_meas_time - start_meas_time << std::endl;
 
 #if defined(Parallel)
   } else {

@@ -38,7 +38,8 @@ class peanoclaw::NumericsFactory {
     peanoclaw::Numerics* createSWENumerics(
       peanoclaw::native::SWEKernelScenario& scenario
     );
-#else
+#endif
+
     /**
      * Creates a new Numerics object on the heap that encapsulates
      * all offered PyClaw functionality.
@@ -52,7 +53,7 @@ class peanoclaw::NumericsFactory {
       InterPatchCommunicationCallback restrictionCallback,
       InterPatchCommunicationCallback fluxCorrectionCallback
     );
-#endif
+
     /**
      * Creates a new Numerics object on the heap that provides
      * native functionality.
