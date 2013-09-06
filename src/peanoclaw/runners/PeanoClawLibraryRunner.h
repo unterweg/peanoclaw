@@ -96,5 +96,7 @@ public:
    */
   void gatherCurrentSolution();
   int runWorker();
+
+  const peanoclaw::State& getState();
 };
 #endif /* PEANO_APPLICATIONS_PEANOCLAW_RUNNERS_PEANOCLAWLIBRARYRUNNER_H_ */

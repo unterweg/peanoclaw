@@ -142,6 +142,7 @@ void peanoclaw::mappings::InitialiseGrid::createInnerVertex(
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
  
+#if 0
   assertion(!fineGridVertex.isHangingNode());
 
   //Normal refinement
@@ -151,6 +152,7 @@ void peanoclaw::mappings::InitialiseGrid::createInnerVertex(
     ) {
     fineGridVertex.refine();
   }
+#endif
 
   //Predefined adaptive refinement
 //  double radius = 0.15;
@@ -177,6 +179,7 @@ void peanoclaw::mappings::InitialiseGrid::createBoundaryVertex(
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
 
+#if 0
   assertion(!fineGridVertex.isHangingNode());
 
   //Normal refinement
@@ -186,6 +189,7 @@ void peanoclaw::mappings::InitialiseGrid::createBoundaryVertex(
   ) {
     fineGridVertex.refine();
   }
+#endif
 
   //Predefined adaptive refinement
 //  double radius = 0.15;
@@ -227,6 +231,7 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
 ) {
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
+#if 0
   Patch patch(
     fineGridCell
   );
@@ -280,6 +285,8 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
       assertion1(!patch.isLeaf() && !patch.isVirtual(), patch);
     }
   }
+#endif
+
   logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }
 
@@ -488,6 +495,21 @@ void peanoclaw::mappings::InitialiseGrid::touchVertexFirstTime(
 
   fineGridVertex.resetSubcellsEraseVeto();
 
+#if 1
+  if (!fineGridVertex.isOutside()) {
+      assertion(!fineGridVertex.isHangingNode());
+
+      //Normal refinement
+      if(
+              tarch::la::oneGreater(fineGridH, _initialMinimalMeshWidth) 
+              && (fineGridVertex.getRefinementControl() == Vertex::Records::Unrefined)
+        ) {
+        fineGridVertex.refine();
+      }
+  }
+#endif
+
+
   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }
 
@@ -518,6 +540,64 @@ void peanoclaw::mappings::InitialiseGrid::enterCell(
 ) {
   logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
   // @todo Insert your code here
+ 
+#if 1
+  Patch patch(
+    fineGridCell
+  );
+
+  if(fineGridCell.isLeaf()) {
+    assertion1(patch.isLeaf(), patch);
+    double demandedMeshWidth = _numerics->initializePatch(patch);
+
+    patch.copyUNewToUOld();
+    patch.setDemandedMeshWidth(demandedMeshWidth);
+
+    #ifdef Asserts
+    dfor(subcellIndex, patch.getSubdivisionFactor()) {
+      tarch::la::Vector<DIMENSIONS, int> subcellIndexInDestinationPatch = subcellIndex;
+      assertion3(patch.getValueUOld(subcellIndexInDestinationPatch, 0) > 0.0,
+              patch.getValueUOld(subcellIndexInDestinationPatch, 0),
+              subcellIndex,
+              subcellIndexInDestinationPatch);
+    }
+    #endif
+
+    //Check for error in refinement criterion
+    if(!tarch::la::greater(demandedMeshWidth, 0.0)) {
+      logWarning("createCell(...)", "A demanded mesh width of 0.0 leads to an infinite refinement. Is the refinement criterion correct?");
+    }
+    assertion(tarch::la::greater(demandedMeshWidth, 0.0));
+
+    //Refine if necessary
+    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(demandedMeshWidth))) {
+      for(int i = 0; i < TWO_POWER_D; i++) {
+        if (fineGridVertices[fineGridVerticesEnumerator(i)].getRefinementControl() == Vertex::Records::Unrefined
+            && !fineGridVertices[fineGridVerticesEnumerator(i)].isHangingNode()) {
+          fineGridVertices[fineGridVerticesEnumerator(i)].refine();
+          _refinementTriggered = true;
+        }
+      }
+    }
+
+    //Switch to refined patch if necessary
+    bool refinementTriggered = false;
+    for(int i = 0; i < TWO_POWER_D; i++) {
+      if(fineGridVertices[fineGridVerticesEnumerator(i)].getRefinementControl()
+          == Vertex::Records::Refining) {
+        refinementTriggered = true;
+      }
+    }
+    if(refinementTriggered) {
+      assertion1(patch.isLeaf(), patch.toString());
+      patch.switchToVirtual();
+      patch.switchToNonVirtual();
+      assertion1(!patch.isLeaf() && !patch.isVirtual(), patch);
+    }
+  }
+#endif
+
+ 
   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 
@@ -553,6 +633,8 @@ void peanoclaw::mappings::InitialiseGrid::beginIteration(
   _numerics = solverState.getNumerics();
 
   _refinementTriggered = solverState.getInitialRefinementTriggered();
+
+  std::cout << "Initializing" << std::endl;
 
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }

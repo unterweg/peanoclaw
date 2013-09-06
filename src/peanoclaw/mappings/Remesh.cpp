@@ -367,6 +367,32 @@ void peanoclaw::mappings::Remesh::createCell(
     );
   }
 
+  /*{
+    bool isRemoteRankAdjacent = false;
+    dfor2(k)
+        isRemoteRankAdjacent |= coarseGridVertices[coarseGridVerticesEnumerator(k)].isAdjacentToRemoteRank();
+    enddforx
+
+    if (isRemoteRankAdjacent){
+        if (fineGridPositionOfCell == tarch::la::Vector<DIMENSIONS,int>(1)) {
+            fineGridCell.setCellIsAForkCandidate(true);
+        } else {
+            fineGridCell.setCellIsAForkCandidate(false);
+        }
+    } else {
+        //if (coarseGridVerticesEnumerator.getLevel() == 2) {
+            fineGridCell.setCellIsAForkCandidate(!coarseGridCell.isCellAForkCandidate());
+        //}
+    }
+  }*/
+
+  /*if (fineGridPositionOfCell(0) != 0 && fineGridPositionOfCell(0) != 1 
+       && fineGridPositionOfCell(1) != 0 && fineGridPositionOfCell(1) != 1 
+       && fineGridVerticesEnumerator.getLevel() >= 3) {
+      fineGridCell.setCellIsAForkCandidate(true);
+  }*/
+
+
   logTraceOutWith2Arguments( "createCell(...)", fineGridCell, fineGridPatch );
 }
 
@@ -910,19 +936,21 @@ void peanoclaw::mappings::Remesh::leaveCell(
   assertionEquals1(finePatch.getLevel(), fineGridVerticesEnumerator.getLevel(), finePatch.toString());
 
   //TODO unterweg: Braucht man das wirklich nicht mehr?
-//  for(int i = 0; i < TWO_POWER_D; i++) {
-//    fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(
-//      i,
-//      fineGridCell.getCellDescriptionIndex()
-//    );
-//  }
+  //for(int i = 0; i < TWO_POWER_D; i++) {
+  //  fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(
+  //    i,
+  //    fineGridCell.getCellDescriptionIndex()
+  //  );
+  //}
 
   //Count number of adjacent subgrids
   ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
   parallelSubgrid.countNumberOfAdjacentParallelSubgridsAndResetExclusiveFlag(
     fineGridVertices,
     fineGridVerticesEnumerator
+ 
   );
+  
 
   logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }
