@@ -142,7 +142,7 @@ void peanoclaw::mappings::InitialiseGrid::createInnerVertex(
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
  
-#if 0
+#if 1
   assertion(!fineGridVertex.isHangingNode());
 
   //Normal refinement
@@ -179,7 +179,7 @@ void peanoclaw::mappings::InitialiseGrid::createBoundaryVertex(
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
 
-#if 0
+#if 1
   assertion(!fineGridVertex.isHangingNode());
 
   //Normal refinement
@@ -231,7 +231,7 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
 ) {
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
-#if 0
+#if 1
   Patch patch(
     fineGridCell
   );
@@ -495,7 +495,7 @@ void peanoclaw::mappings::InitialiseGrid::touchVertexFirstTime(
 
   fineGridVertex.resetSubcellsEraseVeto();
 
-#if 1
+#if 0
   if (!fineGridVertex.isOutside()) {
       assertion(!fineGridVertex.isHangingNode());
 
@@ -541,7 +541,7 @@ void peanoclaw::mappings::InitialiseGrid::enterCell(
   logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
   // @todo Insert your code here
  
-#if 1
+#if 0
   Patch patch(
     fineGridCell
   );
@@ -633,8 +633,6 @@ void peanoclaw::mappings::InitialiseGrid::beginIteration(
   _numerics = solverState.getNumerics();
 
   _refinementTriggered = solverState.getInitialRefinementTriggered();
-
-  std::cout << "Initializing" << std::endl;
 
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }

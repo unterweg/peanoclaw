@@ -936,12 +936,12 @@ void peanoclaw::mappings::Remesh::leaveCell(
   assertionEquals1(finePatch.getLevel(), fineGridVerticesEnumerator.getLevel(), finePatch.toString());
 
   //TODO unterweg: Braucht man das wirklich nicht mehr?
-  //for(int i = 0; i < TWO_POWER_D; i++) {
-  //  fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(
-  //    i,
-  //    fineGridCell.getCellDescriptionIndex()
-  //  );
-  //}
+  for(int i = 0; i < TWO_POWER_D; i++) {
+    fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(
+      i,
+      fineGridCell.getCellDescriptionIndex()
+    );
+  }
 
   //Count number of adjacent subgrids
   ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
