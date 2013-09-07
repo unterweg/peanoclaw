@@ -98,5 +98,7 @@ public:
   int runWorker();
 
   const peanoclaw::State& getState();
+  void configureGlobalTimestep(double time);
+  void runNextPossibleTimestep();
 };
 #endif /* PEANO_APPLICATIONS_PEANOCLAW_RUNNERS_PEANOCLAWLIBRARYRUNNER_H_ */
