@@ -21,6 +21,7 @@ set(PEANOCLAW_SOURCES
     src/peanoclaw/ParallelSubgrid.cpp
 
     src/peanoclaw/interSubgridCommunication/GhostLayerCompositor.cpp
+    src/peanoclaw/interSubgridCommunication/GhostlayerCompositorFunctors.cpp
     src/peanoclaw/interSubgridCommunication/DefaultRestriction.cpp
     src/peanoclaw/interSubgridCommunication/DefaultInterpolation.cpp
     src/peanoclaw/interSubgridCommunication/DefaultFluxCorrection.cpp
