@@ -38,7 +38,6 @@
 
 #include "peano/datatraversal/autotuning/Oracle.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhaseDummy.h"
-#include "sharedmemoryoracles/OracleForOnePhaseWithShrinkingGrainSize.h"
 
 tarch::logging::Log peanoclaw::runners::PeanoClawLibraryRunner::_log("peanoclaw::runners::PeanoClawLibraryRunner");
 
@@ -60,7 +59,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
   _totalRuntime(0.0),
   _numerics(numerics),
-  _validateGrid(false)
+  _validateGrid(true)
 {
   #ifndef Asserts
   _validateGrid = false;
@@ -68,12 +67,12 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
   //Parallel configuration
   #ifdef Parallel
-  //tarch::parallel::Node::getInstance().setTimeOutWarning(1000);
-  //tarch::parallel::Node::getInstance().setDeadlockTimeOut(2000);
+  tarch::parallel::Node::getInstance().setTimeOutWarning(10);
+  tarch::parallel::Node::getInstance().setDeadlockTimeOut(20);
   #endif
 
   //Multicore configuration
-  #ifdef SharedTBB
+  #ifdef SharedMemoryParallelisation
   tarch::multicore::tbb::Core::getInstance().configure(1);
   #endif
 
@@ -89,18 +88,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
   initializeParallelEnvironment();
 
-#ifdef SharedTBB
-  //peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
-  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( 
-          new sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize()
-          //new sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize( peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid  )
-  );
-#endif
-
-  //tarch::la::Vector<DIMENSIONS,double> boundingBoxOffset(-1.0/7.0);
-  tarch::la::Vector<DIMENSIONS,double> boundingBoxOffset = domainOffset;
-  tarch::la::Vector<DIMENSIONS,double> boundingBoxSize = domainSize;
-  boundingBoxSize *= 1.0; // (9.0/7.0);
+  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
 
   //Initialize pseudo geometry
   _geometry =
@@ -111,8 +99,8 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _repository =
     peanoclaw::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
       *_geometry,
-      boundingBoxSize,   // domainSize,
-      boundingBoxOffset  // computationalDomainOffset
+      domainSize,   // domainSize,
+      domainOffset  // computationalDomainOffset
     );
 
   logInfo("PeanoClawLibraryRunner", "Initial values: "
@@ -128,8 +116,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setUnknownsPerSubcell(unknownsPerSubcell);
   state.setAuxiliarFieldsPerSubcell(auxiliarFieldsPerSubcell);
   tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = tarch::la::multiplyComponents(initialMinimalMeshWidth, subdivisionFactor.convertScalar<double>());
-  //tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = initialMinimalMeshWidth;
-
   state.setInitialMinimalMeshWidth(initialMinimalSubcellSize);
   state.setNumerics(numerics);
   state.resetTotalNumberOfCellUpdates();
@@ -141,88 +127,40 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setIsInitializing(true);
 
 #ifdef Parallel
-    if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-        tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();
-    }
-#endif
-
-  tarch::la::Vector<DIMENSIONS, double> current_initialMinimalSubcellSize(0.1);
-  tarch::la::Vector<DIMENSIONS, double> next_initialMinimalSubcellSize(0.1);
-
-#ifdef Parallel
-  state.setInitialMinimalMeshWidth(current_initialMinimalSubcellSize);
-
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    state.setInitialMinimalMeshWidth(current_initialMinimalSubcellSize);
-
-    while (tarch::la::oneGreater(initialMinimalSubcellSize,current_initialMinimalSubcellSize)) {
- 
-        std::cout << "current initial minimal subcell size: " << current_initialMinimalSubcellSize << std::endl;
-
-          if(_validateGrid) {
-            _repository->switchToInitialiseAndValidateGrid();
-          } else {
-            _repository->switchToInitialiseGrid();
-          }
-         
-          _repository->iterate(); 
-          //_repository->iterate(); 
-          //_repository->iterate(); 
-          //_repository->iterate(); 
-
-          do {
-              _repository->switchToRemesh();
-              do {
-                _repository->iterate();
-                std::cout << "idle step " << _repository->getState() << std::endl;
-              } while (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
-         
-              if(_validateGrid) {
-                _repository->switchToInitialiseAndValidateGrid();
-              } else {
-                _repository->switchToInitialiseGrid();
-              }
-         
-              _repository->iterate(); 
-              //_repository->iterate(); 
-              //_repository->iterate(); 
-              //_repository->iterate(); 
-          } while (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
-              next_initialMinimalSubcellSize = current_initialMinimalSubcellSize * (1.0/3.0);
-              if (!tarch::la::oneGreater(initialMinimalSubcellSize, next_initialMinimalSubcellSize)) {
-                  current_initialMinimalSubcellSize = next_initialMinimalSubcellSize;
-              } else {
-                  current_initialMinimalSubcellSize = initialMinimalSubcellSize;
-              }
-              std::cout << "next initial minimal subcell size: " << current_initialMinimalSubcellSize << std::endl;
-
-     }
-  }
+     tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();  
 #endif
 
+
+  if(_validateGrid) {
+    _repository->switchToInitialiseAndValidateGrid();
+  } else {
+    _repository->switchToInitialiseGrid();
+  }
+  _repository->iterate(); _repository->iterate(); _repository->iterate(); _repository->iterate();
+  do {
+    state.setInitialRefinementTriggered(false);
+    if(_validateGrid) {
+      _repository->switchToInitialiseAndValidateGrid();
+    } else {
+      _repository->switchToInitialiseGrid();
+    }
+    _repository->iterate();
+  } while(state.getInitialRefinementTriggered());
+  state.setIsInitializing(false);
+
+  _repository->getState().setPlotNumber(0);
+  if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
+    if(_validateGrid) {
+      _repository->switchToPlotAndValidateGrid(); _repository->iterate();
+    } else {
+      _repository->switchToPlot(); _repository->iterate();
+    }
+  }
 
 #ifdef Parallel
-    if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-        std::cout << "done with step by step grid construction" << std::endl;
-
-      do {
-        state.setInitialRefinementTriggered(false);
-        if(_validateGrid) {
-          _repository->switchToInitialiseAndValidateGrid();
-        } else {
-          _repository->switchToInitialiseGrid();
-        }
-        _repository->iterate();
-      } while(state.getInitialRefinementTriggered() || !_repository->getState().isGridStationary());
-      state.setIsInitializing(false);
-
-      _repository->getState().setPlotNumber(0);
-      if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
-        _repository->switchToPlot(); _repository->iterate();
-      }
   }
 #endif
-
 }
 
 peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
@@ -263,6 +201,9 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
   #ifdef Parallel
   tarch::parallel::NodePool::getInstance().terminate();
   #endif
+  peano::shutdownParallelEnvironment();
+  peano::shutdownSharedMemoryEnvironment();
+
   logTraceOut("~PeanoClawLibraryRunner");
 }
 
@@ -319,12 +260,15 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
 
   if(_configuration.plotAtOutputTimes() && !plotSubsteps) {
     _repository->getState().setPlotNumber(_plotNumber);
-    _repository->switchToPlot(); _repository->iterate();
+    if(_validateGrid) {
+      _repository->switchToPlotAndValidateGrid(); _repository->iterate();
+    } else {
+      _repository->switchToPlot(); _repository->iterate();
+    }
     _plotNumber++;
   } else if (!_configuration.plotAtOutputTimes() && !plotSubsteps) {
     _plotNumber++;
   }
-
   logTraceOut("evolveToTime");
 }
 
@@ -349,8 +293,11 @@ void peanoclaw::runners::PeanoClawLibraryRunner::gatherCurrentSolution() {
   logTraceIn("gatherCurrentSolution");
   assertion(_repository != 0);
 
-  _repository->switchToGatherCurrentSolution();
-  _repository->iterate();
+  if(_validateGrid) {
+    _repository->switchToGatherCurrentSolutionAndValidateGrid(); _repository->iterate();
+  } else {
+    _repository->switchToGatherCurrentSolution(); _repository->iterate();
+  }
   logTraceOut("gatherCurrentSolution");
 }
 
@@ -398,9 +345,4 @@ int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
 
   #endif
   return 0;
-}
-
-
-const peanoclaw::State& peanoclaw::runners::PeanoClawLibraryRunner::getState() {
-    return _repository->getState();
 }
