@@ -392,6 +392,11 @@ void peanoclaw::mappings::Remesh::createCell(
       fineGridCell.setCellIsAForkCandidate(true);
   }*/
 
+  if (fineGridVerticesEnumerator.getLevel() >= 2 && fineGridVerticesEnumerator.getLevel() <= 2) {
+    fineGridCell.setCellIsAForkCandidate(true);
+  } else {
+    fineGridCell.setCellIsAForkCandidate(false);
+  }
 
   logTraceOutWith2Arguments( "createCell(...)", fineGridCell, fineGridPatch );
 }
@@ -902,6 +907,8 @@ void peanoclaw::mappings::Remesh::enterCell(
     assertion1(isRefining, patch);
   }
   #endif
+ 
+  //fineGridCell.setCellIsAForkCandidate(true);
 
   logTraceOutWith2Arguments( "enterCell(...)", fineGridCell, patch );
 }
@@ -953,7 +960,6 @@ void peanoclaw::mappings::Remesh::leaveCell(
  
   );
   
-
   logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }
 
