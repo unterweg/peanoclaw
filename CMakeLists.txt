@@ -31,9 +31,11 @@ set(PEANOCLAW_SOURCES
 
     src/peanoclaw/adapters/Cleanup.cpp
     src/peanoclaw/adapters/GatherCurrentSolution.cpp
+    src/peanoclaw/adapters/GatherCurrentSolutionAndValidateGrid.cpp
     src/peanoclaw/adapters/InitialiseGrid.cpp
     src/peanoclaw/adapters/InitialiseAndValidateGrid.cpp
     src/peanoclaw/adapters/Plot.cpp
+    src/peanoclaw/adapters/PlotAndValidateGrid.cpp
     src/peanoclaw/adapters/Remesh.cpp
     src/peanoclaw/adapters/SolveTimestep.cpp
     src/peanoclaw/adapters/SolveTimestepAndValidateGrid.cpp
@@ -96,7 +98,7 @@ include_directories(
 )
 
 add_definitions(-DSWE -DWAVE_PROPAGATION_SOLVER=1) # TODO: 4 was slow, why?
-add_definitions(-std=c++0x)
+#add_definitions(-std=c++0x)
 
 add_library (peanoclaw SHARED ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
 add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
