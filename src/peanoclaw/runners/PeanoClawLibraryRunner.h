@@ -18,6 +18,8 @@
 
 #include "peano/geometry/Hexahedron.h"
 
+#include "mpibalancing/ControlLoopLoadBalancer/DefaultControlLoopLoadBalancer.h"
+
 namespace peanoclaw {
 
   class Numerics;
@@ -58,6 +60,8 @@ private:
   peanoclaw::Numerics& _numerics;
 
   bool _validateGrid;
+
+  mpibalancing::ControlLoopLoadBalancer::DefaultControlLoopLoadBalancer _controlLoopLoadBalancer;
 
 public:
   /**
