@@ -224,9 +224,6 @@ int main(int argc, char **argv) {
     tarch::parallel::NodePool::getInstance().setStrategy( new tarch::parallel::FCFSNodePoolStrategy() );
   }
 
-  peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
-        new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(true)
-  );
 
   // have to be the same for all ranks
   peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(2048);
@@ -268,7 +265,7 @@ int main(int argc, char **argv) {
           int ghostlayerWidth = 1;
           int unknownsPerSubcell = 3;
           int auxiliarFieldsPerSubcell = 0;
-          int initialTimestepSize = 0.1;
+          double initialTimestepSize = 0.001;
           bool useDimensionalSplittingOptimization = true;
 
           //Check parameters
