@@ -39,10 +39,6 @@
 
 #include "peano/datatraversal/autotuning/Oracle.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhaseDummy.h"
-<<<<<<< HEAD
-//#include "sharedmemoryoracles/OracleForOnePhaseWithShrinkingGrainSize.h"
-=======
->>>>>>> bcb582385701e9cbb168942629ee27c3691bb014
 
 tarch::logging::Log peanoclaw::runners::PeanoClawLibraryRunner::_log("peanoclaw::runners::PeanoClawLibraryRunner");
 
@@ -93,7 +89,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
  
   initializeParallelEnvironment();
 
-<<<<<<< HEAD
 #ifdef SharedTBB
   peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(
     true, // multithreading
@@ -123,9 +118,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   tarch::la::Vector<DIMENSIONS,double> boundingBoxOffset = domainOffset;
   tarch::la::Vector<DIMENSIONS,double> boundingBoxSize = domainSize;
   boundingBoxSize *= 1.0; // (9.0/7.0);
-=======
-  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
->>>>>>> bcb582385701e9cbb168942629ee27c3691bb014
 
   //Initialize pseudo geometry
   _geometry =
@@ -152,13 +144,8 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setDefaultGhostLayerWidth(defaultGhostLayerWidth);
   state.setUnknownsPerSubcell(unknownsPerSubcell);
   state.setAuxiliarFieldsPerSubcell(auxiliarFieldsPerSubcell);
-<<<<<<< HEAD
-  //tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = tarch::la::multiplyComponents(initialMinimalMeshWidth, subdivisionFactor.convertScalar<double>());
-  tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = initialMinimalMeshWidth;
-
-=======
   tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = tarch::la::multiplyComponents(initialMinimalMeshWidth, subdivisionFactor.convertScalar<double>());
->>>>>>> bcb582385701e9cbb168942629ee27c3691bb014
+
   state.setInitialMinimalMeshWidth(initialMinimalSubcellSize);
   state.setNumerics(numerics);
   state.resetTotalNumberOfCellUpdates();
@@ -169,15 +156,15 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 #ifdef Parallel
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
      tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();  
+  }
 #endif
 
-<<<<<<< HEAD
   tarch::la::Vector<DIMENSIONS, double> current_initialMinimalSubcellSize(0.1);
   tarch::la::Vector<DIMENSIONS, double> next_initialMinimalSubcellSize(0.1);
 
 #ifdef Parallel
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-#if 0
+#if 1
     while (tarch::la::allGreater(current_initialMinimalSubcellSize,initialMinimalSubcellSize)) {
         state.setInitialMinimalMeshWidth(current_initialMinimalSubcellSize);
 
@@ -337,50 +324,17 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
             _repository->switchToPlot(); _repository->iterate();
           }
 #endif
-
- }
+  }
 #endif
 
-
-#ifdef Parallel
-    if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
       //std::cout << "done with step by step grid construction: final initial Meshwidth " << state.getInitialMinimalMeshWidth() << std::endl;
 
-
+#ifdef Parallel
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
       _repository->getState().setPlotNumber(0);
       if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
         _repository->switchToPlot(); _repository->iterate();
       }
-=======
-
-  if(_validateGrid) {
-    _repository->switchToInitialiseAndValidateGrid();
-  } else {
-    _repository->switchToInitialiseGrid();
-  }
-  _repository->iterate(); _repository->iterate(); _repository->iterate(); _repository->iterate();
-  do {
-    state.setInitialRefinementTriggered(false);
-    if(_validateGrid) {
-      _repository->switchToInitialiseAndValidateGrid();
-    } else {
-      _repository->switchToInitialiseGrid();
-    }
-    _repository->iterate();
-  } while(state.getInitialRefinementTriggered());
-  state.setIsInitializing(false);
-
-  _repository->getState().setPlotNumber(0);
-  if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
-    if(_validateGrid) {
-      _repository->switchToPlotAndValidateGrid(); _repository->iterate();
-    } else {
-      _repository->switchToPlot(); _repository->iterate();
-    }
-  }
-
-#ifdef Parallel
->>>>>>> bcb582385701e9cbb168942629ee27c3691bb014
   }
 #endif
 }
