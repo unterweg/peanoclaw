@@ -60,7 +60,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
   _totalRuntime(0.0),
   _numerics(numerics),
-  _validateGrid(true)
+  _validateGrid(false)
 {
   #ifndef Asserts
   _validateGrid = false;
@@ -144,7 +144,9 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setDefaultGhostLayerWidth(defaultGhostLayerWidth);
   state.setUnknownsPerSubcell(unknownsPerSubcell);
   state.setAuxiliarFieldsPerSubcell(auxiliarFieldsPerSubcell);
-  tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = tarch::la::multiplyComponents(initialMinimalMeshWidth, subdivisionFactor.convertScalar<double>());
+  //tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = tarch::la::multiplyComponents(initialMinimalMeshWidth, subdivisionFactor.convertScalar<double>());
+  tarch::la::Vector<DIMENSIONS, double> initialMinimalSubcellSize = initialMinimalMeshWidth;
+
 
   state.setInitialMinimalMeshWidth(initialMinimalSubcellSize);
   state.setNumerics(numerics);
@@ -161,129 +163,51 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
   tarch::la::Vector<DIMENSIONS, double> current_initialMinimalSubcellSize(0.1);
   tarch::la::Vector<DIMENSIONS, double> next_initialMinimalSubcellSize(0.1);
+ 
+  state.setIsInitializing(true);
 
 #ifdef Parallel
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-#if 1
-    while (tarch::la::allGreater(current_initialMinimalSubcellSize,initialMinimalSubcellSize)) {
+
+    while (!tarch::la::allSmaller(current_initialMinimalSubcellSize,initialMinimalSubcellSize)) {
         state.setInitialMinimalMeshWidth(current_initialMinimalSubcellSize);
 
         //std::cout << "current initial minimal subcell size: " << current_initialMinimalSubcellSize << std::endl;
   
         bool hasChangedState = false;
-        state.setIsInitializing(true);
-       // do {
-            state.setInitialRefinementTriggered(false);
-
-            _controlLoopLoadBalancer.suspendLoadBalancing(true);
-
-            hasChangedState = false;
-
-            //Initialise Grid (two iterations needed to set the initial ghostlayers of patches neighboring refined patches)
-            if(_validateGrid) {
-                _repository->switchToInitialiseAndValidateGrid();
-            } else {
-                _repository->switchToInitialiseGrid();
-            }
-            _repository->iterate();
-            std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
- 
-
-            _repository->iterate(); 
-            std::cout << "first iteration block (2)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
- 
-
-            _repository->iterate(); 
-            std::cout << "first iteration block (3)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
-
-            _repository->iterate();
-            std::cout << "first iteration block (4)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
- 
-            
-            _controlLoopLoadBalancer.suspendLoadBalancing(false);
-
-            /* _repository->switchToRemesh();
-
-            _repository->iterate();
-            std::cout << "first iteration block (5)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
-
-            _repository->iterate();
-            std::cout << "first iteration block (6)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
-
-            _repository->iterate();
-            std::cout << "first iteration block (7)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
-
-            _repository->iterate();
-            std::cout << "first iteration block (8)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();*/
- 
-        //} while(/*state.getInitialRefinementTriggered() ||*/ !_repository->getState().isGridBalanced() /*|| hasChangedState*/);
-     
-#if 1
-
         do {
-
-            if(_validateGrid) {
-                _repository->switchToInitialiseAndValidateGrid();
-            } else {
-                _repository->switchToInitialiseGrid();
-            }
-
-            if (state.getInitialRefinementTriggered()) {
-                std::cout << "!!!!!!Initial Refinement Triggered!!!!!!!!" << std::endl;
-            }
- 
-            _controlLoopLoadBalancer.suspendLoadBalancing(true);
-
+            //_controlLoopLoadBalancer.suspendLoadBalancing(true);
             state.setInitialRefinementTriggered(false);
 
             hasChangedState = false;
 
             for (int i=0; i < 4; i++) {
+                //Initialise Grid (two iterations needed to set the initial ghostlayers of patches neighboring refined patches)
+                if(_validateGrid) {
+                    _repository->switchToInitialiseAndValidateGrid();
+                } else {
+                    _repository->switchToInitialiseGrid();
+                }
                 _repository->iterate();
-                std::cout << "second iteration block (" << i << ")" << _repository->getState() << std::endl;
-                hasChangedState |= !_repository->getState().isGridStationary();
-            }     
+                std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
+                hasChangedState |= !_repository->getState().isGridStationary()| !_repository->getState().isGridBalanced();
+                
+                //_repository->switchToRemesh();
+
+                _repository->iterate();
+                std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
+                hasChangedState |= !_repository->getState().isGridStationary()| !_repository->getState().isGridBalanced();
  
-            _controlLoopLoadBalancer.suspendLoadBalancing(false);
+                _repository->iterate();
+                std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
+                hasChangedState |= !_repository->getState().isGridStationary()| !_repository->getState().isGridBalanced();
 
-            /*_repository->iterate();
-            std::cout << "second iteration block (last)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();*/
-        } while(state.getInitialRefinementTriggered() /*|| !_repository->getState().isGridBalanced() || hasChangedState*/);
-
-        state.setIsInitializing(false);
-#endif
+                _repository->iterate();
+                std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
+                hasChangedState |= !_repository->getState().isGridStationary()| !_repository->getState().isGridBalanced();
+            }
+        } while(state.getInitialRefinementTriggered()  || hasChangedState);
   
-        /*do {
-            hasChangedState = false;
-            _repository->switchToRemesh();
-            _repository->iterate();
-            std::cout << "remesh iteration block (1)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
-
-            _repository->iterate(); 
-            std::cout << "remesh iteration block (2)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
-
-            _repository->iterate(); 
-            std::cout << "remesh iteration block (3)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
-
-            _repository->iterate();
-            std::cout << "remesh iteration block (4)" << _repository->getState() << std::endl;
-            hasChangedState |= !_repository->getState().isGridStationary();
-
-        } while(state.getInitialRefinementTriggered() || !_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced() || hasChangedState);*/
-          
-
         next_initialMinimalSubcellSize = current_initialMinimalSubcellSize * (1.0/3.0);
         std::cout << "next initial minimal subcell size " << next_initialMinimalSubcellSize 
                     << " " << current_initialMinimalSubcellSize 
@@ -295,35 +219,22 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
             current_initialMinimalSubcellSize = initialMinimalSubcellSize;
         }
     }
-#else
 
-          if(_validateGrid) {
-            _repository->switchToInitialiseAndValidateGrid();
-          } else {
-            _repository->switchToInitialiseGrid();
-          }
-            _controlLoopLoadBalancer.suspendLoadBalancing(true);
+      do {
+        state.setInitialRefinementTriggered(false);
+        if(_validateGrid) {
+          _repository->switchToInitialiseAndValidateGrid();
+        } else {
+          _repository->switchToInitialiseGrid();
+        }
+        _repository->iterate();
+      } while(state.getInitialRefinementTriggered());
+      state.setIsInitializing(false);
 
-          _repository->iterate(); _repository->iterate(); _repository->iterate(); _repository->iterate();
-
-            _controlLoopLoadBalancer.suspendLoadBalancing(false);
-
-          do {
-            state.setInitialRefinementTriggered(false);
-            if(_validateGrid) {
-              _repository->switchToInitialiseAndValidateGrid();
-            } else {
-              _repository->switchToInitialiseGrid();
-            }
-            _repository->iterate();
-          } while(state.getInitialRefinementTriggered());
-          state.setIsInitializing(false);
-
-          _repository->getState().setPlotNumber(0);
-          if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
-            _repository->switchToPlot(); _repository->iterate();
-          }
-#endif
+      _repository->getState().setPlotNumber(0);
+      if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
+        _repository->switchToPlot(); _repository->iterate();
+      }
   }
 #endif
 
@@ -381,8 +292,8 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
   #ifdef Parallel
   //tarch::parallel::NodePool::getInstance().terminate();
   #endif
-  peano::shutdownParallelEnvironment();
-  peano::shutdownSharedMemoryEnvironment();
+  //peano::shutdownParallelEnvironment();
+  //peano::shutdownSharedMemoryEnvironment();
 
   logTraceOut("~PeanoClawLibraryRunner");
 }
@@ -528,18 +439,12 @@ void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep() {
         _repository->switchToSolveTimestepAndPlot();
       }
      
-      _controlLoopLoadBalancer.suspendLoadBalancing(false);
-
       _repository->iterate();
 
-      _controlLoopLoadBalancer.suspendLoadBalancing(true);
- 
-      _repository->iterate();
-      _repository->iterate();
-      _repository->iterate();
-      _repository->iterate();
- 
-      _controlLoopLoadBalancer.suspendLoadBalancing(false);
+      _repository->switchToRemesh();
+      do {
+        _repository->iterate();
+      } while (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
       _plotNumber++;
     } else {
@@ -548,18 +453,14 @@ void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep() {
       } else {
         _repository->switchToSolveTimestep();
       }
-      _controlLoopLoadBalancer.suspendLoadBalancing(false);
-
       _repository->iterate();
 
-      _controlLoopLoadBalancer.suspendLoadBalancing(true);
- 
-      _repository->iterate();
-      _repository->iterate();
-      _repository->iterate();
-      _repository->iterate();
- 
-      _controlLoopLoadBalancer.suspendLoadBalancing(false);
+      _repository->switchToRemesh();
+      
+      do {
+        _repository->iterate();
+      } while (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+
     }
 
 
