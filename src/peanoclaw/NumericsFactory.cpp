@@ -48,6 +48,7 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createSWENumerics(
 
 #endif
 
+#if defined(PEANOCLAW_PYCLAW)
 peanoclaw::Numerics* peanoclaw::NumericsFactory::createPyClawNumerics(
   InitializationCallback initializationCallback,
   BoundaryConditionCallback boundaryConditionCallback,
@@ -98,6 +99,7 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createPyClawNumerics(
     fluxCorrection
   );
 }
+#endif
 
 //peanoclaw::Numerics* peanoclaw::NumericsFactory::createNativeNumerics() {
 //  return new peanoclaw::native::NativeKernel;

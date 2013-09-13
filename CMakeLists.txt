@@ -1,13 +1,19 @@
 find_package(PythonLibs)
 
-set (PEANOCLAW_PYCLAW_SOURCES
-    src/peanoclaw/pyclaw/PyClaw.cpp
-    src/peanoclaw/pyclaw/PyClawState.cpp
-    src/peanoclaw/pyclaw/pyclawBindings.cpp
-    src/peanoclaw/pyclaw/FluxCorrectionCallbackWrapper.cpp
-    src/peanoclaw/pyclaw/InterpolationCallbackWrapper.cpp
-    src/peanoclaw/pyclaw/RestrictionCallbackWrapper.cpp
-)
+option (PEANOCLAW_PYCLAW "enable PyClaw support")
+if (PEANOCLAW_PYCLAW)
+    add_definitions(-DPEANOCLAW_PYCLAW)
+
+    set (PEANOCLAW_PYCLAW_SOURCES
+        src/peanoclaw/pyclaw/PyClaw.cpp
+        src/peanoclaw/pyclaw/PyClawState.cpp
+        src/peanoclaw/pyclaw/pyclawBindings.cpp
+        src/peanoclaw/pyclaw/FluxCorrectionCallbackWrapper.cpp
+        src/peanoclaw/pyclaw/InterpolationCallbackWrapper.cpp
+        src/peanoclaw/pyclaw/RestrictionCallbackWrapper.cpp
+    )
+endif (PEANOCLAW_PYCLAW)
+
 
 set(PEANOCLAW_SOURCES
     src/peanoclaw/Area.cpp
@@ -100,12 +106,20 @@ include_directories(
 add_definitions(-DSWE -DWAVE_PROPAGATION_SOLVER=1) # TODO: 4 was slow, why?
 #add_definitions(-std=c++0x)
 
-add_library (peanoclaw SHARED ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
-add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
+if (PEANOCLAW_PYCLAW)
+    set (PEANOCLAW_SOURCES ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
+    set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES} ${PYTHON_LIBRARIES})
+endif (PEANOCLAW_PYCLAW) 
 
-target_link_libraries (peanoclaw peano_shared peano_tarch_shared peano_toolboxes_shared ${PYTHON_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)
-target_link_libraries (peanoclaw_static peano_static peano_tarch_static peano_toolboxes_static ${PYTHON_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)
+if (PEANO_TBB)
+    set (PEANO_LIBRARIES ${PEANOCLAW_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)
+endif (PEANO_TBB)
 
+add_library (peanoclaw SHARED ${PEANOCLAW_SOURCES})
+add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES})
+
+target_link_libraries (peanoclaw peano_shared peano_tarch_shared peano_toolboxes_shared ${PEANOCLAW_LIBRARIES} ${PEANO_LIBRARIES})
+target_link_libraries (peanoclaw_static peano_static peano_tarch_static peano_toolboxes_static ${PEANOCLAW_LIBRARIES} ${PEANO_LIBRARIES})
 
 SET_TARGET_PROPERTIES(peanoclaw PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
 

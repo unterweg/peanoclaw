@@ -8,7 +8,9 @@
 #ifndef PEANOCLAW_PYCLAW_NUMERICSFACTORY_H_
 #define PEANOCLAW_PYCLAW_NUMERICSFACTORY_H_
 
+#if defined(PEANOCLAW_PYCLAW)
 #include "peanoclaw/pyclaw/PyClawCallbacks.h"
+#endif
 
 #if defined(SWE)
     #include "peanoclaw/native/SWEKernel.h" 
@@ -40,6 +42,7 @@ class peanoclaw::NumericsFactory {
     );
 #endif
 
+#if defined(PEANOCLAW_PYCLAW)
     /**
      * Creates a new Numerics object on the heap that encapsulates
      * all offered PyClaw functionality.
@@ -53,6 +56,7 @@ class peanoclaw::NumericsFactory {
       InterPatchCommunicationCallback restrictionCallback,
       InterPatchCommunicationCallback fluxCorrectionCallback
     );
+#endif
 
     /**
      * Creates a new Numerics object on the heap that provides
