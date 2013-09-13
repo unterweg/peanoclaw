@@ -261,11 +261,11 @@ int main(int argc, char **argv) {
           tarch::la::Vector<DIMENSIONS, double> domainOffset(0);
           tarch::la::Vector<DIMENSIONS, double> domainSize(1.0);
           tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(subfactor);
-          tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(0.01); // TODO: was 0.1/subfactor
+          tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth((double)1.0/((double)meshWidthParam*(double)subfactor)); // TODO: was 0.1/subfactor
           int ghostlayerWidth = 1;
           int unknownsPerSubcell = 3;
           int auxiliarFieldsPerSubcell = 0;
-          double initialTimestepSize = 0.001;
+          double initialTimestepSize = 0.01;
           bool useDimensionalSplittingOptimization = true;
 
           //Check parameters
