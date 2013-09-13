@@ -265,7 +265,8 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
     assertion(tarch::la::greater(demandedMeshWidth, 0.0));
 
     //Refine if necessary
-    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(demandedMeshWidth))) {
+    //ROLAND: not checking for demandedMeshWidth but rather for _initialMinimalMeshWidth
+    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(_initialMinimalMeshWidth))) {
       for(int i = 0; i < TWO_POWER_D; i++) {
         if (fineGridVertices[fineGridVerticesEnumerator(i)].getRefinementControl() == Vertex::Records::Unrefined
             && !fineGridVertices[fineGridVerticesEnumerator(i)].isHangingNode()) {
@@ -576,7 +577,8 @@ void peanoclaw::mappings::InitialiseGrid::enterCell(
     assertion(tarch::la::greater(demandedMeshWidth, 0.0));
 
     //Refine if necessary
-    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(demandedMeshWidth))) {
+    //ROLAND: not checking for demandedMeshWidth but rather for _initialMinimalMeshWidth
+    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(_initialMinimalMeshWidth))) {
       for(int i = 0; i < TWO_POWER_D; i++) {
         if (fineGridVertices[fineGridVerticesEnumerator(i)].getRefinementControl() == Vertex::Records::Unrefined
             && !fineGridVertices[fineGridVerticesEnumerator(i)].isHangingNode()) {
