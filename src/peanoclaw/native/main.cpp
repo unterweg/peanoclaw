@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
 
   std::ostringstream logFileName;
   #ifdef Parallel
-  logFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-trace.txt";
+  //logFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-trace.txt";
   #endif
   //tarch::logging::CommandLineLogger::getInstance().setLogFormat( " ", false, false, true, false, true, logFileName.str() );
 
@@ -345,7 +345,7 @@ int main(int argc, char **argv) {
             runner->runWorker();
           }
 #endif
- 
+
           // experiment done -> cleanup
           delete runner;
  
@@ -353,18 +353,17 @@ int main(int argc, char **argv) {
 
           peano::parallel::loadbalancing::Oracle::getInstance().reset();
 
-
       }
   }
+#endif
 
   //tarch::parallel::NodePool::getInstance().shutdown();
-
-  peano::shutdownParallelEnvironment();
+ 
   peano::shutdownSharedMemoryEnvironment();
+  peano::shutdownParallelEnvironment();
 
   if(_configuration != 0) {
     delete _configuration;
   }
-#endif
   return 0;
 }
