@@ -2,6 +2,7 @@
 
 import os;
 from os.path import join;
+from os.path import dirname;
 import sys;
 
 #########################################################################
@@ -32,8 +33,9 @@ def addPeanoClawFlags(libpath, libs, cpppath, cppdefines):
    elif (pythonHome != None):
       print 'Using environment variable PYTHONHOME =', pythonHome
    else:
-      print('Environment variables PYTHONHOME and PEANOCLAW_PYTHONHOME not defined. Using default \'/usr\'')
-      pythonHome = '/usr'
+      print('Environment variables PYTHONHOME and PEANOCLAW_PYTHONHOME not defined. Using path depending on the interpreter\'s path ' + sys.executable)
+      pythonHome = join(dirname(sys.executable), '..')
+      print pythonHome
    cppdefines.append('NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION')
       
    # Add paths and lib
@@ -46,9 +48,11 @@ def addPeanoClawFlags(libpath, libs, cpppath, cppdefines):
    if(environment['PLATFORM'] == 'darwin'):
      ccflags.append('-flat_namespace')
      linkerflags.append('-flat_namespace')
-   if build == 'release' and (environment['PLATFORM'] != 'darwin'):
+   elif build == 'release':
      cppdefines.append('_GLIBCXX_DEBUG')
      cppdefines.append('NDEBUG')
+     
+     
    if '-Werror' in ccflags:
      ccflags.remove('-Werror')
      
