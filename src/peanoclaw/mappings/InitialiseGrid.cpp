@@ -5,7 +5,7 @@
 #include "peano/utils/Loop.h"
 #include "peano/heap/Heap.h"
 
-//#define TouchBasedRefinement 
+#define TouchBasedRefinement 
 #ifdef TouchBasedRefinement
 #warning Touch based refinement is on
 #endif
@@ -147,7 +147,7 @@ void peanoclaw::mappings::InitialiseGrid::createInnerVertex(
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
  
-#ifndef TouchBasedRefinement
+#if !defined(TouchBasedRefinement)
   assertion(!fineGridVertex.isHangingNode());
 
   //Normal refinement
@@ -184,7 +184,7 @@ void peanoclaw::mappings::InitialiseGrid::createBoundaryVertex(
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
 
-#ifndef TouchBasedRefinement
+#if !defined(TouchBasedRefinement)
   assertion(!fineGridVertex.isHangingNode());
 
   //Normal refinement
@@ -236,17 +236,19 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
 ) {
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
-#ifndef TouchBasedRefinement
-  Patch patch(
-    fineGridCell
-  );
-
-  if(fineGridCell.isLeaf()) {
+ if(fineGridCell.isLeaf()) {
+    Patch patch(
+      fineGridCell
+    );
+ 
     assertion1(patch.isLeaf(), patch);
     double demandedMeshWidth = _numerics->initializePatch(patch);
+    demandedMeshWidth = _initialMinimalMeshWidth[0];
+    //std::cout << "demandedMeshWidth: " << _initialMinimalMeshWidth << std::endl;
 
     patch.copyUNewToUOld();
     patch.setDemandedMeshWidth(demandedMeshWidth);
+
 
     #ifdef Asserts
     dfor(subcellIndex, patch.getSubdivisionFactor()) {
@@ -258,6 +260,8 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
     }
     #endif
 
+#if 0
+#if !defined(TouchBasedRefinement)
     //Check for error in refinement criterion
     if(!tarch::la::greater(demandedMeshWidth, 0.0)) {
       logWarning("createCell(...)", "A demanded mesh width of 0.0 leads to an infinite refinement. Is the refinement criterion correct?");
@@ -266,7 +270,7 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
 
     //Refine if necessary
     //ROLAND: not checking for demandedMeshWidth but rather for _initialMinimalMeshWidth
-    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(_initialMinimalMeshWidth))) {
+    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(patch.getDemandedMeshWidth()))) {
       for(int i = 0; i < TWO_POWER_D; i++) {
         if (fineGridVertices[fineGridVerticesEnumerator(i)].getRefinementControl() == Vertex::Records::Unrefined
             && !fineGridVertices[fineGridVerticesEnumerator(i)].isHangingNode()) {
@@ -290,9 +294,10 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
       patch.switchToNonVirtual();
       assertion1(!patch.isLeaf() && !patch.isVirtual(), patch);
     }
-  }
-
 #endif
+#endif
+
+  }
 
   logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }
@@ -502,7 +507,7 @@ void peanoclaw::mappings::InitialiseGrid::touchVertexFirstTime(
 
   fineGridVertex.resetSubcellsEraseVeto();
 
-#ifdef TouchBasedRefinement
+#if defined(TouchBasedRefinement)
   if (!fineGridVertex.isOutside()) {
       assertion(!fineGridVertex.isHangingNode());
 
@@ -546,39 +551,16 @@ void peanoclaw::mappings::InitialiseGrid::enterCell(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
   logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
- 
-#ifdef TouchBasedRefinement
-  Patch patch(
-    fineGridCell
-  );
 
+//#if !defined(TouchBasedRefinement)
   if(fineGridCell.isLeaf()) {
-    assertion1(patch.isLeaf(), patch);
-    double demandedMeshWidth = _numerics->initializePatch(patch);
-
-    patch.copyUNewToUOld();
-    patch.setDemandedMeshWidth(demandedMeshWidth);
-
-    #ifdef Asserts
-    dfor(subcellIndex, patch.getSubdivisionFactor()) {
-      tarch::la::Vector<DIMENSIONS, int> subcellIndexInDestinationPatch = subcellIndex;
-      assertion3(patch.getValueUOld(subcellIndexInDestinationPatch, 0) > 0.0,
-              patch.getValueUOld(subcellIndexInDestinationPatch, 0),
-              subcellIndex,
-              subcellIndexInDestinationPatch);
-    }
-    #endif
-
-    //Check for error in refinement criterion
-    if(!tarch::la::greater(demandedMeshWidth, 0.0)) {
-      logWarning("createCell(...)", "A demanded mesh width of 0.0 leads to an infinite refinement. Is the refinement criterion correct?");
-    }
-    assertion(tarch::la::greater(demandedMeshWidth, 0.0));
+      Patch patch(
+        fineGridCell
+      );
 
     //Refine if necessary
     //ROLAND: not checking for demandedMeshWidth but rather for _initialMinimalMeshWidth
-    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(_initialMinimalMeshWidth))) {
+    if(tarch::la::oneGreater(patch.getSubcellSize(), tarch::la::Vector<DIMENSIONS, double>(patch.getDemandedMeshWidth()))) {
       for(int i = 0; i < TWO_POWER_D; i++) {
         if (fineGridVertices[fineGridVerticesEnumerator(i)].getRefinementControl() == Vertex::Records::Unrefined
             && !fineGridVertices[fineGridVerticesEnumerator(i)].isHangingNode()) {
@@ -603,11 +585,8 @@ void peanoclaw::mappings::InitialiseGrid::enterCell(
       assertion1(!patch.isLeaf() && !patch.isVirtual(), patch);
     }
   }
-
-  //fineGridCell.setCellIsAForkCandidate(false);
-#endif
-
- 
+//#endif
+  
   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 
