@@ -121,6 +121,9 @@ add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES})
 target_link_libraries (peanoclaw peano_shared peano_tarch_shared peano_toolboxes_shared ${PEANOCLAW_LIBRARIES} ${PEANO_LIBRARIES})
 target_link_libraries (peanoclaw_static peano_static peano_tarch_static peano_toolboxes_static ${PEANOCLAW_LIBRARIES} ${PEANO_LIBRARIES})
 
+if (PEANO_OMP)
+    SET_TARGET_PROPERTIES(peanoclaw PROPERTIES COMPILE_FLAGS "-fopenmp")
+endif (PEANO_OMP)
 SET_TARGET_PROPERTIES(peanoclaw PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
 
 add_executable (peanoclaw_run src/peanoclaw/native/main.cpp)
