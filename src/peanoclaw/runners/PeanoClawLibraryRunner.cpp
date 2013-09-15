@@ -181,32 +181,39 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   
         bool hasChangedState = false;
 
+       hasChangedState = false;
+       if(_validateGrid) {
+            _repository->switchToInitialiseAndValidateGrid();
+        } else {
+            _repository->switchToInitialiseGrid();
+        }
+        _repository->iterate();
+        hasChangedState |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+        //std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
+
+        _repository->switchToRemesh();
+
         do {
-           hasChangedState = false;
-           if(_validateGrid) {
-                _repository->switchToInitialiseAndValidateGrid();
-            } else {
-                _repository->switchToInitialiseGrid();
-            }
-            _repository->iterate();
-            hasChangedState |= !_repository->getState().isGridStationary();
-            //std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
+            // TODO: not sure if we need all 3 iterations of them or if it is sufficient to check for a stationary grid
 
-            _repository->switchToRemesh();
+            hasChangedState = false;
 
             _repository->iterate();
-            hasChangedState |= !_repository->getState().isGridStationary();
-            //std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
+            //hasChangedState |= !_repository->getState().isGridStationary();
+            hasChangedState |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+            std::cout << "first iteration block (1)" << _repository->getState() << " | working_nodes " << tarch::parallel::NodePool::getInstance().getNumberOfWorkingNodes() << std::endl;
+
+           /* _repository->iterate();
+            //hasChangedState |= !_repository->getState().isGridStationary();
+            hasChangedState |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+            std::cout << "first iteration block (2)" << _repository->getState() << " | working_nodes " << tarch::parallel::NodePool::getInstance().getNumberOfWorkingNodes() << std::endl;
+
+            _repository->iterate();
+            //hasChangedState |= !_repository->getState().isGridStationary();
+             hasChangedState |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+            std::cout << "first iteration block (3)" << _repository->getState() << " | working_nodes " << tarch::parallel::NodePool::getInstance().getNumberOfWorkingNodes() << std::endl;*/
+        } while (hasChangedState);
  
-            _repository->iterate();
-            hasChangedState |= !_repository->getState().isGridStationary();
-            //std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
- 
-            _repository->iterate();
-            hasChangedState |= !_repository->getState().isGridStationary();
-            //std::cout << "first iteration block (1)" << _repository->getState() << std::endl;
-        } while (hasChangedState || !_repository->getState().isGridBalanced());
-
         next_initialMinimalSubcellSize = current_initialMinimalSubcellSize * (1.0/subdivisionFactor[0]);
         std::cout << "next initial minimal subcell size " << next_initialMinimalSubcellSize 
                     << " " << current_initialMinimalSubcellSize 
