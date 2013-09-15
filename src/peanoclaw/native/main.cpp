@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
   int sharedMemorySetup = peano::initSharedMemoryEnvironment();
 #endif
 
-  if (argc < 3) {
+  if (argc < 4) {
         if (tarch::parallel::Node::getInstance().getRank() == 0) {
             std::cout << "not enough parameters given" << std::endl;
         }
@@ -181,6 +181,7 @@ int main(int argc, char **argv) {
   const int cmdline_meshwidth = atoi(argv[1]);
   const int cmdline_subgridfactor = atoi(argv[2]);
   const int cmdline_iterations = atoi(argv[3]);
+  const int cmdline_buffersize = atoi(argv[4]);
 
   //importArrays();
 
@@ -226,8 +227,8 @@ int main(int argc, char **argv) {
 
 
   // have to be the same for all ranks
-  peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(2048);
-  peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(2048);
+  peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(cmdline_buffersize);
+  peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(cmdline_buffersize);
 
   //tarch::parallel::NodePool::getInstance().restart();
   #endif
