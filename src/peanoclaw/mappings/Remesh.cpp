@@ -367,8 +367,6 @@ void peanoclaw::mappings::Remesh::createCell(
     );
   }
   
-  fineGridCell.setCellIsAForkCandidate(true);
-
   logTraceOutWith2Arguments( "createCell(...)", fineGridCell, fineGridPatch );
 }
 
@@ -879,7 +877,38 @@ void peanoclaw::mappings::Remesh::enterCell(
   }
   #endif
  
-  //fineGridCell.setCellIsAForkCandidate(true);
+  if (_rootLevel == -1) {
+      //std::cout << "root found @ " << fineGridVerticesEnumerator.getLevel() << std::endl;
+      _rootLevel = fineGridVerticesEnumerator.getLevel();
+  }
+
+#if 0
+  int forkCandidate = (fineGridVerticesEnumerator.getLevel() - _rootLevel) % 2;
+  if (forkCandidate == 0) { 
+      //std::cout << "level " << fineGridVerticesEnumerator.getLevel() << " is allowed to fork" << std::endl;
+      fineGridCell.setCellIsAForkCandidate(true);
+  } else {
+      fineGridCell.setCellIsAForkCandidate(false);
+  }
+#endif
+ 
+#if 1
+  if (fineGridVerticesEnumerator.getLevel() == _rootLevel * 2) { // 2 as a multiplier works AWESOME for 1024 ranks, for < 1024, a modulo approach seems to be better
+                                                                 // TODO: use gcd style, determine level which allocates most processes, then subtract number of processes and restart, but ignore some intermediate levels
+                                                                 //     - e.g. use first level as kick starter and then the desired levels
+                                                                 //     - e.g. use second level as kick starter and then the desired levels
+                                                                 //     - e.g. use first and second level as kick starter and then the desired levels
+    if (!fineGridCell.isAssignedToRemoteRank()) {
+       fineGridCell.setCellIsAForkCandidate(true);
+       //std::cout << "got a fork candidate " << std::endl;
+    } else {
+       //std::cout << "already forked candidate " << std::endl;
+    }
+  } else {
+    fineGridCell.setCellIsAForkCandidate(false);
+  }
+#endif
+
 
   logTraceOutWith2Arguments( "enterCell(...)", fineGridCell, patch );
 }
@@ -984,6 +1013,8 @@ void peanoclaw::mappings::Remesh::beginIteration(
     solverState.increaseLocalHeightOfWorkerTree();
   }
   #endif
+
+  _rootLevel = -1;
 
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
