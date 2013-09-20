@@ -62,6 +62,19 @@ private:
   bool _validateGrid;
 
   mpibalancing::ControlLoopLoadBalancer::DefaultControlLoopLoadBalancer _controlLoopLoadBalancer;
+ 
+  /**
+   * Initializes the MPI environment
+   */
+  void initializeParallelEnvironment();
+
+  void iterateInitialiseGrid();
+
+  void iteratePlot();
+
+  void iterateSolveTimestep(bool plotSubsteps);
+
+  void iterateGatherSolution();
 
 public:
   /**
@@ -89,11 +102,6 @@ public:
    * Evolves the solution up to the given point in time.
    */
   void evolveToTime( double time  );
-
-  /**
-   * Initializes the MPI environment
-   */
-  void initializeParallelEnvironment();
 
   /**
    * Gathers the current solution, i.e. all patches.

@@ -159,15 +159,6 @@ void peanoclaw::mappings::InitialiseGrid::createInnerVertex(
   }
 #endif
 
-  //Predefined adaptive refinement
-//  double radius = 0.15;
-//  if((tarch::la::oneGreater(fineGridH, _initialMinimalMeshWidth)) ||
-//    ((std::abs(tarch::la::norm2(fineGridX-0.5)-radius) < fineGridH(0) / 2.0)
-//        && (tarch::la::oneGreater(fineGridH, _initialMinimalMeshWidth / (std::pow(3.0, (double)_additionalLevelsForPredefinedRefinement)))))) {
-//
-//    fineGridVertex.refine();
-//  }
-//
   logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
 }
 
@@ -195,16 +186,6 @@ void peanoclaw::mappings::InitialiseGrid::createBoundaryVertex(
     fineGridVertex.refine();
   }
 #endif
-
-  //Predefined adaptive refinement
-//  double radius = 0.15;
-//  if((tarch::la::oneGreater(fineGridH, _initialMinimalMeshWidth)) ||
-//    ((std::abs(tarch::la::norm2(fineGridX-0.5)-radius) < fineGridH(0) / 2.0)
-//        && (tarch::la::oneGreater(fineGridH, _initialMinimalMeshWidth / (std::pow(3.0, (double)_additionalLevelsForPredefinedRefinement)))))) {
-//
-//    fineGridVertex.refine();
-//  }
-//
 
   logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
 }

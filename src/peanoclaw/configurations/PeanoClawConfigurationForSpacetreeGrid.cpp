@@ -8,7 +8,7 @@ tarch::logging::Log peanoclaw::configurations::PeanoClawConfigurationForSpacetre
 peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::PeanoClawConfigurationForSpacetreeGrid():
   _isValid(true),
   _plotAtOutputTimes(false),
-  _plotSubsteps(false),
+  _plotSubsteps(true),
   _plotSubstepsAfterOutputTime(-1),
   _additionalLevelsForPredefinedRefinement(1),
   _disableDimensionalSplittingOptimization(false)
