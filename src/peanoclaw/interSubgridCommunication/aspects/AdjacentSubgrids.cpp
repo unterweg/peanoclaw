@@ -70,7 +70,7 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::convertHan
         int hangingVertexIndex = hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i);
 
         if(hangingVertexIndex != -1) {
-          Patch patch(CellDescriptionHeap::getInstance().getData(hangingVertexIndex).at(0));
+          Patch patch(peano::heap::Heap<CellDescription>::getInstance().getData(hangingVertexIndex).at(0));
           if(patch.getLevel() == _level) {
             _vertex.setAdjacentCellDescriptionIndex(i, hangingVertexIndex);
           }
@@ -134,11 +134,11 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::createHang
     for(int i = 0; i < TWO_POWER_D; i++) {
       //From hanging vertex description
       if(hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i) != -1
-          && !CellDescriptionHeap::getInstance().isValidIndex(hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i))) {
+          && !peano::heap::Heap<CellDescription>::getInstance().isValidIndex(hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i))) {
         hangingVertexDescription.setIndicesOfAdjacentCellDescriptions(i, -1);
       }
       if(_vertex.getAdjacentCellDescriptionIndex(i) != -1
-          && !CellDescriptionHeap::getInstance().isValidIndex(_vertex.getAdjacentCellDescriptionIndex(i))) {
+          && !peano::heap::Heap<CellDescription>::getInstance().isValidIndex(_vertex.getAdjacentCellDescriptionIndex(i))) {
         _vertex.setAdjacentCellDescriptionIndex(i, -1);
       }
     }
@@ -153,7 +153,7 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::createHang
     for(int i = 0; i < TWO_POWER_D; i++) {
       assertion(hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i) >= -1);
       if(hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i) != -1) {
-        CellDescription& cellDescription = CellDescriptionHeap::getInstance().getData(hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i)).at(0);
+        CellDescription& cellDescription = peano::heap::Heap<CellDescription>::getInstance().getData(hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i)).at(0);
         if(cellDescription.getLevel() == _level) {
           _vertex.setAdjacentCellDescriptionIndex(i, hangingVertexDescription.getIndicesOfAdjacentCellDescriptions(i));
         }
@@ -223,8 +223,9 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::regainTwoI
 
     peanoclaw::Vertex& coarseVertex = coarseGridVertices[coarseGridVerticesEnumerator(coarseGridPositionOfVertex)];
     if(coarseVertex.getRefinementControl() == peanoclaw::Vertex::Records::Unrefined
-        && !coarseVertex.isHangingNode()
-        && coarseVertex.isInside()) {
+        && !coarseVertex.isHangingNode() 
+        && !coarseVertex.isOutside() // ROLAND: avoid cycling grid states as peano will coarse the outer boundaries automatically
+        ) { 
       coarseVertex.refine();
     }
   }

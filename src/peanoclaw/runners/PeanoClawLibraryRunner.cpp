@@ -30,6 +30,7 @@
 #include "tarch/parallel/FCFSNodePoolStrategy.h"
 #include "peano/parallel/loadbalancing/Oracle.h"
 #include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
+#include "mpibalancing/OracleForOnePhaseControlLoopWrapper.h"
 #endif
 
 #ifdef SharedTBB
@@ -54,10 +55,8 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializePeano(
 
 void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment() {
   //Distributed Memory
-  #if defined(Parallel)
-  tarch::parallel::Node::getInstance().setTimeOutWarning(45);
-  tarch::parallel::Node::getInstance().setDeadlockTimeOut(90);
 
+ /* #if defined(Parallel)
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     tarch::parallel::NodePool::getInstance().setStrategy( new tarch::parallel::FCFSNodePoolStrategy() );
   }
@@ -70,13 +69,42 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
   // have to be the same for all ranks
   peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(64);
   peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(64);
-  #endif
+  #endif*/
+ 
+  //tarch::parallel::NodePool::getInstance().restart();
+  
+  peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
+        //new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(true)
+        new mpibalancing::OracleForOnePhaseControlLoopWrapper(true, _controlLoopLoadBalancer)
+  );
+
 
   //Shared Memory
-  #ifdef SharedMemoryParallelisation
-  tarch::multicore::tbb::Core::getInstance().configure(1);
-  #endif
-  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
+#ifdef SharedMemoryParallelisation
+  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(
+    true, // multithreading
+    false,
+    1, // splitTheThree
+    false, // pipelineDescendProcessing
+    false, // pipelineAscendProcessing
+    tarch::la::aPowI(DIMENSIONS,3*3*3*3/2), // smallestGrainSizeForAscendDescend
+    3, // grainSizeForAsendDescend
+    tarch::la::aPowI(DIMENSIONS,9/2), // smallestGrainSizeForEnterLeaveCell
+    2, // grainSizeForEnterLevelCell
+    tarch::la::aPowI(DIMENSIONS,3*3*3*3+1), // smallestGrainSizeForTouchFirstLast
+    64, // grainSizeForTouchFirstLast
+    tarch::la::aPowI(DIMENSIONS,3*3*3), // smallestGrainSizeForSplitLoadStore
+    8, // grainSizeForSplitLoadStore
+    -1, // adapterNumber
+   peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling // methodTrace
+    )
+  );
+  /*peano::datatraversal::autotuning::Oracle::getInstance().setOracle( 
+          new sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize()
+          //new sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize( peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid  )
+  );*/
+#endif
+
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateInitialiseGrid() {
@@ -157,6 +185,13 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   initializeParallelEnvironment();
 
   //Initialize pseudo geometry (Has to be done after initializeParallelEnvironment()
+
+  //tarch::la::Vector<DIMENSIONS,double> boundingBoxOffset(-1.0/7.0);
+  tarch::la::Vector<DIMENSIONS,double> boundingBoxOffset = domainOffset;
+  tarch::la::Vector<DIMENSIONS,double> boundingBoxSize = domainSize;
+  boundingBoxSize *= 1.0; // (9.0/7.0);
+
+  //Initialize pseudo geometry
   _geometry =
     new  peano::geometry::Hexahedron (
       domainSize,  // width
@@ -273,11 +308,15 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
   delete _repository;
   delete _geometry;
 
+  cellDescriptionHeap.restart();
+  dataHeap.restart();
+  vertexDescriptionHeap.restart();
+
   #ifdef Parallel
-  tarch::parallel::NodePool::getInstance().terminate();
+  //tarch::parallel::NodePool::getInstance().terminate();
   #endif
-  peano::shutdownParallelEnvironment();
-  peano::shutdownSharedMemoryEnvironment();
+  //peano::shutdownParallelEnvironment();
+  //peano::shutdownSharedMemoryEnvironment();
 
   logTraceOut("~PeanoClawLibraryRunner");
 }
@@ -358,6 +397,10 @@ int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
 
   #endif
   return 0;
+}
+
+const peanoclaw::State& peanoclaw::runners::PeanoClawLibraryRunner::getState() {
+    return _repository->getState();
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::configureGlobalTimestep(double time) {
