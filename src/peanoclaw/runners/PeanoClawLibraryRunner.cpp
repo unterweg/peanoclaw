@@ -308,9 +308,9 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
   delete _repository;
   delete _geometry;
 
-  cellDescriptionHeap.restart();
-  dataHeap.restart();
-  vertexDescriptionHeap.restart();
+  CellDescriptionHeap::getInstance().restart();
+  DataHeap::getInstance().restart();
+  VertexDescriptionHeap::getInstance().restart();
 
   #ifdef Parallel
   //tarch::parallel::NodePool::getInstance().terminate();
