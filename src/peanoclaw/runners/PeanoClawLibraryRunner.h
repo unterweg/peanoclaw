@@ -76,6 +76,8 @@ private:
    */
   void initializeParallelEnvironment();
 
+  void iterateRemesh();
+
   void iterateInitialiseGrid();
 
   void iteratePlot();

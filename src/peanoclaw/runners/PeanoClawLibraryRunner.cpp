@@ -107,6 +107,12 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
 
 }
 
+void peanoclaw::runners::PeanoClawLibraryRunner::iterateRemesh() {
+  _repository->switchToRemesh();
+  _repository->iterate();
+}
+
+
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateInitialiseGrid() {
   if(_validateGrid) {
     _repository->switchToInitialiseAndValidateGrid();
@@ -242,31 +248,50 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
         currentMinimalSubcellSize(d) = std::max(initialMinimalMeshWidth(d), domainSize(d) / pow(3.0, maximumLevel) / subdivisionFactor(d));
       }
 
+      state.setInitialMinimalMeshWidth(currentMinimalSubcellSize);
+ 
+      bool hasStateChanged = false;
       do {
-        iterateInitialiseGrid();
-        iterateInitialiseGrid();
+          hasStateChanged = false;
 
+          iterateInitialiseGrid();
+          hasStateChanged |= !_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced();
+          std::cout << "remesh (1)" << _repository->getState() << " | workers " << tarch::parallel::NodePool::getInstance().getNumberOfWorkingNodes() << std::endl;
+
+          /*iterateInitialiseGrid();
+          hasStateChanged |= !_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced();
+          std::cout << "remesh (2)" << _repository->getState() << std::endl;
+
+          iterateInitialiseGrid();
+          hasStateChanged |= !_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced();
+          std::cout << "remesh (3)" << _repository->getState() << std::endl;
+
+          iterateInitialiseGrid();
+          hasStateChanged |= !_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced();
+          std::cout << "remesh (4)" << _repository->getState() << std::endl;*/
         logDebug("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
-      } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+      } while(hasStateChanged);
+ 
+      std::cout << "first loop done" << _repository->getState() << std::endl;
 
-      maximumLevel += 2;
-    } while(tarch::la::oneGreater(currentMinimalSubcellSize, initialMinimalMeshWidth));
-    #endif
+        state.enableRefinementCriterion(true);
+        do {
+          iterateInitialiseGrid();
+          logDebug("PeanoClawLibraryRunner", "Iterate with Refinement Criterion");
+          std::cout << "remesh (2)" << _repository->getState() << " | workers " << tarch::parallel::NodePool::getInstance().getNumberOfWorkingNodes() << std::endl;
+        } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
-    state.enableRefinementCriterion(true);
-    do {
-      logDebug("PeanoClawLibraryRunner", "Iterate with Refinement Criterion");
-      iterateInitialiseGrid();
-      iterateInitialiseGrid();
-    } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+        //Plot initial grid
+        _repository->getState().setPlotNumber(0);
+        if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
+          iteratePlot();
+        }
 
-    //Plot initial grid
-    _repository->getState().setPlotNumber(0);
-    if(_configuration.plotAtOutputTimes() || _configuration.plotSubsteps()) {
-      iteratePlot();
-    }
+          maximumLevel += 2;
+        } while(tarch::la::oneGreater(currentMinimalSubcellSize, initialMinimalMeshWidth));
+        #endif
 
-    state.setIsInitializing(false);
+        state.setIsInitializing(false);
   #ifdef Parallel
   }
   #endif
