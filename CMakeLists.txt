@@ -34,6 +34,7 @@ set(PEANOCLAW_SOURCES
     src/peanoclaw/interSubgridCommunication/Extrapolation.cpp
     src/peanoclaw/interSubgridCommunication/GridLevelTransfer.cpp
     src/peanoclaw/interSubgridCommunication/aspects/AdjacentSubgrids.cpp
+    src/peanoclaw/interSubgridCommunication/aspects/AdjacentVertices.cpp
 
     src/peanoclaw/adapters/Cleanup.cpp
     src/peanoclaw/adapters/GatherCurrentSolution.cpp
