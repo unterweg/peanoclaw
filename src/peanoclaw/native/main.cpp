@@ -321,7 +321,7 @@ int main(int argc, char **argv) {
                           << " meshWidthParam " << meshWidthParam
                           << " minimumMeshWidth " << runner->getState().getMinimumMeshWidth()
                           << " maximumMeshWidth " << runner->getState().getMaximumMeshWidth()
-                          << " initialMinimalMeshWidth " << runner->getState().getInitialMinimalMeshWidth()
+                          << " initialMaximalSubgridSize " << runner->getState().getInitialMaximalSubgridSize()
                           << " computation_time " << stop_time - start_time 
                           << " minimal_timestep " << runner->getState().getMinimalTimestep()
                           << " minimum_globaltimeinterval " << runner->getState().getStartMinimumGlobalTimeInterval() << " " << runner->getState().getEndMinimumGlobalTimeInterval()
