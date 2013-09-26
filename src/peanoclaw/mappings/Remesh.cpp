@@ -291,15 +291,15 @@ void peanoclaw::mappings::Remesh::createCell(
   );
   fineGridCell.setCellDescriptionIndex(fineGridPatch.getCellDescriptionIndex());
 
-  std::cout << "Creating cell on rank "
-      #ifdef Parallel
-      << tarch::parallel::Node::getInstance().getRank() << ": "
-      #endif
-      << fineGridVerticesEnumerator.getVertexPosition(0) << ", "
-      << fineGridVerticesEnumerator.getCellSize()
-      << ", index=" << fineGridCell.getCellDescriptionIndex()
-      << ", level=" << fineGridVerticesEnumerator.getLevel()
-      << std::endl;
+//  std::cout << "Creating cell on rank "
+//      #ifdef Parallel
+//      << tarch::parallel::Node::getInstance().getRank() << ": "
+//      #endif
+//      << fineGridVerticesEnumerator.getVertexPosition(0) << ", "
+//      << fineGridVerticesEnumerator.getCellSize()
+//      << ", index=" << fineGridCell.getCellDescriptionIndex()
+//      << ", level=" << fineGridVerticesEnumerator.getLevel()
+//      << std::endl;
 
   if(fineGridCell.isLeaf()) {
     assertion1(!fineGridPatch.isLeaf(), fineGridPatch);
@@ -988,7 +988,7 @@ void peanoclaw::mappings::Remesh::beginIteration(
                               *_numerics
                            );
 
-  _initialMinimalMeshWidth = solverState.getInitialMinimalMeshWidth();
+  _initialMinimalMeshWidth = solverState.getInitialMaximalSubgridSize();
   _isInitializing = solverState.getIsInitializing();
   _useDimensionalSplittingOptimization = solverState.useDimensionalSplittingOptimization();
   _parallelStatistics = peanoclaw::statistics::ParallelStatistics("Iteration");
@@ -1014,7 +1014,7 @@ void peanoclaw::mappings::Remesh::beginIteration(
   if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
     solverState.resetLocalHeightOfWorkerTree();
 
-    logInfo("beginIteration(State)", "Height of worker tree in last grid iteration was " << solverState.getGlobalHeightOfWorkerTreeDuringLastIteration())
+    logDebug("beginIteration(State)", "Height of worker tree in last grid iteration was " << solverState.getGlobalHeightOfWorkerTreeDuringLastIteration());
   } else {
     solverState.increaseLocalHeightOfWorkerTree();
   }

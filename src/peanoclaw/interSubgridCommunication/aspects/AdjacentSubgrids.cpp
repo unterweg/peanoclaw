@@ -223,9 +223,8 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::regainTwoI
 
     peanoclaw::Vertex& coarseVertex = coarseGridVertices[coarseGridVerticesEnumerator(coarseGridPositionOfVertex)];
     if(coarseVertex.getRefinementControl() == peanoclaw::Vertex::Records::Unrefined
-        && !coarseVertex.isHangingNode() 
-        && !coarseVertex.isOutside() // ROLAND: avoid cycling grid states as peano will coarse the outer boundaries automatically
-        ) { 
+        && !coarseVertex.isHangingNode()
+        && !coarseVertex.isOutside()) {
       coarseVertex.refine();
     }
   }
