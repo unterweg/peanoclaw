@@ -310,7 +310,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
 
   CellDescriptionHeap::getInstance().restart();
   DataHeap::getInstance().restart();
-  VertexDescriptionHeap::getInstance().restart();
 
   #ifdef Parallel
   //tarch::parallel::NodePool::getInstance().terminate();
