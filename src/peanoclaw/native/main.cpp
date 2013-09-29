@@ -35,6 +35,8 @@
 #include <callgrind.h>
 #endif
 
+const double DOMAIN_SIZE = 10;
+
 #if defined(SWE)
 class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenario {
     public:
@@ -43,15 +45,15 @@ class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenari
 
         virtual void initializePatch(peanoclaw::Patch& patch) {
             // dam coordinates
-            double x0=0.5;
-            double y0=0.5;
+            double x0=0.5*DOMAIN_SIZE;
+            double y0=0.5*DOMAIN_SIZE;
             
             // Riemann states of the dam break problem
-            double radDam = 0.25;
-            double hl = 2.;
+            double radDam = 0.1*DOMAIN_SIZE;
+            double hl = 200.;
             double ul = 0.;
             double vl = 0.;
-            double hr = 1.;
+            double hr = 100.;
             double ur = 0.;
             double vr = 0.;
             
@@ -109,13 +111,14 @@ class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenari
             }
           
             double demandedMeshWidth = 0;
-            if (max_gradient > 0.05) {
+            if (max_gradient > 0.001) {
                 //demandedMeshWidth = 1.0/243;
                 //demandedMeshWidth = 1.0/(6.0*9.0);
-                demandedMeshWidth = 1.0/(_subfactor*_meshwidth);
+                demandedMeshWidth = DOMAIN_SIZE/(_subfactor*_meshwidth);
+                //demandedMeshWidth = patch.getDemandedMeshWidth() / 9.0;
             } else {
                 //demandedMeshWidth = 1.0/243;
-                demandedMeshWidth = 1.0/(_subfactor*_meshwidth);
+                demandedMeshWidth = DOMAIN_SIZE/(_subfactor*_meshwidth);
             }
 
             return demandedMeshWidth;
@@ -260,7 +263,7 @@ int main(int argc, char **argv) {
 
           //Construct parameters
           tarch::la::Vector<DIMENSIONS, double> domainOffset(0);
-          tarch::la::Vector<DIMENSIONS, double> domainSize(1.0);
+          tarch::la::Vector<DIMENSIONS, double> domainSize(DOMAIN_SIZE);
           tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(subfactor);
           tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth((double)1.0/((double)meshWidthParam*(double)subfactor)); // TODO: was 0.1/subfactor
           int ghostlayerWidth = 1;
@@ -303,17 +306,26 @@ int main(int argc, char **argv) {
           assertion(runner != 0);
 
           // run experiment
-          double global_endtime = 1.0;
+          double global_endtime = 100.0;
           int total_iterations = cmdline_iterations;
 
 #if defined(Parallel)
           if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 #endif
               runner->configureGlobalTimestep(global_endtime);
+
+              double plot_timestep = 0.01;
+              double next_plot_time = plot_timestep;
+
               double start_meas_time = MPI_Wtime();
               for (int iteration=0; iteration < total_iterations; iteration++) {
                 double start_time = MPI_Wtime();
-                runner->runNextPossibleTimestep();
+                if (runner->getState().getStartMaximumGlobalTimeInterval() >= next_plot_time && runner->getState().getMinimalTimestep() < global_endtime) {
+                   runner->runNextPossibleTimestep(false);
+                   next_plot_time += plot_timestep;
+                } else {
+                   runner->runNextPossibleTimestep(false);
+                }
                 //runner->gatherCurrentSolution();
                 double stop_time = MPI_Wtime();
                 std::cout << "subgridfactor " << subfactor 
