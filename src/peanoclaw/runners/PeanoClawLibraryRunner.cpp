@@ -106,13 +106,23 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
 
 }
 
+void peanoclaw::runners::PeanoClawLibraryRunner::updateOracle() {
+    _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setTraversalInverted(_repository->getState().isTraversalInverted());
+    _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setGridStationary(_repository->getState().isGridStationary());
+    _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setGridBalanced(_repository->getState().isGridBalanced());
+    _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setCouldNotEraseDueToDecomposition(_repository->getState().getCouldNotEraseDueToDecompositionFlag());
+    _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setSubWorkerIsInvolvedInJoinOrFork(_repository->getState().hasSubworkerRebalanced());
+}
+
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateRemesh() {
+  updateOracle();
   _repository->switchToRemesh();
   _repository->iterate();
 }
 
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateInitialiseGrid() {
+  updateOracle();
   if(_validateGrid) {
     _repository->switchToInitialiseAndValidateGrid();
   } else {
@@ -122,6 +132,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::iterateInitialiseGrid() {
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iteratePlot() {
+  updateOracle();
   if(_validateGrid) {
     _repository->switchToPlotAndValidateGrid();
   } else {
@@ -131,6 +142,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::iteratePlot() {
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateSolveTimestep(bool plotSubsteps) {
+  _repository->iterate();
   if(plotSubsteps) {
     _repository->getState().setPlotNumber(_plotNumber);
     if(_validateGrid) {
@@ -146,11 +158,11 @@ void peanoclaw::runners::PeanoClawLibraryRunner::iterateSolveTimestep(bool plotS
     } else {
       _repository->switchToSolveTimestep();
     }
-    _repository->iterate();
   }
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateGatherSolution() {
+  updateOracle();
   if(_validateGrid) {
     _repository->switchToGatherCurrentSolutionAndValidateGrid(); _repository->iterate();
   } else {
@@ -176,7 +188,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
   _totalRuntime(0.0),
   _numerics(numerics),
-  _validateGrid(true)
+  _validateGrid(false)
 {
   #ifndef Asserts
   _validateGrid = false;
@@ -330,7 +342,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
  
   configureGlobalTimestep(time);
   do {
-      runNextPossibleTimestep();
+      runNextPossibleTimestep(plotSubsteps);
   } while(!_repository->getState().getAllPatchesEvolvedToGlobalTimestep());
 
   if(_configuration.plotAtOutputTimes() && !plotSubsteps) {
@@ -370,11 +382,20 @@ int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
         forkMessage.getPositionOfFineGridCellRelativeToCoarseGridCell()
       );
 
+      _controlLoopLoadBalancer.reset();
+
       bool continueToIterate = true;
       while (continueToIterate) {
         switch (_repository->continueToIterate()) {
           case peanoclaw::repositories::Repository::Continue:
-            _repository->iterate();
+            updateOracle();
+            if (_repository->isActiveAdapterSolveTimestep()) {
+                _controlLoopLoadBalancer.suspendLoadBalancing(true);
+               _repository->iterate();
+                _controlLoopLoadBalancer.suspendLoadBalancing(false);
+            } else {
+               _repository->iterate();
+            }
             break;
           case peanoclaw::repositories::Repository::Terminate:
             continueToIterate = false;
@@ -407,9 +428,10 @@ void peanoclaw::runners::PeanoClawLibraryRunner::configureGlobalTimestep(double 
   _repository->getState().setPlotNumber(_plotNumber);
 }
 
-void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep() {
-    bool plotSubsteps = _configuration.plotSubsteps()
-      || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);
+void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep(bool plot) {
+    /*bool plotSubsteps = _configuration.plotSubsteps()
+      || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);*/
+    bool plotSubsteps = plot;
 
     logInfo("evolveToTime", "Solving timestep " << (_plotNumber-1) << " with maximum global time interval ("
         << _repository->getState().getStartMaximumGlobalTimeInterval() << ", " << _repository->getState().getEndMaximumGlobalTimeInterval() << ")"
@@ -420,7 +442,14 @@ void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep() {
     _repository->getState().resetMinimalTimestep();
     _repository->getState().setAllPatchesEvolvedToGlobalTimestep(true);
 
+    _controlLoopLoadBalancer.suspendLoadBalancing(true);
     iterateSolveTimestep(plotSubsteps);
+    _controlLoopLoadBalancer.suspendLoadBalancing(false);
+
+    while (!_repository->getState().isGridBalanced() || !_repository->getState().isGridStationary()) {
+        std::cout << "temporary REMESHING" << _repository->getState() << std::endl;
+        iterateRemesh();
+    }
 
     _repository->getState().plotStatisticsForLastGridIteration();
 
