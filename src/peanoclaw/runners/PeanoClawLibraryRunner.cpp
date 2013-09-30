@@ -446,11 +446,6 @@ void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep(bool pl
     iterateSolveTimestep(plotSubsteps);
     _controlLoopLoadBalancer.suspendLoadBalancing(false);
 
-    while (!_repository->getState().isGridBalanced() || !_repository->getState().isGridStationary()) {
-        std::cout << "temporary REMESHING" << _repository->getState() << std::endl;
-        iterateRemesh();
-    }
-
     _repository->getState().plotStatisticsForLastGridIteration();
 
     _iterationTimer.stopTimer();

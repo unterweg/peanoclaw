@@ -45,15 +45,15 @@ class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenari
 
         virtual void initializePatch(peanoclaw::Patch& patch) {
             // dam coordinates
-            double x0=0.5*DOMAIN_SIZE;
-            double y0=0.5*DOMAIN_SIZE;
+            double x0=0.25*DOMAIN_SIZE;
+            double y0=0.25*DOMAIN_SIZE;
             
             // Riemann states of the dam break problem
             double radDam = 0.1*DOMAIN_SIZE;
-            double hl = 200.;
+            double hl = 2.;
             double ul = 0.;
             double vl = 0.;
-            double hr = 100.;
+            double hr = 1.;
             double ur = 0.;
             double vr = 0.;
             
@@ -111,10 +111,10 @@ class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenari
             }
           
             double demandedMeshWidth = 0;
-            if (max_gradient > 0.001) {
+            if (max_gradient > 0.5) {
                 //demandedMeshWidth = 1.0/243;
                 //demandedMeshWidth = 1.0/(6.0*9.0);
-                demandedMeshWidth = DOMAIN_SIZE/(_subfactor*_meshwidth);
+                demandedMeshWidth = DOMAIN_SIZE/(9*_subfactor*_meshwidth);
                 //demandedMeshWidth = patch.getDemandedMeshWidth() / 9.0;
             } else {
                 //demandedMeshWidth = 1.0/243;
@@ -306,7 +306,7 @@ int main(int argc, char **argv) {
           assertion(runner != 0);
 
           // run experiment
-          double global_endtime = 100.0;
+          double global_endtime = 10000.0;
           int total_iterations = cmdline_iterations;
 
 #if defined(Parallel)
@@ -321,7 +321,7 @@ int main(int argc, char **argv) {
               for (int iteration=0; iteration < total_iterations; iteration++) {
                 double start_time = MPI_Wtime();
                 if (runner->getState().getStartMaximumGlobalTimeInterval() >= next_plot_time && runner->getState().getMinimalTimestep() < global_endtime) {
-                   runner->runNextPossibleTimestep(false);
+                   runner->runNextPossibleTimestep(true);
                    next_plot_time += plot_timestep;
                 } else {
                    runner->runNextPossibleTimestep(false);

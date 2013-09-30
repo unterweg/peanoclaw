@@ -72,7 +72,13 @@ double peanoclaw::native::SWEKernel::solveTimestep(Patch& patch, double maximumT
       patch, maximumTimestepSize, estimatedNextTimestepSize, patch.toStringUNew());
   assertion(patch.getTimestepSize() < std::numeric_limits<double>::infinity());
  
-  double requiredMeshWidth = (dt / patch.getTimestepSize()) * patch.getDemandedMeshWidth();
+  double requiredMeshWidth = 0.0;
+  if (dt < 1e-3) {
+      requiredMeshWidth = patch.getDemandedMeshWidth();
+  } else {
+      requiredMeshWidth = (dt / patch.getTimestepSize()) * patch.getDemandedMeshWidth();
+  }
+  
 
   //std::cout << "factor: " << dt / patch.getTimestepSize() << std::endl;
 
