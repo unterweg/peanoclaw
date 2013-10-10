@@ -263,6 +263,16 @@ void peanoclaw::parallel::NeighbourCommunicator::receivePatch(int localCellDescr
   CellDescriptionHeap::getInstance().getData(localCellDescriptionIndex).at(0) = remoteCellDescription;
   assertionEquals(CellDescriptionHeap::getInstance().getData(localCellDescriptionIndex).size(), 1);
 
+  //Check for zeros in solution
+  #ifdef Asserts
+  Patch remotePatch(remoteCellDescription);
+  if(remotePatch.isValid() && (remotePatch.isLeaf() || remotePatch.isVirtual())) {
+    dfor(subcellIndex, remotePatch.getSubdivisionFactor()) {
+      assertion2(tarch::la::greater(remotePatch.getValueUNew(subcellIndex, 0), 0.0), subcellIndex, remotePatch);
+    }
+  }
+  #endif
+
   //TODO unterweg debug
 //    logInfo("", "Merged: " << CellDescriptionHeap::getInstance().getData(localCellDescriptionIndex).at(0).toString());
 

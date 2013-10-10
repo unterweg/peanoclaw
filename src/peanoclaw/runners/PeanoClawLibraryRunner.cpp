@@ -50,12 +50,18 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializePeano(
   CellDescriptionHeap::getInstance().setName("CellDescription");
   DataHeap::getInstance().setName("Data");
   LevelStatisticsHeap::getInstance().setName("LevelStatistics");
+
+  assertionEquals(CellDescriptionHeap::getInstance().getNumberOfAllocatedEntries(), 0);
+  assertionEquals(DataHeap::getInstance().getNumberOfAllocatedEntries(), 0);
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment() {
   //Distributed Memory
+  /*
+  #if defined(Parallel)
+  //tarch::parallel::Node::getInstance().setTimeOutWarning(4500);
+  //tarch::parallel::Node::getInstance().setDeadlockTimeOut(9000);
 
- /* #if defined(Parallel)
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     tarch::parallel::NodePool::getInstance().setStrategy( new tarch::parallel::FCFSNodePoolStrategy() );
   }
@@ -68,7 +74,8 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
   // have to be the same for all ranks
   peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(64);
   peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(64);
-  #endif*/
+  #endif
+  */
  
   //tarch::parallel::NodePool::getInstance().restart();
   
@@ -158,6 +165,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::iterateSolveTimestep(bool plotS
     } else {
       _repository->switchToSolveTimestep();
     }
+    _repository->iterate();
   }
 }
 
@@ -234,7 +242,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setUnknownsPerSubcell(unknownsPerSubcell);
   state.setAuxiliarFieldsPerSubcell(auxiliarFieldsPerSubcell);
   state.setNumerics(numerics);
-  state.resetTotalNumberOfCellUpdates();
   state.setInitialTimestepSize(initialTimestepSize);
   state.setDomain(domainOffset, domainSize);
   state.setUseDimensionalSplittingOptimization(useDimensionalSplittingOptimization && !_configuration.disableDimensionalSplittingOptimization());
@@ -257,13 +264,14 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
       for(int d = 0; d < DIMENSIONS; d++) {
         currentMinimalSubgridSize(d) = std::max(initialMinimalSubgridSize(d), domainSize(d) / pow(3.0, maximumLevel));
       }
+
       _repository->getState().setInitialMaximalSubgridSize(currentMinimalSubgridSize);
 
       do {
         iterateInitialiseGrid();
-        iterateInitialiseGrid();
+        iterateInitialiseGrid(); //TODO unterweg: Raus?
 
-        logDebug("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
+        logInfo("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
       } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
       maximumLevel += 2;
@@ -275,6 +283,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
       logDebug("PeanoClawLibraryRunner", "Iterate with Refinement Criterion");
 //      iterateInitialiseGrid();
       iterateInitialiseGrid();
+      iterateInitialiseGrid(); //TODO unterweg: Raus?
     } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
     //Plot initial grid
@@ -429,7 +438,8 @@ void peanoclaw::runners::PeanoClawLibraryRunner::configureGlobalTimestep(double 
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep(bool plot) {
-    /*bool plotSubsteps = _configuration.plotSubsteps()
+    /*
+    bool plotSubsteps = _configuration.plotSubsteps()
       || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);*/
     bool plotSubsteps = plot;
 

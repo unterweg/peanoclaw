@@ -277,10 +277,10 @@ void peanoclaw::mappings::Remesh::createCell(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
   logTraceInWith6Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, coarseGridVerticesEnumerator.toString(), fineGridPositionOfCell, fineGridVerticesEnumerator.getCellCenter() );
- 
+
   //Initialise new Patch
   Patch fineGridPatch = Patch(
-    fineGridVerticesEnumerator.getVertexPosition(),
+    fineGridVerticesEnumerator.getVertexPosition(0),
     fineGridVerticesEnumerator.getCellSize(),
     _unknownsPerSubcell,
     _auxiliarFieldsPerSubcell,
@@ -367,7 +367,7 @@ void peanoclaw::mappings::Remesh::createCell(
       i
     );
   }
-  
+
   logTraceOutWith2Arguments( "createCell(...)", fineGridCell, fineGridPatch );
 }
 
@@ -598,7 +598,7 @@ void peanoclaw::mappings::Remesh::mergeWithRemoteDataDueToForkOrJoin(
   logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
 
-void peanoclaw::mappings::Remesh::prepareSendToWorker(
+bool peanoclaw::mappings::Remesh::prepareSendToWorker(
   peanoclaw::Cell&                 fineGridCell,
   peanoclaw::Vertex * const        fineGridVertices,
   const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -633,6 +633,7 @@ void peanoclaw::mappings::Remesh::prepareSendToWorker(
   }
 
   logTraceOut( "prepareSendToWorker(...)" );
+  return true;
 }
 
 void peanoclaw::mappings::Remesh::prepareSendToMaster(
@@ -825,11 +826,15 @@ void peanoclaw::mappings::Remesh::touchVertexLastTime(
     coarseGridVerticesEnumerator.getLevel()+1
   );
 
+  adjacentSubgrids.refineOnParallelAndAdaptiveBoundary();
+
   adjacentSubgrids.regainTwoIrregularity(
     coarseGridVertices,
     coarseGridVerticesEnumerator
   );
-  adjacentSubgrids.storeAdjacencyInformation();
+
+  //Mark vertex as "old" (i.e. older than just created ;-))
+  fineGridVertex.setWasCreatedInThisIteration(false);
 
   logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
 }
@@ -950,21 +955,20 @@ void peanoclaw::mappings::Remesh::leaveCell(
   assertionEquals1(finePatch.getLevel(), fineGridVerticesEnumerator.getLevel(), finePatch.toString());
 
   //TODO unterweg: Braucht man das wirklich nicht mehr?
-  //for(int i = 0; i < TWO_POWER_D; i++) {
-  //  fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(
-  //    i,
-  //    fineGridCell.getCellDescriptionIndex()
-  //  );
-  //}
+//  for(int i = 0; i < TWO_POWER_D; i++) {
+//    fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(
+//      i,
+//      fineGridCell.getCellDescriptionIndex()
+//    );
+//  }
 
   //Count number of adjacent subgrids
   ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
   parallelSubgrid.countNumberOfAdjacentParallelSubgridsAndResetExclusiveFlag(
     fineGridVertices,
     fineGridVerticesEnumerator
- 
   );
-  
+
   logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }
 

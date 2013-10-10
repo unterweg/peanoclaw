@@ -6,6 +6,9 @@
  */
 #include "peanoclaw/interSubgridCommunication/aspects/AdjacentSubgrids.h"
 
+#include "peanoclaw/interSubgridCommunication/aspects/CornerAdjacentPatchTraversal.h"
+#include "peanoclaw/interSubgridCommunication/aspects/EdgeAdjacentPatchTraversal.h"
+
 #include "peanoclaw/Heap.h"
 #include "peanoclaw/Patch.h"
 #include "peanoclaw/ParallelSubgrid.h"
@@ -93,7 +96,7 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::createHang
   if(!tarch::la::oneGreater(domainOffset, _position)
       && !tarch::la::oneGreater(_position, domainOffset + domainSize)) {
     //Project adjacency information down from coarse grid vertex
-    gridLevelTransfer.fillAdjacentPatchIndicesFromCoarseVertices(
+    fillAdjacentPatchIndicesFromCoarseVertices(
       coarseGridVertices,
       coarseGridVerticesEnumerator,
       _vertex,
@@ -114,16 +117,13 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::createHang
         vertexDescription.setIndicesOfAdjacentCellDescriptions(i, -1);
       }
       _vertexMap[hangingVertexPosition] = vertexDescription;
-    } else {
-      //A vertex on this position existed earlier...
-      _vertex.setWasCreatedInThisIteration(false);
     }
 
     VertexDescription& hangingVertexDescription = _vertexMap[hangingVertexPosition];
     hangingVertexDescription.setTouched(true);
 
     //Copy indices from coarse level
-    gridLevelTransfer.fillAdjacentPatchIndicesFromCoarseVertices(
+    fillAdjacentPatchIndicesFromCoarseVertices(
       coarseGridVertices,
       coarseGridVerticesEnumerator,
       _vertex,
@@ -191,22 +191,6 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::destroyHan
   }
 }
 
-void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::storeAdjacencyInformation() {
-  #ifdef Parallel
-  //Set all adjacent patches to unsent if the adjacency information has changed
-//  for(int i = 0; i < TWO_POWER_D; i++) {
-//    if(_vertex.getAdjacentRanks()(i) != _vertex.getAdjacentRanksDuringLastIteration()(i)) {
-//      for(int j = 0; j < TWO_POWER_D; j++) {
-//        if(_vertex.getAdjacentCellDescriptionIndex(j) != -1) {
-//          ParallelSubgrid adjacentSubgrid(_vertex.getAdjacentCellDescriptionIndex(j));
-//          adjacentSubgrid.markCurrentStateAsSent(false);
-//        }
-//      }
-//    }
-//  }
-  #endif
-}
-
 void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::regainTwoIrregularity(
   peanoclaw::Vertex * const            coarseGridVertices,
   const peano::grid::VertexEnumerator& coarseGridVerticesEnumerator
@@ -225,10 +209,115 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::regainTwoI
     if(coarseVertex.getRefinementControl() == peanoclaw::Vertex::Records::Unrefined
         && !coarseVertex.isHangingNode()
         && !coarseVertex.isOutside()) {
+
       coarseVertex.refine();
     }
   }
+}
 
-  //Mark vertex as "old" (i.e. older than just created ;-))
-  _vertex.setWasCreatedInThisIteration(false);
+void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::fillAdjacentPatchIndicesFromCoarseVertices(
+  const peanoclaw::Vertex* coarseGridVertices,
+  const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
+  peanoclaw::Vertex&       fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,int>&                   localPositionOfHangingNode
+) {
+  logTraceInWith2Arguments( "fillAdjacentPatchIndicesFromCoarseVertices(...)", fineGridVertex, localPositionOfHangingNode );
+
+  tarch::la::Vector<DIMENSIONS,int>   fromCoarseGridVertex;
+  tarch::la::Vector<DIMENSIONS,int>   coarseGridVertexAdjacentPatchIndex;
+
+  dfor2(k)
+    for (int d=0; d<DIMENSIONS; d++) {
+      if (localPositionOfHangingNode(d)==0) {
+        fromCoarseGridVertex(d)          = 0;
+        coarseGridVertexAdjacentPatchIndex(d) = k(d);
+      }
+      else if (localPositionOfHangingNode(d)==3) {
+        fromCoarseGridVertex(d)          = 1;
+        coarseGridVertexAdjacentPatchIndex(d) = k(d);
+      }
+      else if (k(d)==0) {
+        fromCoarseGridVertex(d)          = 0;
+        coarseGridVertexAdjacentPatchIndex(d) = 1;
+      }
+      else {
+        fromCoarseGridVertex(d)          = 1;
+        coarseGridVertexAdjacentPatchIndex(d) = 0;
+      }
+    }
+    int coarseGridVertexIndex = coarseGridVerticesEnumerator(peano::utils::dLinearised(fromCoarseGridVertex,2));
+    int coarseGridVertexEntry = TWO_POWER_D_MINUS_ONE-peano::utils::dLinearised(coarseGridVertexAdjacentPatchIndex,2);
+    fineGridVertex.setAdjacentCellDescriptionIndex(
+      TWO_POWER_D_MINUS_ONE-kScalar,
+      coarseGridVertices[coarseGridVertexIndex].getAdjacentCellDescriptionIndex(coarseGridVertexEntry)
+    );
+  enddforx
+
+  logTraceOut( "fillAdjacentPatchIndicesFromCoarseVertices(...)" );
+}
+
+void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::refineOnParallelAndAdaptiveBoundary() {
+  logTraceIn("refineOnParallelBoundary(...)");
+  #ifdef Parallel
+  assertion2(!_vertex.isHangingNode(), _vertex, _position);
+
+  if(_vertex.getRefinementControl() == Vertex::Records::Unrefined && _vertex.isAdjacentToRemoteRank()) {
+    //Fill ghost layers of adjacent cells
+    //Get adjacent cell descriptions
+    CellDescription* cellDescriptions[TWO_POWER_D];
+    for(int cellIndex = 0; cellIndex < TWO_POWER_D; cellIndex++) {
+      if(_vertex.getAdjacentCellDescriptionIndex(cellIndex) != -1) {
+        cellDescriptions[cellIndex] = &CellDescriptionHeap::getInstance().getData(_vertex.getAdjacentCellDescriptionIndex(cellIndex)).at(0);
+      }
+    }
+
+    Patch patches[TWO_POWER_D];
+    dfor2(cellIndex)
+      if(_vertex.getAdjacentCellDescriptionIndex(cellIndexScalar) != -1) {
+        patches[cellIndexScalar] = Patch(
+          *cellDescriptions[cellIndexScalar]
+        );
+      }
+    enddforx
+
+    //Until now we just created the patches. Refactor this?
+    CheckIntersectingParallelAndAdaptiveBoundaryFunctor functor(_vertex.getAdjacentRanks());
+    peanoclaw::interSubgridCommunication::aspects::
+      EdgeAdjacentPatchTraversal<CheckIntersectingParallelAndAdaptiveBoundaryFunctor>(patches, functor);
+    #ifdef Dim3
+    peanoclaw::interSubgridCommunication::aspects::
+      CornerAdjacentPatchTraversal<CheckIntersectingParallelAndAdaptiveBoundaryFunctor>(patches, functor);
+    #endif
+
+    if(functor.doesParallelBoundaryCoincideWithAdaptiveBoundaryCorner()) {
+//      _vertex.refine();
+    }
+  }
+
+  #endif
+  logTraceOut("refineOnParallelBoundary(...)");
+}
+
+peanoclaw::interSubgridCommunication::aspects::CheckIntersectingParallelAndAdaptiveBoundaryFunctor::CheckIntersectingParallelAndAdaptiveBoundaryFunctor(
+  const tarch::la::Vector<DIMENSIONS_TIMES_TWO, int>& adjacentRanks
+) : _adjacentRanks(adjacentRanks),
+    _parallelBoundaryCoincidesWithAdaptiveBoundaryCorner(false)
+{
+}
+
+void peanoclaw::interSubgridCommunication::aspects::CheckIntersectingParallelAndAdaptiveBoundaryFunctor::operator() (
+  peanoclaw::Patch&                         patch1,
+  int                                       index1,
+  peanoclaw::Patch&                         patch2,
+  int                                       index2,
+  const tarch::la::Vector<DIMENSIONS, int>& direction
+) {
+  if(_adjacentRanks[TWO_POWER_D - index1 - 1] != _adjacentRanks[TWO_POWER_D - index2 - 1]
+    && !patch1.isLeaf() && !patch2.isLeaf()) {
+    _parallelBoundaryCoincidesWithAdaptiveBoundaryCorner = true;
+  }
+}
+
+bool peanoclaw::interSubgridCommunication::aspects::CheckIntersectingParallelAndAdaptiveBoundaryFunctor::doesParallelBoundaryCoincideWithAdaptiveBoundaryCorner() const {
+  return _parallelBoundaryCoincidesWithAdaptiveBoundaryCorner;
 }
