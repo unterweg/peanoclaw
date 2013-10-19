@@ -93,6 +93,9 @@ set(PEANOCLAW_SOURCES
     # swe part
     src/peanoclaw/native/SWE/src/blocks/SWE_Block.cpp
     src/peanoclaw/native/SWE/src/blocks/SWE_WavePropagationBlock.cpp
+
+    # load balancing part
+    src/peanoclaw/PeanoClawControlLoopLoadBalancer.cpp
 )
 
 execute_process ( COMMAND python -c "from numpy import get_include; print get_include()" OUTPUT_VARIABLE NUMPY_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -111,6 +114,10 @@ if (PEANOCLAW_PYCLAW)
     set (PEANOCLAW_SOURCES ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
     set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES} ${PYTHON_LIBRARIES})
 endif (PEANOCLAW_PYCLAW) 
+
+if (HDF5_FOUND)
+    set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES} -lhdf5)
+endif (HDF5_FOUND)
 
 if (PEANO_TBB)
     set (PEANO_LIBRARIES ${PEANOCLAW_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)

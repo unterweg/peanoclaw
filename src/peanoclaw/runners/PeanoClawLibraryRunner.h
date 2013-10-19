@@ -18,7 +18,7 @@
 
 #include "peano/geometry/Hexahedron.h"
 
-#include "mpibalancing/ControlLoopLoadBalancer/DefaultControlLoopLoadBalancer.h"
+#include "peanoclaw/PeanoClawControlLoopLoadBalancer.h"
 
 namespace peanoclaw {
 
@@ -61,7 +61,7 @@ private:
 
   bool _validateGrid;
 
-  mpibalancing::ControlLoopLoadBalancer::DefaultControlLoopLoadBalancer _controlLoopLoadBalancer;
+  PeanoClawControlLoopLoadBalancer _controlLoopLoadBalancer;
 
   /**
    * Initializes geometry and grid.
