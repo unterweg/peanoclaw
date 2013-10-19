@@ -71,16 +71,6 @@ double peanoclaw::native::SWEKernel::solveTimestep(Patch& patch, double maximumT
       || tarch::la::equals(patch.getEstimatedNextTimestepSize(), 0.0),
       patch, maximumTimestepSize, estimatedNextTimestepSize, patch.toStringUNew());
   assertion(patch.getTimestepSize() < std::numeric_limits<double>::infinity());
- 
-  double requiredMeshWidth = 0.0;
-  if (dt < 1e-3) {
-      requiredMeshWidth = patch.getDemandedMeshWidth();
-  } else {
-      requiredMeshWidth = (dt / patch.getTimestepSize()) * patch.getDemandedMeshWidth();
-  }
-  
-
-  //std::cout << "factor: " << dt / patch.getTimestepSize() << std::endl;
 
   if (tarch::la::greater(dt, 0.0)) {
     patch.advanceInTime();
@@ -88,11 +78,8 @@ double peanoclaw::native::SWEKernel::solveTimestep(Patch& patch, double maximumT
   }
   patch.setEstimatedNextTimestepSize(estimatedNextTimestepSize);
 
-  //std::cout << "requiredMeshWidth " << requiredMeshWidth << " vs oldMeshWidth " << patch.getDemandedMeshWidth() << std::endl;
-
-  logTraceOutWith1Argument( "solveTimestep(...)", requiredMeshWidth);
-  //return _scenario.computeDemandedMeshWidth(patch);
-  return requiredMeshWidth;
+  logTraceOut( "solveTimestep(...)");
+  return _scenario.computeDemandedMeshWidth(patch);
 }
 
 void peanoclaw::native::SWEKernel::addPatchToSolution(Patch& patch) {

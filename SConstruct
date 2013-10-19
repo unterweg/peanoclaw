@@ -73,13 +73,14 @@ libs = []
 filenameSuffix = ''
 
 #Configure Peano 3
-p3Path = 'src/p3/src'
+p3Path = '../peano3'
 try:
   import peanoConfiguration
   p3Path = peanoConfiguration.getPeano3Path()
 except ImportError:
   pass
-cpppath.append(p3Path)
+p3SourcePath = join(p3Path, 'src')
+cpppath.append(p3SourcePath)
 
 # Platform specific settings
 environment = Environment()
@@ -123,22 +124,15 @@ else:
    
 ##### Determine MPI-Parallelization
 #
+mpiConfigurationFile = ARGUMENTS.get('mpiconfig', 'openMPIConfiguration')
+mpiConfiguration = __import__(mpiConfigurationFile)
+
 parallel = ARGUMENTS.get('parallel', 'parallel_no')  # Read command line parameter
 if parallel == 'yes' or parallel == 'parallel_yes':
    cppdefines.append('Parallel')
-   cpppath.append('/opt/ibmhpc/pecurrent/mpich2/intel/include64')
-   libpath.append('/opt/ibmhpc/pecurrent/mpich2/intel/lib64')
-   libpath.append('/opt/ibmhpc/pecurrent/mpich2/../pempi/intel/lib64')
-   libpath.append('/opt/ibmhpc/pecurrent/ppe.pami/intel/lib64/pami64')
-   libs.append ('cxxmpich')
-   libs.append ('pthread')
-   libs.append('mpich')
-   libs.append('opa')
-   libs.append('mpl')
-   libs.append('dl')
-   libs.append('poe')
-   libs.append('pami')
-   cxx = 'mpicxx'
+   cpppath.extend(mpiConfiguration.getMPIIncludes())
+   libpath.extend(mpiConfiguration.getMPILibrarypaths())
+   libs.extend(mpiConfiguration.getMPILibraries())
 elif parallel == 'no' or parallel == 'parallel_no':
    pass
 else:
@@ -255,7 +249,7 @@ elif compiler == 'icc':
       ccflags.append('-w')
       ccflags.append('-align')
       ccflags.append('-ansi-alias')
-      ccflags.append('-O0')
+      ccflags.append('-O2')
    elif build == 'release':
       ccflags.append('-w')
       ccflags.append('-align')
@@ -346,7 +340,7 @@ print "Buildpath: " + buildpath
 print
 
 VariantDir (buildpath, './src', duplicate=0)  # Set build directory for PeanoClaw sources
-VariantDir (join(buildpath, 'kernel'), p3Path, duplicate=0)  # Set build directory for Peano sources
+VariantDir (join(buildpath, 'kernel'), p3SourcePath, duplicate=0)  # Set build directory for Peano sources
 if solver == 'swe':
   
   print "VariantDir(", join(buildpath, 'swe'), ",", swePath, ")"
