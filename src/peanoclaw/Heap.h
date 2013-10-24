@@ -19,11 +19,13 @@
 //#define noPackedEmptyHeapMessages
 
 #ifdef noPackedEmptyHeapMessages
+#warning Using Plain Heap
 typedef peano::heap::PlainHeap<peanoclaw::records::CellDescription> CellDescriptionHeap;
 typedef peano::heap::PlainHeap<peanoclaw::records::Data> DataHeap;
 typedef peano::heap::PlainHeap<peanoclaw::statistics::LevelStatistics> LevelStatisticsHeap;
 typedef peano::heap::PlainHeap<peanoclaw::records::PatchDescription> PatchDescriptionHeap;
 #else
+#warning Using RLE Heap
 typedef peano::heap::RLEHeap<peanoclaw::records::CellDescription> CellDescriptionHeap;
 typedef peano::heap::RLEHeap<peanoclaw::records::Data> DataHeap;
 typedef peano::heap::RLEHeap<peanoclaw::statistics::LevelStatistics> LevelStatisticsHeap;

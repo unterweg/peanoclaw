@@ -18,6 +18,8 @@
 
 #include "peano/geometry/Hexahedron.h"
 
+#include "peanoclaw/PeanoClawControlLoopLoadBalancer.h"
+
 namespace peanoclaw {
 
   class Numerics;
@@ -59,6 +61,8 @@ private:
 
   bool _validateGrid;
 
+  PeanoClawControlLoopLoadBalancer _controlLoopLoadBalancer;
+
   /**
    * Initializes geometry and grid.
    */
@@ -71,6 +75,10 @@ private:
    * Initializes the MPI environment
    */
   void initializeParallelEnvironment();
+
+  void updateOracle();
+
+  void iterateRemesh();
 
   void iterateInitialiseGrid();
 
@@ -113,7 +121,8 @@ public:
   void gatherCurrentSolution();
   int runWorker();
 
+  const peanoclaw::State& getState();
   void configureGlobalTimestep(double time);
-  void runNextPossibleTimestep();
+  void runNextPossibleTimestep(bool plot);
 };
 #endif /* PEANO_APPLICATIONS_PEANOCLAW_RUNNERS_PEANOCLAWLIBRARYRUNNER_H_ */

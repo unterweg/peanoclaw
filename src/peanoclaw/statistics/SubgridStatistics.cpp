@@ -60,13 +60,13 @@ void peanoclaw::statistics::SubgridStatistics::addLevelToLevelStatistics(int lev
 void peanoclaw::statistics::SubgridStatistics::addSubgridToLevelStatistics(
   const Patch& subgrid
 ) {
-  addLevelToLevelStatistics(subgrid.getLevel());
+  /*addLevelToLevelStatistics(subgrid.getLevel());
   peanoclaw::statistics::LevelStatistics& level = _levelStatistics->at(subgrid.getLevel()-1);
   if(subgrid.isLeaf()) {
     level.setNumberOfPatches(level.getNumberOfPatches() + 1);
     level.setNumberOfCells(level.getNumberOfCells() + (tarch::la::volume(subgrid.getSubdivisionFactor())));
     level.setArea(level.getArea() + tarch::la::volume(subgrid.getSize()));
-  }
+  }*/
 }
 
 peanoclaw::statistics::SubgridStatistics::SubgridStatistics()
@@ -189,10 +189,10 @@ void peanoclaw::statistics::SubgridStatistics::processSubgridAfterUpdate(const p
   _minimalTimestep = std::min(_minimalTimestep, patch.getTimestepSize());
 
   processSubgrid(patch, parentIndex);
-  LevelStatistics& level = _levelStatistics->at(patch.getLevel()-1);
+  /*LevelStatistics& level = _levelStatistics->at(patch.getLevel()-1);
   level.setNumberOfCellUpdates(
     level.getNumberOfCellUpdates() + tarch::la::volume(patch.getSubdivisionFactor())
-  );
+  );*/
 }
 
 void peanoclaw::statistics::SubgridStatistics::updateMinimalSubgridBlockReason(
@@ -280,28 +280,28 @@ void peanoclaw::statistics::SubgridStatistics::logLevelStatistics(std::string de
 }
 
 void peanoclaw::statistics::SubgridStatistics::addBlockedPatchDueToGlobalTimestep(const Patch& subgrid) {
-  addLevelToLevelStatistics(subgrid.getLevel());
+  /*addLevelToLevelStatistics(subgrid.getLevel());
   _levelStatistics->at(subgrid.getLevel() - 1).setPatchesBlockedDueToGlobalTimestep(
       _levelStatistics->at(subgrid.getLevel() - 1).getPatchesBlockedDueToGlobalTimestep() + 1
-  );
+  );*/
 }
 void peanoclaw::statistics::SubgridStatistics::addBlockedPatchDueToNeighborTimeConstraint(const Patch& subgrid) {
-  addLevelToLevelStatistics(subgrid.getLevel());
+  /*addLevelToLevelStatistics(subgrid.getLevel());
   _levelStatistics->at(subgrid.getLevel() - 1).setPatchesBlockedDueToNeighbors(
       _levelStatistics->at(subgrid.getLevel() - 1).getPatchesBlockedDueToNeighbors() + 1
-  );
+  );*/
 }
 void peanoclaw::statistics::SubgridStatistics::addBlockedPatchDueToSkipIteration(const Patch& subgrid) {
-  addLevelToLevelStatistics(subgrid.getLevel());
+  /*addLevelToLevelStatistics(subgrid.getLevel());
   _levelStatistics->at(subgrid.getLevel() - 1).setPatchesSkippingIteration(
       _levelStatistics->at(subgrid.getLevel() - 1).getPatchesSkippingIteration() + 1
-  );
+  );*/
 }
 void peanoclaw::statistics::SubgridStatistics::addBlockedPatchDueToCoarsening(const Patch& subgrid) {
-  addLevelToLevelStatistics(subgrid.getLevel());
+  /*addLevelToLevelStatistics(subgrid.getLevel());
   _levelStatistics->at(subgrid.getLevel() - 1).setPatchesCoarsening(
       _levelStatistics->at(subgrid.getLevel() - 1).getPatchesCoarsening() + 1
-  );
+  );*/
 }
 
 void peanoclaw::statistics::SubgridStatistics::merge(const SubgridStatistics& subgridStatistics) {
@@ -322,7 +322,7 @@ void peanoclaw::statistics::SubgridStatistics::merge(const SubgridStatistics& su
   _averageGlobalTimeInterval         = (_averageGlobalTimeInterval + subgridStatistics._averageGlobalTimeInterval) / 2.0;
 
   //Level statistics
-  addLevelToLevelStatistics(subgridStatistics._levelStatistics->size()-1);
+  /*addLevelToLevelStatistics(subgridStatistics._levelStatistics->size()-1);
   for(int level = 0; level < (int)subgridStatistics._levelStatistics->size(); level++) {
 
     LevelStatistics& thisLevel = _levelStatistics->at(level);
@@ -338,7 +338,7 @@ void peanoclaw::statistics::SubgridStatistics::merge(const SubgridStatistics& su
     thisLevel.setPatchesBlockedDueToNeighbors(thisLevel.getPatchesBlockedDueToNeighbors() + otherLevel.getPatchesBlockedDueToNeighbors());
     thisLevel.setPatchesCoarsening(thisLevel.getPatchesCoarsening() + otherLevel.getPatchesCoarsening());
     thisLevel.setPatchesSkippingIteration(thisLevel.getPatchesSkippingIteration() + otherLevel.getPatchesSkippingIteration());
-  }
+  }*/
 }
 
 void peanoclaw::statistics::SubgridStatistics::averageTotalSimulationValues(int numberOfEntries) {
