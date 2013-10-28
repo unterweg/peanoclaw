@@ -31,9 +31,9 @@ namespace peanoclaw {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 12-04-2013 09:18
+    * 		   build date: 22-10-2013 20:59
     *
-    * @date   06/10/2013 18:41
+    * @date   28/10/2013 11:29
     */
    class peanoclaw::records::CellDescription { 
       
@@ -809,9 +809,9 @@ namespace peanoclaw {
              * 		   2007-2009 Wolfgang Eckhardt
              * 		   2012      Tobias Weinzierl
              *
-             * 		   build date: 12-04-2013 09:18
+             * 		   build date: 22-10-2013 20:59
              *
-             * @date   06/10/2013 18:41
+             * @date   28/10/2013 11:29
              */
             class peanoclaw::records::CellDescriptionPacked { 
                
@@ -1587,9 +1587,9 @@ namespace peanoclaw {
                       * 		   2007-2009 Wolfgang Eckhardt
                       * 		   2012      Tobias Weinzierl
                       *
-                      * 		   build date: 12-04-2013 09:18
+                      * 		   build date: 22-10-2013 20:59
                       *
-                      * @date   06/10/2013 18:41
+                      * @date   28/10/2013 11:29
                       */
                      class peanoclaw::records::CellDescription { 
                         
@@ -2218,9 +2218,9 @@ namespace peanoclaw {
                                * 		   2007-2009 Wolfgang Eckhardt
                                * 		   2012      Tobias Weinzierl
                                *
-                               * 		   build date: 12-04-2013 09:18
+                               * 		   build date: 22-10-2013 20:59
                                *
-                               * @date   06/10/2013 18:41
+                               * @date   28/10/2013 11:29
                                */
                               class peanoclaw::records::CellDescriptionPacked { 
                                  

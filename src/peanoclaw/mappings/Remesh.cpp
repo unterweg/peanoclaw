@@ -133,7 +133,7 @@ void peanoclaw::mappings::Remesh::createHangingVertex(
   logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
   fineGridVertex.setShouldRefine(false);
-  fineGridVertex.resetSubcellsEraseVeto();
+  fineGridVertex.setAllSubcellEraseVetos();
 
   peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids adjacentSubgrids(
     fineGridVertex,
@@ -203,7 +203,7 @@ void peanoclaw::mappings::Remesh::createInnerVertex(
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
   fineGridVertex.setShouldRefine(false);
-  fineGridVertex.resetSubcellsEraseVeto();
+  fineGridVertex.setAllSubcellEraseVetos();
 
   peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids adjacentSubgrids(
     fineGridVertex,
@@ -229,7 +229,7 @@ void peanoclaw::mappings::Remesh::createBoundaryVertex(
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
  
   fineGridVertex.setShouldRefine(false);
-  fineGridVertex.resetSubcellsEraseVeto();
+  fineGridVertex.setAllSubcellEraseVetos();
 
   peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids adjacentSubgrids(
     fineGridVertex,
@@ -830,7 +830,8 @@ void peanoclaw::mappings::Remesh::touchVertexLastTime(
 
   adjacentSubgrids.regainTwoIrregularity(
     coarseGridVertices,
-    coarseGridVerticesEnumerator
+    coarseGridVerticesEnumerator,
+    fineGridPositionOfVertex
   );
 
   //Mark vertex as "old" (i.e. older than just created ;-))
@@ -909,13 +910,17 @@ void peanoclaw::mappings::Remesh::enterCell(
                                                                  //     - e.g. use second level as kick starter and then the desired levels
                                                                  //     - e.g. use first and second level as kick starter and then the desired levels
     if (!fineGridCell.isAssignedToRemoteRank()) {
-       fineGridCell.setCellIsAForkCandidate(true);
+      #ifdef Parallel
+      fineGridCell.setCellIsAForkCandidate(true);
+      #endif
        //std::cout << "got a fork candidate " << std::endl;
     } else {
        //std::cout << "already forked candidate " << std::endl;
     }
   } else {
+    #ifdef Parallel
     fineGridCell.setCellIsAForkCandidate(false);
+    #endif
   }
 #endif
 

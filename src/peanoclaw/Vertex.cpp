@@ -162,7 +162,7 @@ bool peanoclaw::Vertex::shouldRefine() const {
   return _vertexData.getShouldRefine();
 }
 
-void peanoclaw::Vertex::resetSubcellsEraseVeto() {
+void peanoclaw::Vertex::resetSubcellEraseVetos() {
   for(int i = 0; i < TWO_POWER_D; i++) {
     _vertexData.setAdjacentSubcellsEraseVeto(i, false);
   }
@@ -172,6 +172,12 @@ void peanoclaw::Vertex::setSubcellEraseVeto(
   int cellIndex
 ) {
   _vertexData.setAdjacentSubcellsEraseVeto(cellIndex, true);
+}
+
+void peanoclaw::Vertex::setAllSubcellEraseVetos() {
+  for(int i = 0; i < TWO_POWER_D; i++) {
+    setSubcellEraseVeto(i);
+  }
 }
 
 bool peanoclaw::Vertex::shouldErase() const {

@@ -57,8 +57,8 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializePeano(
 
 void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment() {
   //Distributed Memory
-  /*
   #if defined(Parallel)
+  /*
   //tarch::parallel::Node::getInstance().setTimeOutWarning(4500);
   //tarch::parallel::Node::getInstance().setDeadlockTimeOut(9000);
 
@@ -74,7 +74,6 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
   // have to be the same for all ranks
   peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(64);
   peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(64);
-  #endif
   */
  
   //tarch::parallel::NodePool::getInstance().restart();
@@ -83,6 +82,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
         //new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(true)
         new mpibalancing::OracleForOnePhaseControlLoopWrapper(true, _controlLoopLoadBalancer)
   );
+  #endif
 
 
   //Shared Memory
@@ -114,11 +114,13 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::updateOracle() {
+    #ifdef Parallel
     _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setTraversalInverted(_repository->getState().isTraversalInverted());
     _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setGridStationary(_repository->getState().isGridStationary());
     _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setGridBalanced(_repository->getState().isGridBalanced());
     _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setCouldNotEraseDueToDecomposition(_repository->getState().getCouldNotEraseDueToDecompositionFlag());
     _controlLoopLoadBalancer.getGridStateHistory().getCurrentItem().setSubWorkerIsInvolvedInJoinOrFork(_repository->getState().hasSubworkerRebalanced());
+    #endif
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateRemesh() {

@@ -4,6 +4,8 @@
 #include "mpibalancing/ControlLoopLoadBalancer/Reductions.h"
 
 using namespace  mpibalancing::ControlLoopLoadBalancer;
+
+tarch::logging::Log PeanoClawStrategy::_log("PeanoClawStrategy");
  
 PeanoClawStrategy::PeanoClawStrategy(
     History<mpibalancing::ControlLoopLoadBalancer::WorkerData>& masterHistory, 
@@ -65,6 +67,8 @@ int PeanoClawStrategy::run( int worker ) {
 }
 
 // --------------------------------------------------------------------------------------------------------
+
+tarch::logging::Log PeanoClawControlLoopLoadBalancer::_log("PeanoClawControlLoopLoadBalancer");
 
 PeanoClawControlLoopLoadBalancer::PeanoClawControlLoopLoadBalancer() :
     _strategy(_masterHistory,_workerHistorySet,_gridStateHistory),
