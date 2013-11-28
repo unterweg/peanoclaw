@@ -246,6 +246,7 @@ int main(int argc, char **argv) {
           tarch::parallel::NodePool::getInstance().restart();
 
           std::ostringstream filename;
+          peano::analysis::Analysis::getInstance().enable(false);
           filename << "peanoclaw-meshwidth" << meshWidthParam << "-subgridfactor" << subfactor;
           peano::analysis::Analysis::getInstance().setBaseFilename(filename.str().c_str());
           peano::analysis::Analysis::getInstance().reset();
