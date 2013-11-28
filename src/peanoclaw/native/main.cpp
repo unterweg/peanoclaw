@@ -29,8 +29,6 @@
 #include "peano/parallel/loadbalancing/Oracle.h"
 #include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
 
-#include "peano/analysis/Analysis.h"
-
 #if USE_VALGRIND
 #include <callgrind.h>
 #endif
@@ -105,8 +103,8 @@ class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenari
                     double q0_x =  (patch.getValueUNew(next_subcellIndex_x, 0) - q0) / meshWidth(0);
                     double q0_y =  (patch.getValueUNew(next_subcellIndex_y, 0) - q0) / meshWidth(1);
 
-                    max_gradient = fmax(max_gradient, q0_x);
-                    max_gradient = fmax(max_gradient, q0_y);
+                    max_gradient = fmax(max_gradient, fabs(q0_x));
+                    max_gradient = fmax(max_gradient, fabs(q0_y));
                 }
             }
           
@@ -141,7 +139,7 @@ static peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid* _confi
 }*/
 
 int main(int argc, char **argv) {
- /* double initialMinimalMeshWidthScalar,
+ /* double initialMaximalMeshWidthScalar,
   double domainOffsetX0,
   double domainOffsetX1,
   double domainOffsetX2,
@@ -177,7 +175,9 @@ int main(int argc, char **argv) {
         if (tarch::parallel::Node::getInstance().getRank() == 0) {
             std::cout << "not enough parameters given" << std::endl;
         }
+        #ifdef Parallel
         MPI_Finalize();
+        #endif
         return -1;
   }
 
@@ -208,7 +208,8 @@ int main(int argc, char **argv) {
  
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::statistics::SubgridStatistics::logLevelStatistics", true ) );
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime", true ) );
-
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "tarch::mpianalysis::DefaultAnalyser", false ) );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::mappings::SolveTimestep", false ) );
 
   //tarch::logging::CommandLineLogger::getInstance().setLogFormat( ... please consult source code documentation );
 
@@ -248,8 +249,8 @@ int main(int argc, char **argv) {
           std::ostringstream filename;
           peano::analysis::Analysis::getInstance().enable(false);
           filename << "peanoclaw-meshwidth" << meshWidthParam << "-subgridfactor" << subfactor;
-          peano::analysis::Analysis::getInstance().setBaseFilename(filename.str().c_str());
-          peano::analysis::Analysis::getInstance().reset();
+//          peano::analysis::Analysis::getInstance().setBaseFilename(filename.str().c_str());
+//          peano::analysis::Analysis::getInstance().reset();
 
           peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
             new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(true)
@@ -266,7 +267,9 @@ int main(int argc, char **argv) {
           tarch::la::Vector<DIMENSIONS, double> domainOffset(0);
           tarch::la::Vector<DIMENSIONS, double> domainSize(DOMAIN_SIZE);
           tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(subfactor);
-          tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth((double)1.0/((double)meshWidthParam*(double)subfactor)); // TODO: was 0.1/subfactor
+          //TODO unterweg debug
+          //tarch::la::Vector<DIMENSIONS, double> initialMaximalMeshWidth(DOMAIN_SIZE/(subfactor*meshWidthParam)); // TODO: was 0.1/subfactor
+          tarch::la::Vector<DIMENSIONS, double> initialMaximalMeshWidth(DOMAIN_SIZE/(subfactor*meshWidthParam) / 9); // TODO: was 0.1/subfactor
           int ghostlayerWidth = 1;
           int unknownsPerSubcell = 3;
           int auxiliarFieldsPerSubcell = 0;
@@ -275,8 +278,8 @@ int main(int argc, char **argv) {
 
           //Check parameters
           assertion1(tarch::la::greater(domainSize(0), 0.0) && tarch::la::greater(domainSize(1), 0.0), domainSize);
-          if(initialMinimalMeshWidth(0) > domainSize(0) || initialMinimalMeshWidth(1) > domainSize(1)) {
-            logError("main(...)", "Domainsize or initialMinimalMeshWidth not set properly.");
+          if(initialMaximalMeshWidth(0) > domainSize(0) || initialMaximalMeshWidth(1) > domainSize(1)) {
+            logError("main(...)", "Domainsize or initialMaximalMeshWidth not set properly.");
           }
           if(tarch::la::oneGreater(tarch::la::Vector<DIMENSIONS, int>(1), subdivisionFactor(0)) ) {
             logError("main(...)", "subdivisionFactor not set properly.");
@@ -291,7 +294,7 @@ int main(int argc, char **argv) {
             *numerics,
             domainOffset,
             domainSize,
-            initialMinimalMeshWidth,
+            initialMaximalMeshWidth,
             subdivisionFactor,
             ghostlayerWidth,
             unknownsPerSubcell,
@@ -325,7 +328,7 @@ int main(int argc, char **argv) {
                    runner->runNextPossibleTimestep(true);
                    next_plot_time += plot_timestep;
                 } else {
-                   runner->runNextPossibleTimestep(false);
+                   runner->runNextPossibleTimestep(true);
                 }
                 //runner->gatherCurrentSolution();
                 double stop_time = MPI_Wtime();
@@ -344,9 +347,9 @@ int main(int argc, char **argv) {
                           << " maxLevel " << runner->getState().getMaxLevel()
                           << " working_nodes " << tarch::parallel::NodePool::getInstance().getNumberOfWorkingNodes()
                           << " idle_nodes " << tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()
-                          << " registered_nodes " << tarch::parallel::NodePool::getInstance().getNumberOfRegisteredNodes()
-                          << " sendReceiveBufferSize " << peano::parallel::SendReceiveBufferPool::getInstance().getBufferSize()
-                          << " joinBufferSize " <<  peano::parallel::JoinDataBufferPool::getInstance().getBufferSize()
+                          //<< " registered_nodes " << tarch::parallel::NodePool::getInstance().getNumberOfRegisteredNodes()
+//                          << " sendReceiveBufferSize " << peano::parallel::SendReceiveBufferPool::getInstance().getBufferSize()
+//                          << " joinBufferSize " <<  peano::parallel::JoinDataBufferPool::getInstance().getBufferSize()
                           << std::endl;
               }
 
@@ -365,7 +368,7 @@ int main(int argc, char **argv) {
  
           tarch::parallel::NodePool::getInstance().terminate();
 
-          peano::parallel::loadbalancing::Oracle::getInstance().reset();
+//          peano::parallel::loadbalancing::Oracle::getInstance().reset();
 
       }
   }

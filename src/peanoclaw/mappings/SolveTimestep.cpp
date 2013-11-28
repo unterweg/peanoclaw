@@ -492,6 +492,12 @@ void peanoclaw::mappings::SolveTimestep::touchVertexFirstTime(
 ) {
   logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
+  //TODO unterweg debug
+  logInfo("", "Refinement management for vertex at " << fineGridX << " on level " << (coarseGridVerticesEnumerator.getLevel() + 1) << " on rank " << tarch::parallel::Node::getInstance().getRank() << ": "
+      << fineGridVertex.shouldErase() << ", "
+      << fineGridVertex.getCurrentAdjacentCellsHeight() << ", "
+      << fineGridVertex.isHangingNode());
+
   // Application driven refinement control
   if(
       fineGridVertex.shouldRefine()
@@ -506,7 +512,8 @@ void peanoclaw::mappings::SolveTimestep::touchVertexFirstTime(
     fineGridVertex.refine();
   } else if (
       fineGridVertex.shouldErase()
-      && fineGridVertex.getCurrentAdjacentCellsHeight() == 1
+      && fineGridVertex.getRefinementControl() == peanoclaw::Vertex::Records::Refined
+      //&& fineGridVertex.getCurrentAdjacentCellsHeight() == 1
     ) {
     //TODO unterweg debug
 //    logInfo("", "Erasing vertex at " << fineGridX << " on level " << (coarseGridVerticesEnumerator.getLevel()+1)
@@ -514,10 +521,11 @@ void peanoclaw::mappings::SolveTimestep::touchVertexFirstTime(
 //      << " on rank " << tarch::parallel::Node::getInstance().getRank()
 //      #endif
 //    );
+    assertion4(fineGridVertex.getAdjacentCellsHeightOfPreviousIteration() <= 1, fineGridVertex.getCurrentAdjacentCellsHeight(), fineGridX, fineGridH, coarseGridVerticesEnumerator.getLevel());
     fineGridVertex.erase();
   }
   fineGridVertex.setShouldRefine(false);
-  fineGridVertex.resetSubcellsEraseVeto();
+  fineGridVertex.resetSubcellEraseVetos();
 
   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }
@@ -533,7 +541,7 @@ void peanoclaw::mappings::SolveTimestep::touchVertexLastTime(
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
- 
+
   logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
 }
 
@@ -702,6 +710,7 @@ void peanoclaw::mappings::SolveTimestep::leaveCell(
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfCell
 ) {
   logTraceInWith4Arguments( "leaveCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
+
   Patch patch(fineGridCell);
 
   //Refinement criterion
@@ -741,6 +750,7 @@ void peanoclaw::mappings::SolveTimestep::leaveCell(
       coarseGridVertices[coarseGridVerticesEnumerator(i)].setSubcellEraseVeto(i);
     }
   }
+
   logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }
 

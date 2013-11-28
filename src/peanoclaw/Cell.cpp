@@ -2,14 +2,16 @@
 
 
 peanoclaw::Cell::Cell():
-  Base() {
+  Base() { 
   _cellData.setCellDescriptionIndex(-2);
+  #ifdef Parallel
   setCellIsAForkCandidate(false);
+  #endif
 }
 
 
 peanoclaw::Cell::Cell(const Base::DoNotCallStandardConstructor& value):
-  Base(value) {
+  Base(value) { 
   // Please do not insert anything here
 }
 

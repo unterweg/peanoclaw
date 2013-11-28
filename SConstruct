@@ -48,7 +48,7 @@ def addPeanoClawFlags(libpath, libs, cpppath, cppdefines):
    if(environment['PLATFORM'] == 'darwin'):
      ccflags.append('-flat_namespace')
      linkerflags.append('-flat_namespace')
-   elif build == 'release':
+   elif build == 'release' or build == 'asserts':
      cppdefines.append('_GLIBCXX_DEBUG')
      cppdefines.append('NDEBUG')
      
@@ -552,12 +552,19 @@ sourcesPeanoBase = [
   Glob(join(buildpath, 'kernel/*.cpp'))
 ]
 
+sourcesLoadBalancingToolBox = [
+  Glob(join(buildpath, 'kernel/mpibalancing/*.cpp')),
+  Glob(join(buildpath, 'kernel/mpibalancing/ControlLoopLoadBalancer/*.cpp')),
+  Glob(join(buildpath, 'kernel/mpibalancing/ControlLoopLoadBalancer/strategies/*.cpp'))
+]
+
 sourcesToolBox = [
   Glob(join(buildpath, 'kernel/peano/toolbox/solver/*.cpp')),
   Glob(join(buildpath, 'kernel/peano/toolbox/solver/configurations/*.cpp')),
   Glob(join(buildpath, 'kernel/peano/toolbox/solver/tests/*.cpp')),
   Glob(join(buildpath, 'kernel/peano/toolbox/stencil/*.cpp')),
-  Glob(join(buildpath, 'kernel/peano/toolbox/refinement/*.cpp'))
+  Glob(join(buildpath, 'kernel/peano/toolbox/refinement/*.cpp')),
+  sourcesLoadBalancingToolBox
 ]
 
 sourcesToolBoxVHH = [
@@ -581,6 +588,7 @@ sourcesPeanoClaw = [
   Glob(join(buildpath, 'peanoclaw/runners/*.cpp')),
   Glob(join(buildpath, 'peanoclaw/statistics/*.cpp')),
   Glob(join(buildpath, 'peanoclaw/tests/*.cpp')),
+  sourcesToolBox
 	]
 
 ##### Define sources of application peanoclaw
