@@ -9,6 +9,7 @@
 #define PEANOCLAW_PARALLELSUBGRID_H_
 
 #include "peanoclaw/Cell.h"
+#include "peanoclaw/Patch.h"
 #include "peanoclaw/Vertex.h"
 #include "peanoclaw/records/CellDescription.h"
 #include "peanoclaw/records/Data.h"
@@ -38,6 +39,14 @@ class peanoclaw::ParallelSubgrid {
 
   ParallelSubgrid(
     int subgridDescriptionIndex
+  );
+
+  ParallelSubgrid(
+    const Cell& cell
+  );
+
+  ParallelSubgrid(
+    Patch& subgrid
   );
 
   /**
@@ -70,10 +79,27 @@ class peanoclaw::ParallelSubgrid {
   int getNumberOfSharedAdjacentVertices() const;
 
   /**
+   * Returns the number of additional transfers for this subgrid that have to
+   * be skipped.
+   */
+  int getNumberOfTransfersToBeSkipped() const;
+
+  /**
+   * Decreases the number of additional transfers for this subgrid that have to
+   * be skipped.
+   */
+  void decreaseNumberOfTransfersToBeSkipped();
+
+  /**
+   * Resets the number to zero.
+   */
+  void resetNumberOfTransfersToBeSkipped();
+
+  /**
    * Counts how many of the adjacent subgrids belong to a different MPI rank
    * and how many vertices are involved in the communication.
    */
-  void countNumberOfAdjacentParallelSubgridsAndResetExclusiveFlag(
+  void countNumberOfAdjacentParallelSubgrids(
     peanoclaw::Vertex * const            vertices,
     const peano::grid::VertexEnumerator& verticesEnumerator
   );

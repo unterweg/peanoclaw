@@ -132,8 +132,9 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::switchToAndAddVirt
   }
 }
 
-void peanoclaw::interSubgridCommunication::GridLevelTransfer::restrictToAllVirtualSubgrids(
-  const Patch& fineSubgrid
+void peanoclaw::interSubgridCommunication::GridLevelTransfer::restrictToOverlappingVirtualSubgrids(
+  const Patch&           subgrid,
+  const ParallelSubgrid& parallelSubgrid
 ) {
   tarch::multicore::Lock lock(_virtualPatchListSemaphore);
 
@@ -145,32 +146,32 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::restrictToAllVirtu
     int virtualSubgridDescriptionIndex = i->second;
     CellDescription& virtualSubgridDescription = CellDescriptionHeap::getInstance().getData(virtualSubgridDescriptionIndex).at(0);
     Patch virtualSubgrid(virtualSubgridDescription);
+    ParallelSubgrid virtualParallelSubgrid(virtualSubgridDescription);
+
+    // Restrict only if coarse patches can advance in time
+    bool areAllCoarseSubgridsBlocked = tarch::la::smaller(subgrid.getCurrentTime() + subgrid.getTimestepSize(), virtualSubgrid.getMinimalLeafNeighborTimeConstraint());
+    // Restrict only if this patch is overlapped by neighboring ghostlayers
+    bool isOverlappedByCoarseGhostlayers
+      = tarch::la::oneGreater(virtualSubgrid.getUpperNeighboringGhostlayerBounds(), subgrid.getPosition())
+        || tarch::la::oneGreater(subgrid.getPosition() + subgrid.getSize(), virtualSubgrid.getLowerNeighboringGhostlayerBounds());
+
     if(
-//          true
-        // Restrict if virtual patch is coarsening
-        virtualSubgrid.willCoarsen()
-        #ifdef Dim2
-        || (
-          // Restrict only if coarse patches can advance in time
-          (tarch::la::greaterEquals(fineSubgrid.getCurrentTime() + fineSubgrid.getTimestepSize(), virtualSubgrid.getMinimalLeafNeighborTimeConstraint()))
-        &&
-          // Restrict only if this patch is overlapped by neighboring ghostlayers
-          (tarch::la::oneGreater(virtualSubgrid.getUpperNeighboringGhostlayerBounds(), fineSubgrid.getPosition())
-          || tarch::la::oneGreater(fineSubgrid.getPosition() + fineSubgrid.getSize(), virtualSubgrid.getLowerNeighboringGhostlayerBounds()))
-        )
-        #else
-         || true
-        #endif
+      // Restrict if virtual subgrid is coarsening or if the data on the virtual subgrid is required for timestepping
+      virtualSubgrid.willCoarsen()
+      || (!areAllCoarseSubgridsBlocked && isOverlappedByCoarseGhostlayers)
+      //|| true
     ) {
-      assertion2(virtualSubgrid.isVirtual(), fineSubgrid.toString(), virtualSubgrid.toString());
-      assertion2(!tarch::la::oneGreater(virtualSubgrid.getPosition(), fineSubgrid.getPosition())
-          && !tarch::la::oneGreater(fineSubgrid.getPosition() + fineSubgrid.getSize(), virtualSubgrid.getPosition() + virtualSubgrid.getSize()),
-          fineSubgrid.toString(), virtualSubgrid.toString());
+      assertion2(virtualSubgrid.isVirtual(), subgrid.toString(), virtualSubgrid.toString());
+      assertion2(!tarch::la::oneGreater(virtualSubgrid.getPosition(), subgrid.getPosition())
+          && !tarch::la::oneGreater(subgrid.getPosition() + subgrid.getSize(), virtualSubgrid.getPosition() + virtualSubgrid.getSize()),
+          subgrid.toString(), virtualSubgrid.toString());
 
-      _numerics.restrict(fineSubgrid, virtualSubgrid, !virtualSubgrid.willCoarsen());
+      _numerics.restrict(subgrid, virtualSubgrid, !virtualSubgrid.willCoarsen());
 
-      virtualSubgrid.setEstimatedNextTimestepSize(fineSubgrid.getEstimatedNextTimestepSize());
+      virtualSubgrid.setEstimatedNextTimestepSize(subgrid.getEstimatedNextTimestepSize());
     }
+
+    virtualParallelSubgrid.markCurrentStateAsSent(virtualParallelSubgrid.wasCurrentStateSent() || parallelSubgrid.wasCurrentStateSent());
   }
 }
 
@@ -212,6 +213,8 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::finalizeVirtualSub
   if(isPeanoCellLeaf) {
     assertion1(tarch::la::greaterEquals(subgrid.getTimestepSize(), 0.0), subgrid);
     subgrid.switchToLeaf();
+    ParallelSubgrid parallelSubgrid(subgrid);
+    parallelSubgrid.markCurrentStateAsSent(false);
   } else {
     if(!isPatchAdjacentToRemoteRank(
       fineGridVertices,
@@ -355,7 +358,10 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepDown(
     if(coarsePatch.shouldFineGridsSynchronize()) {
       //Set time constraint of fine grid to time of coarse grid to synch
       //on that time.
-      fineSubgrid.updateMinimalNeighborTimeConstraint(coarsePatch.getCurrentTime(), coarsePatch.getCellDescriptionIndex());
+      fineSubgrid.updateMinimalNeighborTimeConstraint(
+        coarsePatch.getCurrentTime() + coarsePatch.getTimestepSize(),
+        coarsePatch.getCellDescriptionIndex()
+      );
     }
   }
 }
@@ -363,6 +369,7 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepDown(
 void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepUp(
   int                                  coarseCellDescriptionIndex,
   Patch&                               finePatch,
+  ParallelSubgrid&                     fineParallelSubgrid,
   bool                                 isPeanoCellLeaf,
   peanoclaw::Vertex * const            fineGridVertices,
   const peano::grid::VertexEnumerator& fineGridVerticesEnumerator
@@ -395,7 +402,7 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepUp(
   }
 
   if(finePatch.isLeaf()) {
-    restrictToAllVirtualSubgrids(finePatch);
+    restrictToOverlappingVirtualSubgrids(finePatch, fineParallelSubgrid);
 
     //TODO unterweg dissertation:
     //If the patch is leaf, but the Peano cell is not, it got refined.
@@ -462,7 +469,7 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::restrictDestroyedS
   peanoclaw::Vertex * const            fineGridVertices,
   const peano::grid::VertexEnumerator& fineGridVerticesEnumerator
 ) {
-  assertion1(tarch::la::greaterEquals(coarseSubgrid.getTimestepSize(), 0.0), destroyedSubgrid);
+  assertion2(tarch::la::greaterEquals(coarseSubgrid.getTimestepSize(), 0.0), destroyedSubgrid, coarseSubgrid);
 
   //Fix timestep size
   assertion1(tarch::la::greaterEquals(coarseSubgrid.getTimestepSize(), 0), coarseSubgrid);
@@ -480,3 +487,5 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::restrictDestroyedS
   //the coarse patch might get refined immediately.
   coarseSubgrid.setDemandedMeshWidth(coarseSubgrid.getSubcellSize()(0));
 }
+
+

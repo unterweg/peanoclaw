@@ -17,6 +17,8 @@
 #include "tarch/parallel/Node.h"
 #include "tarch/multicore/Lock.h"
 
+#include "tarch/Assertions.h"
+
 tarch::logging::Log peanoclaw::pyclaw::PyClaw::_log("peanoclaw::pyclaw::PyClaw");
 
 peanoclaw::pyclaw::PyClaw::PyClaw(
@@ -95,7 +97,11 @@ double peanoclaw::pyclaw::PyClaw::solveTimestep(Patch& patch, double maximumTime
 
   tarch::timing::Watch pyclawWatch("", "", false);
   pyclawWatch.startTimer();
+
   double dtAndEstimatedNextDt[2];
+  dtAndEstimatedNextDt[0] = 0.0;
+  dtAndEstimatedNextDt[1] = 0.0;
+
   double requiredMeshWidth
     = _solverCallback(
       dtAndEstimatedNextDt,
@@ -191,7 +197,7 @@ void peanoclaw::pyclaw::PyClaw::fillBoundaryLayer(Patch& patch, int dimension, b
 
   tarch::multicore::Lock lock(_semaphore);
 
-  logDebug("fillBoundaryLayerInPyClaw", "Setting left boundary for " << patch.getPosition() << ", dim=" << dimension << ", setUpper=" << setUpper);
+  logDebug("fillBoundaryLayerInPyClaw", "Setting boundary for " << patch.getPosition() << ", dim=" << dimension << ", setUpper=" << setUpper);
 
   PyClawState state(patch);
   _boundaryConditionCallback(state._q, state._qbc, dimension, setUpper ? 1 : 0);

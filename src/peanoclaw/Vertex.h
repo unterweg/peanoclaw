@@ -1,3 +1,4 @@
+
 // This file is part of the Peano project. For conditions of distribution and 
 // use, please see the copyright notice at www.peano-framework.org
 #ifndef _PEANOCLAW_VERTEX_H_ 
@@ -156,19 +157,47 @@ class peanoclaw::Vertex: public peano::grid::Vertex< peanoclaw::records::Vertex 
     bool shouldErase() const;
 
     /**
-     * Sets, whether this vertex was just created or not.
+     * Increases the age of this vertex by one.
      */
-    void setWasCreatedInThisIteration(bool flag);
+    void increaseAgeInGridIterations();
 
     /**
-     * Returns, whether this vertex was just created or not.
+     * Returns the age of this vertex in grid iterations.
      */
-    bool wasCreatedInThisIteration() const;
+    int getAgeInGridIterations() const;
+
+    /**
+     * Sets the age to zero.
+     */
+    void resetAgeInGridIterations();
 
     /**
      * Merges a neighbor vertex into this vertex.
      */
     void mergeWithNeighbor(const Vertex& neighbor);
+
+    /**
+     * Sets the ranks in the former grid iteration.
+     */
+    void setAdjacentRanksInFormerGridIteration(const tarch::la::Vector<TWO_POWER_D, int>& adjacentRanksInFormerGridIteration);
+
+    /**
+     * Returns the ranks adjacent to this vertex during the last grid
+     * iteration.
+     */
+    tarch::la::Vector<TWO_POWER_D, int> getAdjacentRanksInFormerGridIteration() const;
+
+    /**
+     * Sets whether the ranks adjacent to this vertex changed in this
+     * grid iteration.
+     */
+    void setWhetherAdjacentRanksChanged(bool adjacentRanksChanged);
+
+    /**
+     * Returns whether the ranks adjacent to this vertex got changed in
+     * this grid iteration.
+     */
+    bool wereAdjacentRanksChanged() const;
 };
 
 

@@ -213,10 +213,16 @@ class peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids {
      * TODO unterweg dissertation
      */
     void fillAdjacentPatchIndicesFromCoarseVertices(
-      const peanoclaw::Vertex* coarseGridVertices,
+      const peanoclaw::Vertex*                  coarseGridVertices,
       const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
-      const tarch::la::Vector<DIMENSIONS,int>&                   localPositionOfHangingNode
+      const tarch::la::Vector<DIMENSIONS,int>&  localPositionOfHangingNode
     );
+
+    /**
+     * Checks whether the adjacent ranks for this vertex changed and store
+     * this information in the vertex.
+     */
+    void checkForChangesInAdjacentRanks();
 };
 
 /**
@@ -235,13 +241,13 @@ class peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids {
 class peanoclaw::interSubgridCommunication::aspects::CheckIntersectingParallelAndAdaptiveBoundaryFunctor {
 
   private:
-    const tarch::la::Vector<DIMENSIONS_TIMES_TWO, int>& _adjacentRanks;
-    int                                                 _numberOfDiagonallyAdjacentSubgrids;
-    int                                                 _numberOfDiagonallyAdjacentRefinedSubgrids;
+    const tarch::la::Vector<TWO_POWER_D, int>& _adjacentRanks;
+    int                                        _numberOfDiagonallyAdjacentSubgrids;
+    int                                        _numberOfDiagonallyAdjacentRefinedSubgrids;
 
   public:
     CheckIntersectingParallelAndAdaptiveBoundaryFunctor(
-      const tarch::la::Vector<DIMENSIONS_TIMES_TWO, int>& adjacentRanks
+      const tarch::la::Vector<TWO_POWER_D, int>& adjacentRanks
     );
 
     void operator() (

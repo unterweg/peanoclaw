@@ -1,13 +1,17 @@
 #include "peano/utils/Globals.h"
 
-Packed-Type: short int;
+Packed-Type: int;
 
 class peano::applications::peanoclaw::dastgen::Vertex {
 	parallelise persistent int indicesOfAdjacentCellDescriptions[TWO_POWER_D];
 
   parallelise persistent packed bool adjacentSubcellsEraseVeto[TWO_POWER_D];
+  
+  persistent int adjacentRanksInFormerIteration[TWO_POWER_D];
+  
+  parallelise persistent packed bool adjacentRanksChanged;
 	
 	parallelise persistent packed bool shouldRefine;
 	
-	parallelise persistent packed bool wasCreatedInThisIteration; 
+	parallelise persistent int ageInGridIterations;
 };

@@ -8,6 +8,8 @@ w * GridLevelTransfer.h
 #ifndef PEANO_APPLICATIONS_PEANOCLAW_GRIDLEVELTRANSFER_H_
 #define PEANO_APPLICATIONS_PEANOCLAW_GRIDLEVELTRANSFER_H_
 
+#include "peanoclaw/ParallelSubgrid.h"
+#include "peanoclaw/Patch.h"
 #include "peanoclaw/records/CellDescription.h"
 #include "peanoclaw/records/Data.h"
 
@@ -183,11 +185,27 @@ class peanoclaw::interSubgridCommunication::GridLevelTransfer {
     );
 
     /**
-     * Restricts to all subgrids that are in the path from the root of
-     * the spacetree to the current subgrid.
+     * Restricts to virtual subgrids that overlap with the current
+     * subgrid.
+     *
+     * While basically this should restrict to all
+     * overlapping virtual subgrids for optimization reasons this is
+     * not true. Restriction can be omitted if the virtual subgrid
+     * (or the part of it that is overlapped by the current subgrid)
+     * for sure will not be required in the current grid iteration.
+     *
+     * This, for example, is true if the timestepping of all
+     * affected coarse subgrids will be blocked by the current subgrid.
+     *
+     * It also is true if no ghostlayer overlaps with the current
+     * subgrid.
+     *
+     * TODO unterweg dissertation Optimierung für Restriktion siehe oben.
+     *
      */
-    void restrictToAllVirtualSubgrids(
-      const Patch& subgrid
+    void restrictToOverlappingVirtualSubgrids(
+      const Patch&           subgrid,
+      const ParallelSubgrid& fineParallelSubgrid
     );
 
     /**
@@ -251,6 +269,7 @@ class peanoclaw::interSubgridCommunication::GridLevelTransfer {
     void stepUp(
       int                                  coarseCellDescriptionIndex,
       Patch&                               finePatch,
+      ParallelSubgrid&                     fineParallelSubgrid,
       bool                                 isPeanoCellLeaf,
       peanoclaw::Vertex * const            fineGridVertices,
       const peano::grid::VertexEnumerator& fineGridVerticesEnumerator

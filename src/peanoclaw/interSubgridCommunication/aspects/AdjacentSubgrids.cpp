@@ -55,7 +55,21 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::convertPer
 
   //Copy adjacency information from destroyed vertex to hanging vertex description
   for(int i = 0; i < TWO_POWER_D; i++) {
-    vertexDescription.setIndicesOfAdjacentCellDescriptions(i, _vertex.getAdjacentCellDescriptionIndex(i));
+    if(_vertex.getAdjacentCellDescriptionIndex(i) != -1) {
+
+      //TODO unterweg dissertation: Wenn ein echter Vertex zu einem hängenden wird müssen alle
+      //adjazenten remote-Subgrids aus der Adjazenzinformation gestrichen werden. Ansonsten kann
+      //es sein, dass der Vertex ein schon lange gecoarstes Subgrid als Nachbarn hält, das damit
+      //das Timestepping blockiert.
+      Patch subgrid(_vertex.getAdjacentCellDescriptionIndex(i));
+      if(!subgrid.isRemote()) {
+        vertexDescription.setIndicesOfAdjacentCellDescriptions(i, _vertex.getAdjacentCellDescriptionIndex(i));
+      } else {
+        vertexDescription.setIndicesOfAdjacentCellDescriptions(i, -1);
+      }
+    } else {
+      vertexDescription.setIndicesOfAdjacentCellDescriptions(i, -1);
+    }
   }
 }
 
@@ -82,7 +96,7 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::convertHan
     }
   }
 
-  _vertex.setWasCreatedInThisIteration(true);
+  _vertex.resetAgeInGridIterations();
 }
 
 void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::createHangingVertex(
@@ -215,9 +229,9 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::regainTwoI
 }
 
 void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::fillAdjacentPatchIndicesFromCoarseVertices(
-  const peanoclaw::Vertex* coarseGridVertices,
-  const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
-  const tarch::la::Vector<DIMENSIONS,int>&                   localPositionOfHangingNode
+  const peanoclaw::Vertex*                 coarseGridVertices,
+  const peano::grid::VertexEnumerator&     coarseGridVerticesEnumerator,
+  const tarch::la::Vector<DIMENSIONS,int>& localPositionOfHangingNode
 ) {
   logTraceInWith1Argument( "fillAdjacentPatchIndicesFromCoarseVertices(...)", localPositionOfHangingNode );
 
@@ -296,8 +310,21 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::refineOnPa
   logTraceOut("refineOnParallelBoundary(...)");
 }
 
+void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::checkForChangesInAdjacentRanks() {
+  #ifdef Parallel
+  _vertex.setWhetherAdjacentRanksChanged(false);
+  for(int i = 0; i < TWO_POWER_D; i++) {
+    if(_vertex.getAdjacentRanks()(i) != _vertex.getAdjacentRanksInFormerGridIteration()(i)) {
+      _vertex.setWhetherAdjacentRanksChanged(true);
+      break;
+    }
+  }
+  _vertex.setAdjacentRanksInFormerGridIteration(_vertex.getAdjacentRanks());
+  #endif
+}
+
 peanoclaw::interSubgridCommunication::aspects::CheckIntersectingParallelAndAdaptiveBoundaryFunctor::CheckIntersectingParallelAndAdaptiveBoundaryFunctor(
-  const tarch::la::Vector<DIMENSIONS_TIMES_TWO, int>& adjacentRanks
+  const tarch::la::Vector<TWO_POWER_D, int>& adjacentRanks
 ) : _adjacentRanks(adjacentRanks),
     _numberOfDiagonallyAdjacentSubgrids(0),
     _numberOfDiagonallyAdjacentRefinedSubgrids(0)

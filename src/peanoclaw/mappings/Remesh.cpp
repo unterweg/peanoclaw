@@ -187,6 +187,14 @@ void peanoclaw::mappings::Remesh::destroyHangingVertex(
     _domainSize
   );
 
+  //TODO unterweg debug
+  for(int i = 0; i < TWO_POWER_D; i++) {
+    if(fineGridVertex.getAdjacentCellDescriptionIndex(i) != -1) {
+      Patch subgrid(fineGridVertex.getAdjacentCellDescriptionIndex(i));
+      assertion1(!subgrid.isRemote() || subgrid.getLevel() <= coarseGridVerticesEnumerator.getLevel(), subgrid);
+    }
+  }
+
   logTraceOutWith1Argument( "destroyHangingVertex(...)", fineGridVertex );
 }
 
@@ -277,6 +285,9 @@ void peanoclaw::mappings::Remesh::createCell(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
   logTraceInWith6Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, coarseGridVerticesEnumerator.toString(), fineGridPositionOfCell, fineGridVerticesEnumerator.getCellCenter() );
+
+  //TODO unterweg debug
+//  std::cout << "Creating cell at " << fineGridVerticesEnumerator.getVertexPosition() << " on level " << fineGridVerticesEnumerator.getLevel() << " on rank " << tarch::parallel::Node::getInstance().getRank() << std::endl;
 
   //Initialise new Patch
   Patch fineGridPatch = Patch(
@@ -383,6 +394,10 @@ void peanoclaw::mappings::Remesh::destroyCell(
 ) {
   logTraceInWith4Arguments( "destroyCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
+  //TODO unterweg debug
+//  std::cout << "Destroy cell at " << fineGridVerticesEnumerator.getVertexPosition() << " on level " << fineGridVerticesEnumerator.getLevel() << " on rank " << tarch::parallel::Node::getInstance().getRank()
+//      << " copying: " << fineGridCell.isAssignedToRemoteRank() << std::endl;
+
   assertion5(
     fineGridCell.getCellDescriptionIndex() != -2,
     fineGridCell.toString(),
@@ -470,27 +485,6 @@ void peanoclaw::mappings::Remesh::mergeWithNeighbour(
 ) {
   logTraceInWith6Arguments( "mergeWithNeighbour(...)", vertex, neighbour, fromRank, fineGridX, fineGridH, level );
 
-  //Prepare adjacent subgrids
-  for(int i = 0; i < TWO_POWER_D; i++) {
-    if(!tarch::parallel::Node::getInstance().isGlobalMaster() != 0 && fromRank != 0) {
-      if(vertex.getAdjacentCellDescriptionIndexInPeanoOrder(i) == -1 && vertex.getAdjacentRanks()(i) != 0) {
-        //Create remote patch if it does not exist and it belongs to a rank other than global master (which would be outside of the domain)
-        tarch::la::Vector<DIMENSIONS, double> subgridPosition = fineGridX + tarch::la::multiplyComponents(fineGridH, peano::utils::dDelinearised(i, 2).convertScalar<double>() - 1.0);
-        Patch outsidePatch(
-          subgridPosition,
-          fineGridH,
-          _unknownsPerSubcell,
-          _auxiliarFieldsPerSubcell,
-          _defaultSubdivisionFactor,
-          _defaultGhostLayerWidth,
-          _initialTimestepSize,
-          level
-        );
-        vertex.setAdjacentCellDescriptionIndexInPeanoOrder(i, outsidePatch.getCellDescriptionIndex());
-      }
-    }
-  }
-
   peanoclaw::parallel::NeighbourCommunicator communicator(fromRank, fineGridX, level, fineGridH, _remoteSubgridMap, _parallelStatistics);
   communicator.receiveSubgridsForVertex(
     vertex,
@@ -499,6 +493,15 @@ void peanoclaw::mappings::Remesh::mergeWithNeighbour(
     fineGridH,
     level
   );
+
+  #ifdef Asserts
+  for(int i = 0; i < TWO_POWER_D; i++) {
+    if(vertex.getAdjacentCellDescriptionIndex(i) != -1) {
+      Patch subgrid(vertex.getAdjacentCellDescriptionIndex(i));
+      assertion1(!tarch::la::smaller(subgrid.getTimestepSize(), 0.0) || !subgrid.isLeaf(), subgrid);
+    }
+  }
+  #endif
 
   logTraceOut( "mergeWithNeighbour(...)" );
 }
@@ -558,6 +561,8 @@ void peanoclaw::mappings::Remesh::prepareCopyToRemoteNode(
     //Switch to remote after having sent the patch away...
     Patch patch(localCell);
     patch.setIsRemote(true);
+    ParallelSubgrid parallelSubgrid(localCell);
+    parallelSubgrid.resetNumberOfTransfersToBeSkipped();
   }
   logTraceOut( "prepareCopyToRemoteNode(...)" );
 }
@@ -594,6 +599,15 @@ void peanoclaw::mappings::Remesh::mergeWithRemoteDataDueToForkOrJoin(
     cellSize,
     *_state
   );
+
+  //TODO unterweg debug
+  #ifdef Asserts
+  if(localCell.getCellDescriptionIndex() >= 0) {
+    ParallelSubgrid parallelSubgrid(localCell);
+    Patch subgrid(localCell);
+    assertion1(parallelSubgrid.getNumberOfTransfersToBeSkipped() == 0, subgrid);
+  }
+  #endif
 
   logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
@@ -803,7 +817,15 @@ void peanoclaw::mappings::Remesh::touchVertexFirstTime(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
+
+  peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids adjacentSubgrids(
+    fineGridVertex,
+    _vertexPositionToIndexMap,
+    fineGridX,
+    coarseGridVerticesEnumerator.getLevel()+1
+  );
+  adjacentSubgrids.checkForChangesInAdjacentRanks();
+
   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }
 
@@ -834,8 +856,7 @@ void peanoclaw::mappings::Remesh::touchVertexLastTime(
     fineGridPositionOfVertex
   );
 
-  //Mark vertex as "old" (i.e. older than just created ;-))
-  fineGridVertex.setWasCreatedInThisIteration(false);
+  fineGridVertex.increaseAgeInGridIterations();
 
   logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
 }
@@ -947,10 +968,14 @@ void peanoclaw::mappings::Remesh::leaveCell(
   Patch finePatch(
     fineGridCell
   );
+  ParallelSubgrid fineParallelSubgrid(
+    fineGridCell
+  );
 
   _gridLevelTransfer->stepUp(
     coarseGridCell.getCellDescriptionIndex(),
     finePatch,
+    fineParallelSubgrid,
     fineGridCell.isLeaf(),
     fineGridVertices,
     fineGridVerticesEnumerator
@@ -959,20 +984,14 @@ void peanoclaw::mappings::Remesh::leaveCell(
   assertionEquals1(finePatch.isLeaf(), fineGridCell.isLeaf(), finePatch);
   assertionEquals1(finePatch.getLevel(), fineGridVerticesEnumerator.getLevel(), finePatch.toString());
 
-  //TODO unterweg: Braucht man das wirklich nicht mehr?
-//  for(int i = 0; i < TWO_POWER_D; i++) {
-//    fineGridVertices[fineGridVerticesEnumerator(i)].setAdjacentCellDescriptionIndex(
-//      i,
-//      fineGridCell.getCellDescriptionIndex()
-//    );
-//  }
-
-  //Count number of adjacent subgrids
-  ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
-  parallelSubgrid.countNumberOfAdjacentParallelSubgridsAndResetExclusiveFlag(
-    fineGridVertices,
-    fineGridVerticesEnumerator
-  );
+  if(!fineGridCell.isAssignedToRemoteRank()) {
+    //Count number of adjacent subgrids
+    ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
+    parallelSubgrid.countNumberOfAdjacentParallelSubgrids(
+      fineGridVertices,
+      fineGridVerticesEnumerator
+    );
+  }
 
   logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }

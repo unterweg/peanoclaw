@@ -23,6 +23,18 @@ peanoclaw::ParallelSubgrid::ParallelSubgrid(
   _cellDescription = &CellDescriptionHeap::getInstance().getData(subgridDescriptionIndex).at(0);
 }
 
+peanoclaw::ParallelSubgrid::ParallelSubgrid(
+  const Cell& cell
+) {
+  _cellDescription = &CellDescriptionHeap::getInstance().getData(cell.getCellDescriptionIndex()).at(0);
+}
+
+peanoclaw::ParallelSubgrid::ParallelSubgrid(
+  Patch& subgrid
+) {
+  _cellDescription = &CellDescriptionHeap::getInstance().getData(subgrid.getCellDescriptionIndex()).at(0);
+}
+
 void peanoclaw::ParallelSubgrid::markCurrentStateAsSent(bool wasSent) {
   #ifdef Parallel
   _cellDescription->setCurrentStateWasSend(wasSent);
@@ -59,27 +71,65 @@ int peanoclaw::ParallelSubgrid::getNumberOfSharedAdjacentVertices() const {
   #endif
 }
 
-void peanoclaw::ParallelSubgrid::countNumberOfAdjacentParallelSubgridsAndResetExclusiveFlag (
+int peanoclaw::ParallelSubgrid::getNumberOfTransfersToBeSkipped() const {
+  #ifdef Parallel
+  return _cellDescription->getNumberOfSkippedTransfers();
+  #else
+  return 0;
+  #endif
+}
+
+void peanoclaw::ParallelSubgrid::decreaseNumberOfTransfersToBeSkipped() {
+  #ifdef Parallel
+  _cellDescription->setNumberOfSkippedTransfers(_cellDescription->getNumberOfSkippedTransfers() - 1);
+  #endif
+}
+
+void peanoclaw::ParallelSubgrid::resetNumberOfTransfersToBeSkipped() {
+  #ifdef Parallel
+  _cellDescription->setNumberOfSkippedTransfers(0);
+  #endif
+}
+
+void peanoclaw::ParallelSubgrid::countNumberOfAdjacentParallelSubgrids (
   peanoclaw::Vertex * const            vertices,
   const peano::grid::VertexEnumerator& verticesEnumerator
 ) {
   #ifdef Parallel
+//  assertion1(_cellDescription->getNumberOfSharedAdjacentVertices() <= 0, _cellDescription->toString());
+
   int adjacentRank = -1;
   int localRank = tarch::parallel::Node::getInstance().getRank();
   int numberOfSharedAdjacentVertices = 0;
   for(int i = 0; i < TWO_POWER_D; i++) {
     Vertex& vertex = vertices[verticesEnumerator(i)];
 
-    for(int j = 0; j < TWO_POWER_D; j++) {
-      if(vertex.getAdjacentRanks()(j) != localRank) {
-        if(adjacentRank == -1 || vertex.getAdjacentRanks()(j) == adjacentRank) {
-          adjacentRank = vertex.getAdjacentRanks()(j);
-          numberOfSharedAdjacentVertices++;
-        } else {
-          adjacentRank = -1;
-          numberOfSharedAdjacentVertices = -1;
+    if(!vertex.isHangingNode()) {
+      bool oneAdjacentRemoteRank = false;
+      bool moreThanOneAdjacentRemoteRanks = false;
+
+      for(int j = 0; j < TWO_POWER_D; j++) {
+        if(
+            vertex.getAdjacentRanks()(j) != localRank
+            && vertex.getAdjacentRanks()(j) != 0
+          ) {
+          if(adjacentRank == -1) {
+            adjacentRank = vertex.getAdjacentRanks()(j);
+            oneAdjacentRemoteRank = true;
+          } else if(vertex.getAdjacentRanks()(j) == adjacentRank) {
+            oneAdjacentRemoteRank = true;
+          } else {
+            moreThanOneAdjacentRemoteRanks = true;
+            break;
+          }
         }
-        break;
+      }
+
+      if(oneAdjacentRemoteRank && !moreThanOneAdjacentRemoteRanks) {
+        numberOfSharedAdjacentVertices++;
+      } else if (moreThanOneAdjacentRemoteRanks) {
+        adjacentRank = -1;
+        numberOfSharedAdjacentVertices = -1;
       }
     }
 
@@ -88,9 +138,12 @@ void peanoclaw::ParallelSubgrid::countNumberOfAdjacentParallelSubgridsAndResetEx
       break;
     }
   }
+
+  assertion2(numberOfSharedAdjacentVertices <= TWO_POWER_D, numberOfSharedAdjacentVertices, _cellDescription->toString());
+
   _cellDescription->setAdjacentRank(adjacentRank);
   _cellDescription->setNumberOfSharedAdjacentVertices(numberOfSharedAdjacentVertices);
-  _cellDescription->setIsExclusiveMessageForSubgrid(false);
+  _cellDescription->setNumberOfSkippedTransfers(std::max(0, numberOfSharedAdjacentVertices-1));
   #endif
 }
 

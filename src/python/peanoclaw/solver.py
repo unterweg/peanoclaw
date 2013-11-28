@@ -60,13 +60,18 @@ class Solver(Solver):
 
         #Create callbacks
         self.initialization_callback = InitializationCallback(self, refinement_criterion, q_initialization, aux_initialization, initial_minimal_mesh_width)
-        self.solver_callback = SolverCallback(self, refinement_criterion, initial_minimal_mesh_width)
+        self.solver_callback = SolverCallback(self, refinement_criterion, initial_minimal_mesh_width, internal_settings.fixed_timestep_size)
         self.boundary_condition_callback = BoundaryConditionCallback(self)
         self.interpolation_callback = InterpolationCallback(interpolation, self)
         self.restriction_callback = RestrictionCallback(restriction, self)
         self.flux_correction_callback = FluxCorrectionCallback(flux_correction, self)
         
         self.internal_settings = internal_settings
+        
+        self._is_set_up = False
+        
+    def _del_(self):
+      self.teardown()
         
     def setup(self, solution):
         r"""
@@ -82,6 +87,8 @@ class Solver(Solver):
         self.solution = solution
         
         self.peano = self.setup_peano(solution)
+        
+        self._is_set_up = True 
         
     def run_tests(self, solution):
       self.peano = self.setup_peano(solution)
@@ -108,7 +115,7 @@ class Solver(Solver):
         See :class:`Solver` for full documentation
         """ 
         self.peano.teardown()
-        self.solver.teardown()
+        #self.solver.teardown()
     
     def evolve_to_time(self, solution, tend=None):
         r"""

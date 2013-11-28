@@ -34,7 +34,7 @@ namespace peanoclaw {
     *
     * 		   build date: 22-10-2013 20:59
     *
-    * @date   28/10/2013 11:29
+    * @date   28/11/2013 11:13
     */
    class peanoclaw::records::Vertex { 
       
@@ -61,8 +61,14 @@ namespace peanoclaw {
             #else
             std::bitset<TWO_POWER_D> _adjacentSubcellsEraseVeto;
             #endif
+            #ifdef UseManualAlignment
+            tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration __attribute__((aligned(VectorisationAlignment)));
+            #else
+            tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration;
+            #endif
+            bool _adjacentRanksChanged;
             bool _shouldRefine;
-            bool _wasCreatedInThisIteration;
+            int _ageInGridIterations;
             bool _isHangingNode;
             RefinementControl _refinementControl;
             int _adjacentCellsHeight;
@@ -87,7 +93,7 @@ namespace peanoclaw {
             /**
              * Generated
              */
-            PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+            PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
             
             
             /**
@@ -206,6 +212,84 @@ namespace peanoclaw {
             
             
             
+            /**
+             * Generated and optimized
+             * 
+             * If you realise a for loop using exclusively arrays (vectors) and compile 
+             * with -DUseManualAlignment you may add 
+             * \code
+             #pragma vector aligned
+             #pragma simd
+             \endcode to this for loop to enforce your compiler to use SSE/AVX.
+             * 
+             * The alignment is tied to the unpacked records, i.e. for packed class
+             * variants the machine's natural alignment is switched off to recude the  
+             * memory footprint. Do not use any SSE/AVX operations or 
+             * vectorisation on the result for the packed variants, as the data is misaligned. 
+             * If you rely on vectorisation, convert the underlying record 
+             * into the unpacked version first. 
+             * 
+             * @see convert()
+             */
+            inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               return _adjacentRanksInFormerIteration;
+            }
+            
+            
+            
+            /**
+             * Generated and optimized
+             * 
+             * If you realise a for loop using exclusively arrays (vectors) and compile 
+             * with -DUseManualAlignment you may add 
+             * \code
+             #pragma vector aligned
+             #pragma simd
+             \endcode to this for loop to enforce your compiler to use SSE/AVX.
+             * 
+             * The alignment is tied to the unpacked records, i.e. for packed class
+             * variants the machine's natural alignment is switched off to recude the  
+             * memory footprint. Do not use any SSE/AVX operations or 
+             * vectorisation on the result for the packed variants, as the data is misaligned. 
+             * If you rely on vectorisation, convert the underlying record 
+             * into the unpacked version first. 
+             * 
+             * @see convert()
+             */
+            inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               _adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+            }
+            
+            
+            
+            inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               return _adjacentRanksChanged;
+            }
+            
+            
+            
+            inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               _adjacentRanksChanged = adjacentRanksChanged;
+            }
+            
+            
+            
             inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -226,22 +310,22 @@ namespace peanoclaw {
             
             
             
-            inline bool getWasCreatedInThisIteration() const 
+            inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               return _wasCreatedInThisIteration;
+               return _ageInGridIterations;
             }
             
             
             
-            inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+            inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               _wasCreatedInThisIteration = wasCreatedInThisIteration;
+               _ageInGridIterations = ageInGridIterations;
             }
             
             
@@ -503,12 +587,12 @@ namespace peanoclaw {
          /**
           * Generated
           */
-         Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+         Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
          
          /**
           * Generated
           */
-         Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+         Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
          
          /**
           * Generated
@@ -696,6 +780,110 @@ namespace peanoclaw {
          
          
          
+         /**
+          * Generated and optimized
+          * 
+          * If you realise a for loop using exclusively arrays (vectors) and compile 
+          * with -DUseManualAlignment you may add 
+          * \code
+          #pragma vector aligned
+          #pragma simd
+          \endcode to this for loop to enforce your compiler to use SSE/AVX.
+          * 
+          * The alignment is tied to the unpacked records, i.e. for packed class
+          * variants the machine's natural alignment is switched off to recude the  
+          * memory footprint. Do not use any SSE/AVX operations or 
+          * vectorisation on the result for the packed variants, as the data is misaligned. 
+          * If you rely on vectorisation, convert the underlying record 
+          * into the unpacked version first. 
+          * 
+          * @see convert()
+          */
+         inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _persistentRecords._adjacentRanksInFormerIteration;
+         }
+         
+         
+         
+         /**
+          * Generated and optimized
+          * 
+          * If you realise a for loop using exclusively arrays (vectors) and compile 
+          * with -DUseManualAlignment you may add 
+          * \code
+          #pragma vector aligned
+          #pragma simd
+          \endcode to this for loop to enforce your compiler to use SSE/AVX.
+          * 
+          * The alignment is tied to the unpacked records, i.e. for packed class
+          * variants the machine's natural alignment is switched off to recude the  
+          * memory footprint. Do not use any SSE/AVX operations or 
+          * vectorisation on the result for the packed variants, as the data is misaligned. 
+          * If you rely on vectorisation, convert the underlying record 
+          * into the unpacked version first. 
+          * 
+          * @see convert()
+          */
+         inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _persistentRecords._adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+         }
+         
+         
+         
+         inline int getAdjacentRanksInFormerIteration(int elementIndex) const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            assertion(elementIndex>=0);
+            assertion(elementIndex<TWO_POWER_D);
+            return _persistentRecords._adjacentRanksInFormerIteration[elementIndex];
+            
+         }
+         
+         
+         
+         inline void setAdjacentRanksInFormerIteration(int elementIndex, const int& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            assertion(elementIndex>=0);
+            assertion(elementIndex<TWO_POWER_D);
+            _persistentRecords._adjacentRanksInFormerIteration[elementIndex]= adjacentRanksInFormerIteration;
+            
+         }
+         
+         
+         
+         inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _persistentRecords._adjacentRanksChanged;
+         }
+         
+         
+         
+         inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _persistentRecords._adjacentRanksChanged = adjacentRanksChanged;
+         }
+         
+         
+         
          inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -716,22 +904,22 @@ namespace peanoclaw {
          
          
          
-         inline bool getWasCreatedInThisIteration() const 
+         inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-            return _persistentRecords._wasCreatedInThisIteration;
+            return _persistentRecords._ageInGridIterations;
          }
          
          
          
-         inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+         inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-            _persistentRecords._wasCreatedInThisIteration = wasCreatedInThisIteration;
+            _persistentRecords._ageInGridIterations = ageInGridIterations;
          }
          
          
@@ -1155,7 +1343,7 @@ namespace peanoclaw {
        *
        * 		   build date: 22-10-2013 20:59
        *
-       * @date   28/10/2013 11:29
+       * @date   28/11/2013 11:13
        */
       class peanoclaw::records::VertexPacked { 
          
@@ -1167,6 +1355,8 @@ namespace peanoclaw {
             
             struct PersistentRecords {
                tarch::la::Vector<TWO_POWER_D,int> _indicesOfAdjacentCellDescriptions;
+               tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration;
+               int _ageInGridIterations;
                int _adjacentCellsHeight;
                tarch::la::Vector<DIMENSIONS,double> _x;
                int _level;
@@ -1175,14 +1365,14 @@ namespace peanoclaw {
                /** mapping of records:
                || Member 	|| startbit 	|| length
                 |  adjacentSubcellsEraseVeto	| startbit 0	| #bits TWO_POWER_D
-                |  shouldRefine	| startbit TWO_POWER_D + 0	| #bits 1
-                |  wasCreatedInThisIteration	| startbit TWO_POWER_D + 1	| #bits 1
+                |  adjacentRanksChanged	| startbit TWO_POWER_D + 0	| #bits 1
+                |  shouldRefine	| startbit TWO_POWER_D + 1	| #bits 1
                 |  isHangingNode	| startbit TWO_POWER_D + 2	| #bits 1
                 |  refinementControl	| startbit TWO_POWER_D + 3	| #bits 3
                 |  insideOutsideDomain	| startbit TWO_POWER_D + 6	| #bits 2
                 |  adjacentSubtreeForksIntoOtherRank	| startbit TWO_POWER_D + 8	| #bits 1
                 */
-               short int _packedRecords0;
+               int _packedRecords0;
                
                /**
                 * Generated
@@ -1192,7 +1382,7 @@ namespace peanoclaw {
                /**
                 * Generated
                 */
-               PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                
                
                /**
@@ -1277,10 +1467,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                  mask = static_cast<short int>(mask << (0));
-                  short int tmp = static_cast<short int>(_packedRecords0 & mask);
-                  tmp = static_cast<short int>(tmp >> (0));
+                  int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                  mask = static_cast<int>(mask << (0));
+                  int tmp = static_cast<int>(_packedRecords0 & mask);
+                  tmp = static_cast<int>(tmp >> (0));
                   std::bitset<TWO_POWER_D> result = tmp;
                   return result;
                }
@@ -1311,10 +1501,91 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                  mask = static_cast<short int>(mask << (0));
-                  _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-                  _packedRecords0 = static_cast<short int>(_packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                  int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                  mask = static_cast<int>(mask << (0));
+                  _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+                  _packedRecords0 = static_cast<int>(_packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+               }
+               
+               
+               
+               /**
+                * Generated and optimized
+                * 
+                * If you realise a for loop using exclusively arrays (vectors) and compile 
+                * with -DUseManualAlignment you may add 
+                * \code
+                #pragma vector aligned
+                #pragma simd
+                \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                * 
+                * The alignment is tied to the unpacked records, i.e. for packed class
+                * variants the machine's natural alignment is switched off to recude the  
+                * memory footprint. Do not use any SSE/AVX operations or 
+                * vectorisation on the result for the packed variants, as the data is misaligned. 
+                * If you rely on vectorisation, convert the underlying record 
+                * into the unpacked version first. 
+                * 
+                * @see convert()
+                */
+               inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  return _adjacentRanksInFormerIteration;
+               }
+               
+               
+               
+               /**
+                * Generated and optimized
+                * 
+                * If you realise a for loop using exclusively arrays (vectors) and compile 
+                * with -DUseManualAlignment you may add 
+                * \code
+                #pragma vector aligned
+                #pragma simd
+                \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                * 
+                * The alignment is tied to the unpacked records, i.e. for packed class
+                * variants the machine's natural alignment is switched off to recude the  
+                * memory footprint. Do not use any SSE/AVX operations or 
+                * vectorisation on the result for the packed variants, as the data is misaligned. 
+                * If you rely on vectorisation, convert the underlying record 
+                * into the unpacked version first. 
+                * 
+                * @see convert()
+                */
+               inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  _adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+               }
+               
+               
+               
+               inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  int mask = 1 << (TWO_POWER_D);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+               }
+               
+               
+               
+               inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  int mask = 1 << (TWO_POWER_D);
+   _packedRecords0 = static_cast<int>( adjacentRanksChanged ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -1324,8 +1595,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (TWO_POWER_D);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (TWO_POWER_D + 1);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -1336,31 +1607,28 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (TWO_POWER_D);
-   _packedRecords0 = static_cast<short int>( shouldRefine ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (TWO_POWER_D + 1);
+   _packedRecords0 = static_cast<int>( shouldRefine ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
                
-               inline bool getWasCreatedInThisIteration() const 
+               inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (TWO_POWER_D + 1);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   return (tmp != 0);
+                  return _ageInGridIterations;
                }
                
                
                
-               inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+               inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (TWO_POWER_D + 1);
-   _packedRecords0 = static_cast<short int>( wasCreatedInThisIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  _ageInGridIterations = ageInGridIterations;
                }
                
                
@@ -1370,8 +1638,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (TWO_POWER_D + 2);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (TWO_POWER_D + 2);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -1382,8 +1650,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (TWO_POWER_D + 2);
-   _packedRecords0 = static_cast<short int>( isHangingNode ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (TWO_POWER_D + 2);
+   _packedRecords0 = static_cast<int>( isHangingNode ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -1393,10 +1661,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 3));
+                  int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 3));
    assertion(( tmp >= 0 &&  tmp <= 6));
    return (RefinementControl) tmp;
                }
@@ -1409,10 +1677,10 @@ namespace peanoclaw {
  #endif 
  {
                   assertion((refinementControl >= 0 && refinementControl <= 6));
-   short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<short int>(_packedRecords0 | refinementControl << (TWO_POWER_D + 3));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | refinementControl << (TWO_POWER_D + 3));
                }
                
                
@@ -1442,10 +1710,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 6));
+                  int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 6));
    assertion(( tmp >= 0 &&  tmp <= 2));
    return (InsideOutsideDomain) tmp;
                }
@@ -1458,10 +1726,10 @@ namespace peanoclaw {
  #endif 
  {
                   assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
-   short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<short int>(_packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
+   int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
                }
                
                
@@ -1607,8 +1875,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (TWO_POWER_D + 8);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (TWO_POWER_D + 8);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -1619,8 +1887,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (TWO_POWER_D + 8);
-   _packedRecords0 = static_cast<short int>( adjacentSubtreeForksIntoOtherRank ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (TWO_POWER_D + 8);
+   _packedRecords0 = static_cast<int>( adjacentSubtreeForksIntoOtherRank ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -1646,12 +1914,12 @@ namespace peanoclaw {
             /**
              * Generated
              */
-            VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+            VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
             
             /**
              * Generated
              */
-            VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+            VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
             
             /**
              * Generated
@@ -1767,10 +2035,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-               mask = static_cast<short int>(mask << (0));
-               short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-               tmp = static_cast<short int>(tmp >> (0));
+               int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+               mask = static_cast<int>(mask << (0));
+               int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+               tmp = static_cast<int>(tmp >> (0));
                std::bitset<TWO_POWER_D> result = tmp;
                return result;
             }
@@ -1801,10 +2069,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-               mask = static_cast<short int>(mask << (0));
-               _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-               _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+               int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+               mask = static_cast<int>(mask << (0));
+               _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+               _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
             }
             
             
@@ -1854,13 +2122,120 @@ namespace peanoclaw {
             
             
             
+            /**
+             * Generated and optimized
+             * 
+             * If you realise a for loop using exclusively arrays (vectors) and compile 
+             * with -DUseManualAlignment you may add 
+             * \code
+             #pragma vector aligned
+             #pragma simd
+             \endcode to this for loop to enforce your compiler to use SSE/AVX.
+             * 
+             * The alignment is tied to the unpacked records, i.e. for packed class
+             * variants the machine's natural alignment is switched off to recude the  
+             * memory footprint. Do not use any SSE/AVX operations or 
+             * vectorisation on the result for the packed variants, as the data is misaligned. 
+             * If you rely on vectorisation, convert the underlying record 
+             * into the unpacked version first. 
+             * 
+             * @see convert()
+             */
+            inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               return _persistentRecords._adjacentRanksInFormerIteration;
+            }
+            
+            
+            
+            /**
+             * Generated and optimized
+             * 
+             * If you realise a for loop using exclusively arrays (vectors) and compile 
+             * with -DUseManualAlignment you may add 
+             * \code
+             #pragma vector aligned
+             #pragma simd
+             \endcode to this for loop to enforce your compiler to use SSE/AVX.
+             * 
+             * The alignment is tied to the unpacked records, i.e. for packed class
+             * variants the machine's natural alignment is switched off to recude the  
+             * memory footprint. Do not use any SSE/AVX operations or 
+             * vectorisation on the result for the packed variants, as the data is misaligned. 
+             * If you rely on vectorisation, convert the underlying record 
+             * into the unpacked version first. 
+             * 
+             * @see convert()
+             */
+            inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               _persistentRecords._adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+            }
+            
+            
+            
+            inline int getAdjacentRanksInFormerIteration(int elementIndex) const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               assertion(elementIndex>=0);
+               assertion(elementIndex<TWO_POWER_D);
+               return _persistentRecords._adjacentRanksInFormerIteration[elementIndex];
+               
+            }
+            
+            
+            
+            inline void setAdjacentRanksInFormerIteration(int elementIndex, const int& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               assertion(elementIndex>=0);
+               assertion(elementIndex<TWO_POWER_D);
+               _persistentRecords._adjacentRanksInFormerIteration[elementIndex]= adjacentRanksInFormerIteration;
+               
+            }
+            
+            
+            
+            inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               int mask = 1 << (TWO_POWER_D);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+            }
+            
+            
+            
+            inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               int mask = 1 << (TWO_POWER_D);
+   _persistentRecords._packedRecords0 = static_cast<int>( adjacentRanksChanged ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+            }
+            
+            
+            
             inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (TWO_POWER_D);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (TWO_POWER_D + 1);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -1871,31 +2246,28 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (TWO_POWER_D);
-   _persistentRecords._packedRecords0 = static_cast<short int>( shouldRefine ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (TWO_POWER_D + 1);
+   _persistentRecords._packedRecords0 = static_cast<int>( shouldRefine ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
             
-            inline bool getWasCreatedInThisIteration() const 
+            inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (TWO_POWER_D + 1);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   return (tmp != 0);
+               return _persistentRecords._ageInGridIterations;
             }
             
             
             
-            inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+            inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (TWO_POWER_D + 1);
-   _persistentRecords._packedRecords0 = static_cast<short int>( wasCreatedInThisIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               _persistentRecords._ageInGridIterations = ageInGridIterations;
             }
             
             
@@ -1905,8 +2277,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (TWO_POWER_D + 2);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (TWO_POWER_D + 2);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -1917,8 +2289,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (TWO_POWER_D + 2);
-   _persistentRecords._packedRecords0 = static_cast<short int>( isHangingNode ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (TWO_POWER_D + 2);
+   _persistentRecords._packedRecords0 = static_cast<int>( isHangingNode ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -1928,10 +2300,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 3));
+               int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 3));
    assertion(( tmp >= 0 &&  tmp <= 6));
    return (RefinementControl) tmp;
             }
@@ -1944,10 +2316,10 @@ namespace peanoclaw {
  #endif 
  {
                assertion((refinementControl >= 0 && refinementControl <= 6));
-   short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | refinementControl << (TWO_POWER_D + 3));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | refinementControl << (TWO_POWER_D + 3));
             }
             
             
@@ -2017,10 +2389,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 6));
+               int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 6));
    assertion(( tmp >= 0 &&  tmp <= 2));
    return (InsideOutsideDomain) tmp;
             }
@@ -2033,10 +2405,10 @@ namespace peanoclaw {
  #endif 
  {
                assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
-   short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
+   int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
             }
             
             
@@ -2234,8 +2606,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (TWO_POWER_D + 8);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (TWO_POWER_D + 8);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -2246,8 +2618,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (TWO_POWER_D + 8);
-   _persistentRecords._packedRecords0 = static_cast<short int>( adjacentSubtreeForksIntoOtherRank ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (TWO_POWER_D + 8);
+   _persistentRecords._packedRecords0 = static_cast<int>( adjacentSubtreeForksIntoOtherRank ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -2340,7 +2712,7 @@ namespace peanoclaw {
           *
           * 		   build date: 22-10-2013 20:59
           *
-          * @date   28/10/2013 11:29
+          * @date   28/11/2013 11:13
           */
          class peanoclaw::records::Vertex { 
             
@@ -2367,8 +2739,14 @@ namespace peanoclaw {
                   #else
                   std::bitset<TWO_POWER_D> _adjacentSubcellsEraseVeto;
                   #endif
+                  #ifdef UseManualAlignment
+                  tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration __attribute__((aligned(VectorisationAlignment)));
+                  #else
+                  tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration;
+                  #endif
+                  bool _adjacentRanksChanged;
                   bool _shouldRefine;
-                  bool _wasCreatedInThisIteration;
+                  int _ageInGridIterations;
                   bool _isHangingNode;
                   RefinementControl _refinementControl;
                   int _adjacentCellsHeight;
@@ -2381,7 +2759,7 @@ namespace peanoclaw {
                   /**
                    * Generated
                    */
-                  PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
+                  PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
                   
                   
                   /**
@@ -2500,6 +2878,84 @@ namespace peanoclaw {
                   
                   
                   
+                  /**
+                   * Generated and optimized
+                   * 
+                   * If you realise a for loop using exclusively arrays (vectors) and compile 
+                   * with -DUseManualAlignment you may add 
+                   * \code
+                   #pragma vector aligned
+                   #pragma simd
+                   \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                   * 
+                   * The alignment is tied to the unpacked records, i.e. for packed class
+                   * variants the machine's natural alignment is switched off to recude the  
+                   * memory footprint. Do not use any SSE/AVX operations or 
+                   * vectorisation on the result for the packed variants, as the data is misaligned. 
+                   * If you rely on vectorisation, convert the underlying record 
+                   * into the unpacked version first. 
+                   * 
+                   * @see convert()
+                   */
+                  inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _adjacentRanksInFormerIteration;
+                  }
+                  
+                  
+                  
+                  /**
+                   * Generated and optimized
+                   * 
+                   * If you realise a for loop using exclusively arrays (vectors) and compile 
+                   * with -DUseManualAlignment you may add 
+                   * \code
+                   #pragma vector aligned
+                   #pragma simd
+                   \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                   * 
+                   * The alignment is tied to the unpacked records, i.e. for packed class
+                   * variants the machine's natural alignment is switched off to recude the  
+                   * memory footprint. Do not use any SSE/AVX operations or 
+                   * vectorisation on the result for the packed variants, as the data is misaligned. 
+                   * If you rely on vectorisation, convert the underlying record 
+                   * into the unpacked version first. 
+                   * 
+                   * @see convert()
+                   */
+                  inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                  }
+                  
+                  
+                  
+                  inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _adjacentRanksChanged;
+                  }
+                  
+                  
+                  
+                  inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _adjacentRanksChanged = adjacentRanksChanged;
+                  }
+                  
+                  
+                  
                   inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -2520,22 +2976,22 @@ namespace peanoclaw {
                   
                   
                   
-                  inline bool getWasCreatedInThisIteration() const 
+                  inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     return _wasCreatedInThisIteration;
+                     return _ageInGridIterations;
                   }
                   
                   
                   
-                  inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                  inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     _wasCreatedInThisIteration = wasCreatedInThisIteration;
+                     _ageInGridIterations = ageInGridIterations;
                   }
                   
                   
@@ -2641,12 +3097,12 @@ namespace peanoclaw {
                /**
                 * Generated
                 */
-               Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
+               Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
                
                /**
                 * Generated
                 */
-               Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain);
+               Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain);
                
                /**
                 * Generated
@@ -2834,6 +3290,110 @@ namespace peanoclaw {
                
                
                
+               /**
+                * Generated and optimized
+                * 
+                * If you realise a for loop using exclusively arrays (vectors) and compile 
+                * with -DUseManualAlignment you may add 
+                * \code
+                #pragma vector aligned
+                #pragma simd
+                \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                * 
+                * The alignment is tied to the unpacked records, i.e. for packed class
+                * variants the machine's natural alignment is switched off to recude the  
+                * memory footprint. Do not use any SSE/AVX operations or 
+                * vectorisation on the result for the packed variants, as the data is misaligned. 
+                * If you rely on vectorisation, convert the underlying record 
+                * into the unpacked version first. 
+                * 
+                * @see convert()
+                */
+               inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  return _persistentRecords._adjacentRanksInFormerIteration;
+               }
+               
+               
+               
+               /**
+                * Generated and optimized
+                * 
+                * If you realise a for loop using exclusively arrays (vectors) and compile 
+                * with -DUseManualAlignment you may add 
+                * \code
+                #pragma vector aligned
+                #pragma simd
+                \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                * 
+                * The alignment is tied to the unpacked records, i.e. for packed class
+                * variants the machine's natural alignment is switched off to recude the  
+                * memory footprint. Do not use any SSE/AVX operations or 
+                * vectorisation on the result for the packed variants, as the data is misaligned. 
+                * If you rely on vectorisation, convert the underlying record 
+                * into the unpacked version first. 
+                * 
+                * @see convert()
+                */
+               inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  _persistentRecords._adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+               }
+               
+               
+               
+               inline int getAdjacentRanksInFormerIteration(int elementIndex) const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  assertion(elementIndex>=0);
+                  assertion(elementIndex<TWO_POWER_D);
+                  return _persistentRecords._adjacentRanksInFormerIteration[elementIndex];
+                  
+               }
+               
+               
+               
+               inline void setAdjacentRanksInFormerIteration(int elementIndex, const int& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  assertion(elementIndex>=0);
+                  assertion(elementIndex<TWO_POWER_D);
+                  _persistentRecords._adjacentRanksInFormerIteration[elementIndex]= adjacentRanksInFormerIteration;
+                  
+               }
+               
+               
+               
+               inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  return _persistentRecords._adjacentRanksChanged;
+               }
+               
+               
+               
+               inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  _persistentRecords._adjacentRanksChanged = adjacentRanksChanged;
+               }
+               
+               
+               
                inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -2854,22 +3414,22 @@ namespace peanoclaw {
                
                
                
-               inline bool getWasCreatedInThisIteration() const 
+               inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  return _persistentRecords._wasCreatedInThisIteration;
+                  return _persistentRecords._ageInGridIterations;
                }
                
                
                
-               inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+               inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  _persistentRecords._wasCreatedInThisIteration = wasCreatedInThisIteration;
+                  _persistentRecords._ageInGridIterations = ageInGridIterations;
                }
                
                
@@ -3085,7 +3645,7 @@ namespace peanoclaw {
              *
              * 		   build date: 22-10-2013 20:59
              *
-             * @date   28/10/2013 11:29
+             * @date   28/11/2013 11:13
              */
             class peanoclaw::records::VertexPacked { 
                
@@ -3097,18 +3657,20 @@ namespace peanoclaw {
                   
                   struct PersistentRecords {
                      tarch::la::Vector<TWO_POWER_D,int> _indicesOfAdjacentCellDescriptions;
+                     tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration;
+                     int _ageInGridIterations;
                      int _adjacentCellsHeight;
                      
                      /** mapping of records:
                      || Member 	|| startbit 	|| length
                       |  adjacentSubcellsEraseVeto	| startbit 0	| #bits TWO_POWER_D
-                      |  shouldRefine	| startbit TWO_POWER_D + 0	| #bits 1
-                      |  wasCreatedInThisIteration	| startbit TWO_POWER_D + 1	| #bits 1
+                      |  adjacentRanksChanged	| startbit TWO_POWER_D + 0	| #bits 1
+                      |  shouldRefine	| startbit TWO_POWER_D + 1	| #bits 1
                       |  isHangingNode	| startbit TWO_POWER_D + 2	| #bits 1
                       |  refinementControl	| startbit TWO_POWER_D + 3	| #bits 3
                       |  insideOutsideDomain	| startbit TWO_POWER_D + 6	| #bits 2
                       */
-                     short int _packedRecords0;
+                     int _packedRecords0;
                      
                      /**
                       * Generated
@@ -3118,7 +3680,7 @@ namespace peanoclaw {
                      /**
                       * Generated
                       */
-                     PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
+                     PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
                      
                      
                      /**
@@ -3203,10 +3765,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                        mask = static_cast<short int>(mask << (0));
-                        short int tmp = static_cast<short int>(_packedRecords0 & mask);
-                        tmp = static_cast<short int>(tmp >> (0));
+                        int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                        mask = static_cast<int>(mask << (0));
+                        int tmp = static_cast<int>(_packedRecords0 & mask);
+                        tmp = static_cast<int>(tmp >> (0));
                         std::bitset<TWO_POWER_D> result = tmp;
                         return result;
                      }
@@ -3237,10 +3799,91 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                        mask = static_cast<short int>(mask << (0));
-                        _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-                        _packedRecords0 = static_cast<short int>(_packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                        int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                        mask = static_cast<int>(mask << (0));
+                        _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+                        _packedRecords0 = static_cast<int>(_packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                     }
+                     
+                     
+                     
+                     /**
+                      * Generated and optimized
+                      * 
+                      * If you realise a for loop using exclusively arrays (vectors) and compile 
+                      * with -DUseManualAlignment you may add 
+                      * \code
+                      #pragma vector aligned
+                      #pragma simd
+                      \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                      * 
+                      * The alignment is tied to the unpacked records, i.e. for packed class
+                      * variants the machine's natural alignment is switched off to recude the  
+                      * memory footprint. Do not use any SSE/AVX operations or 
+                      * vectorisation on the result for the packed variants, as the data is misaligned. 
+                      * If you rely on vectorisation, convert the underlying record 
+                      * into the unpacked version first. 
+                      * 
+                      * @see convert()
+                      */
+                     inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _adjacentRanksInFormerIteration;
+                     }
+                     
+                     
+                     
+                     /**
+                      * Generated and optimized
+                      * 
+                      * If you realise a for loop using exclusively arrays (vectors) and compile 
+                      * with -DUseManualAlignment you may add 
+                      * \code
+                      #pragma vector aligned
+                      #pragma simd
+                      \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                      * 
+                      * The alignment is tied to the unpacked records, i.e. for packed class
+                      * variants the machine's natural alignment is switched off to recude the  
+                      * memory footprint. Do not use any SSE/AVX operations or 
+                      * vectorisation on the result for the packed variants, as the data is misaligned. 
+                      * If you rely on vectorisation, convert the underlying record 
+                      * into the unpacked version first. 
+                      * 
+                      * @see convert()
+                      */
+                     inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                     }
+                     
+                     
+                     
+                     inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        int mask = 1 << (TWO_POWER_D);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+                     }
+                     
+                     
+                     
+                     inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        int mask = 1 << (TWO_POWER_D);
+   _packedRecords0 = static_cast<int>( adjacentRanksChanged ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -3250,8 +3893,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                        int mask = 1 << (TWO_POWER_D + 1);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -3262,31 +3905,28 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D);
-   _packedRecords0 = static_cast<short int>( shouldRefine ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        int mask = 1 << (TWO_POWER_D + 1);
+   _packedRecords0 = static_cast<int>( shouldRefine ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
                      
-                     inline bool getWasCreatedInThisIteration() const 
+                     inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D + 1);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   return (tmp != 0);
+                        return _ageInGridIterations;
                      }
                      
                      
                      
-                     inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                     inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D + 1);
-   _packedRecords0 = static_cast<short int>( wasCreatedInThisIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        _ageInGridIterations = ageInGridIterations;
                      }
                      
                      
@@ -3296,8 +3936,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D + 2);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                        int mask = 1 << (TWO_POWER_D + 2);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -3308,8 +3948,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D + 2);
-   _packedRecords0 = static_cast<short int>( isHangingNode ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        int mask = 1 << (TWO_POWER_D + 2);
+   _packedRecords0 = static_cast<int>( isHangingNode ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -3319,10 +3959,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 3));
+                        int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 3));
    assertion(( tmp >= 0 &&  tmp <= 6));
    return (RefinementControl) tmp;
                      }
@@ -3335,10 +3975,10 @@ namespace peanoclaw {
  #endif 
  {
                         assertion((refinementControl >= 0 && refinementControl <= 6));
-   short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<short int>(_packedRecords0 | refinementControl << (TWO_POWER_D + 3));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | refinementControl << (TWO_POWER_D + 3));
                      }
                      
                      
@@ -3368,10 +4008,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 6));
+                        int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 6));
    assertion(( tmp >= 0 &&  tmp <= 2));
    return (InsideOutsideDomain) tmp;
                      }
@@ -3384,10 +4024,10 @@ namespace peanoclaw {
  #endif 
  {
                         assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
-   short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<short int>(_packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
+   int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
                      }
                      
                      
@@ -3413,12 +4053,12 @@ namespace peanoclaw {
                   /**
                    * Generated
                    */
-                  VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
+                  VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
                   
                   /**
                    * Generated
                    */
-                  VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain);
+                  VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain);
                   
                   /**
                    * Generated
@@ -3534,10 +4174,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                     mask = static_cast<short int>(mask << (0));
-                     short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-                     tmp = static_cast<short int>(tmp >> (0));
+                     int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                     mask = static_cast<int>(mask << (0));
+                     int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+                     tmp = static_cast<int>(tmp >> (0));
                      std::bitset<TWO_POWER_D> result = tmp;
                      return result;
                   }
@@ -3568,10 +4208,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                     mask = static_cast<short int>(mask << (0));
-                     _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-                     _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                     int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                     mask = static_cast<int>(mask << (0));
+                     _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+                     _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
                   }
                   
                   
@@ -3621,13 +4261,120 @@ namespace peanoclaw {
                   
                   
                   
+                  /**
+                   * Generated and optimized
+                   * 
+                   * If you realise a for loop using exclusively arrays (vectors) and compile 
+                   * with -DUseManualAlignment you may add 
+                   * \code
+                   #pragma vector aligned
+                   #pragma simd
+                   \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                   * 
+                   * The alignment is tied to the unpacked records, i.e. for packed class
+                   * variants the machine's natural alignment is switched off to recude the  
+                   * memory footprint. Do not use any SSE/AVX operations or 
+                   * vectorisation on the result for the packed variants, as the data is misaligned. 
+                   * If you rely on vectorisation, convert the underlying record 
+                   * into the unpacked version first. 
+                   * 
+                   * @see convert()
+                   */
+                  inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _persistentRecords._adjacentRanksInFormerIteration;
+                  }
+                  
+                  
+                  
+                  /**
+                   * Generated and optimized
+                   * 
+                   * If you realise a for loop using exclusively arrays (vectors) and compile 
+                   * with -DUseManualAlignment you may add 
+                   * \code
+                   #pragma vector aligned
+                   #pragma simd
+                   \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                   * 
+                   * The alignment is tied to the unpacked records, i.e. for packed class
+                   * variants the machine's natural alignment is switched off to recude the  
+                   * memory footprint. Do not use any SSE/AVX operations or 
+                   * vectorisation on the result for the packed variants, as the data is misaligned. 
+                   * If you rely on vectorisation, convert the underlying record 
+                   * into the unpacked version first. 
+                   * 
+                   * @see convert()
+                   */
+                  inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _persistentRecords._adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                  }
+                  
+                  
+                  
+                  inline int getAdjacentRanksInFormerIteration(int elementIndex) const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     assertion(elementIndex>=0);
+                     assertion(elementIndex<TWO_POWER_D);
+                     return _persistentRecords._adjacentRanksInFormerIteration[elementIndex];
+                     
+                  }
+                  
+                  
+                  
+                  inline void setAdjacentRanksInFormerIteration(int elementIndex, const int& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     assertion(elementIndex>=0);
+                     assertion(elementIndex<TWO_POWER_D);
+                     _persistentRecords._adjacentRanksInFormerIteration[elementIndex]= adjacentRanksInFormerIteration;
+                     
+                  }
+                  
+                  
+                  
+                  inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     int mask = 1 << (TWO_POWER_D);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+                  }
+                  
+                  
+                  
+                  inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     int mask = 1 << (TWO_POWER_D);
+   _persistentRecords._packedRecords0 = static_cast<int>( adjacentRanksChanged ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                  }
+                  
+                  
+                  
                   inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (TWO_POWER_D);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                     int mask = 1 << (TWO_POWER_D + 1);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
                   
@@ -3638,31 +4385,28 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (TWO_POWER_D);
-   _persistentRecords._packedRecords0 = static_cast<short int>( shouldRefine ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     int mask = 1 << (TWO_POWER_D + 1);
+   _persistentRecords._packedRecords0 = static_cast<int>( shouldRefine ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
                   
-                  inline bool getWasCreatedInThisIteration() const 
+                  inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (TWO_POWER_D + 1);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   return (tmp != 0);
+                     return _persistentRecords._ageInGridIterations;
                   }
                   
                   
                   
-                  inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                  inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (TWO_POWER_D + 1);
-   _persistentRecords._packedRecords0 = static_cast<short int>( wasCreatedInThisIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     _persistentRecords._ageInGridIterations = ageInGridIterations;
                   }
                   
                   
@@ -3672,8 +4416,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (TWO_POWER_D + 2);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                     int mask = 1 << (TWO_POWER_D + 2);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
                   
@@ -3684,8 +4428,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (TWO_POWER_D + 2);
-   _persistentRecords._packedRecords0 = static_cast<short int>( isHangingNode ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     int mask = 1 << (TWO_POWER_D + 2);
+   _persistentRecords._packedRecords0 = static_cast<int>( isHangingNode ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
@@ -3695,10 +4439,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 3));
+                     int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 3));
    assertion(( tmp >= 0 &&  tmp <= 6));
    return (RefinementControl) tmp;
                   }
@@ -3711,10 +4455,10 @@ namespace peanoclaw {
  #endif 
  {
                      assertion((refinementControl >= 0 && refinementControl <= 6));
-   short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | refinementControl << (TWO_POWER_D + 3));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | refinementControl << (TWO_POWER_D + 3));
                   }
                   
                   
@@ -3784,10 +4528,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 6));
+                     int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 6));
    assertion(( tmp >= 0 &&  tmp <= 2));
    return (InsideOutsideDomain) tmp;
                   }
@@ -3800,10 +4544,10 @@ namespace peanoclaw {
  #endif 
  {
                      assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
-   short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
+   int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
                   }
                   
                   
@@ -3897,7 +4641,7 @@ namespace peanoclaw {
              *
              * 		   build date: 22-10-2013 20:59
              *
-             * @date   28/10/2013 11:29
+             * @date   28/11/2013 11:13
              */
             class peanoclaw::records::Vertex { 
                
@@ -3924,8 +4668,14 @@ namespace peanoclaw {
                      #else
                      std::bitset<TWO_POWER_D> _adjacentSubcellsEraseVeto;
                      #endif
+                     #ifdef UseManualAlignment
+                     tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration __attribute__((aligned(VectorisationAlignment)));
+                     #else
+                     tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration;
+                     #endif
+                     bool _adjacentRanksChanged;
                      bool _shouldRefine;
-                     bool _wasCreatedInThisIteration;
+                     int _ageInGridIterations;
                      bool _isHangingNode;
                      RefinementControl _refinementControl;
                      int _adjacentCellsHeight;
@@ -3944,7 +4694,7 @@ namespace peanoclaw {
                      /**
                       * Generated
                       */
-                     PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+                     PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
                      
                      
                      /**
@@ -4063,6 +4813,84 @@ namespace peanoclaw {
                      
                      
                      
+                     /**
+                      * Generated and optimized
+                      * 
+                      * If you realise a for loop using exclusively arrays (vectors) and compile 
+                      * with -DUseManualAlignment you may add 
+                      * \code
+                      #pragma vector aligned
+                      #pragma simd
+                      \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                      * 
+                      * The alignment is tied to the unpacked records, i.e. for packed class
+                      * variants the machine's natural alignment is switched off to recude the  
+                      * memory footprint. Do not use any SSE/AVX operations or 
+                      * vectorisation on the result for the packed variants, as the data is misaligned. 
+                      * If you rely on vectorisation, convert the underlying record 
+                      * into the unpacked version first. 
+                      * 
+                      * @see convert()
+                      */
+                     inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _adjacentRanksInFormerIteration;
+                     }
+                     
+                     
+                     
+                     /**
+                      * Generated and optimized
+                      * 
+                      * If you realise a for loop using exclusively arrays (vectors) and compile 
+                      * with -DUseManualAlignment you may add 
+                      * \code
+                      #pragma vector aligned
+                      #pragma simd
+                      \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                      * 
+                      * The alignment is tied to the unpacked records, i.e. for packed class
+                      * variants the machine's natural alignment is switched off to recude the  
+                      * memory footprint. Do not use any SSE/AVX operations or 
+                      * vectorisation on the result for the packed variants, as the data is misaligned. 
+                      * If you rely on vectorisation, convert the underlying record 
+                      * into the unpacked version first. 
+                      * 
+                      * @see convert()
+                      */
+                     inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                     }
+                     
+                     
+                     
+                     inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _adjacentRanksChanged;
+                     }
+                     
+                     
+                     
+                     inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _adjacentRanksChanged = adjacentRanksChanged;
+                     }
+                     
+                     
+                     
                      inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -4083,22 +4911,22 @@ namespace peanoclaw {
                      
                      
                      
-                     inline bool getWasCreatedInThisIteration() const 
+                     inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        return _wasCreatedInThisIteration;
+                        return _ageInGridIterations;
                      }
                      
                      
                      
-                     inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                     inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        _wasCreatedInThisIteration = wasCreatedInThisIteration;
+                        _ageInGridIterations = ageInGridIterations;
                      }
                      
                      
@@ -4282,12 +5110,12 @@ namespace peanoclaw {
                   /**
                    * Generated
                    */
-                  Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+                  Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
                   
                   /**
                    * Generated
                    */
-                  Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+                  Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
                   
                   /**
                    * Generated
@@ -4475,6 +5303,110 @@ namespace peanoclaw {
                   
                   
                   
+                  /**
+                   * Generated and optimized
+                   * 
+                   * If you realise a for loop using exclusively arrays (vectors) and compile 
+                   * with -DUseManualAlignment you may add 
+                   * \code
+                   #pragma vector aligned
+                   #pragma simd
+                   \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                   * 
+                   * The alignment is tied to the unpacked records, i.e. for packed class
+                   * variants the machine's natural alignment is switched off to recude the  
+                   * memory footprint. Do not use any SSE/AVX operations or 
+                   * vectorisation on the result for the packed variants, as the data is misaligned. 
+                   * If you rely on vectorisation, convert the underlying record 
+                   * into the unpacked version first. 
+                   * 
+                   * @see convert()
+                   */
+                  inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _persistentRecords._adjacentRanksInFormerIteration;
+                  }
+                  
+                  
+                  
+                  /**
+                   * Generated and optimized
+                   * 
+                   * If you realise a for loop using exclusively arrays (vectors) and compile 
+                   * with -DUseManualAlignment you may add 
+                   * \code
+                   #pragma vector aligned
+                   #pragma simd
+                   \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                   * 
+                   * The alignment is tied to the unpacked records, i.e. for packed class
+                   * variants the machine's natural alignment is switched off to recude the  
+                   * memory footprint. Do not use any SSE/AVX operations or 
+                   * vectorisation on the result for the packed variants, as the data is misaligned. 
+                   * If you rely on vectorisation, convert the underlying record 
+                   * into the unpacked version first. 
+                   * 
+                   * @see convert()
+                   */
+                  inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _persistentRecords._adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                  }
+                  
+                  
+                  
+                  inline int getAdjacentRanksInFormerIteration(int elementIndex) const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     assertion(elementIndex>=0);
+                     assertion(elementIndex<TWO_POWER_D);
+                     return _persistentRecords._adjacentRanksInFormerIteration[elementIndex];
+                     
+                  }
+                  
+                  
+                  
+                  inline void setAdjacentRanksInFormerIteration(int elementIndex, const int& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     assertion(elementIndex>=0);
+                     assertion(elementIndex<TWO_POWER_D);
+                     _persistentRecords._adjacentRanksInFormerIteration[elementIndex]= adjacentRanksInFormerIteration;
+                     
+                  }
+                  
+                  
+                  
+                  inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _persistentRecords._adjacentRanksChanged;
+                  }
+                  
+                  
+                  
+                  inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _persistentRecords._adjacentRanksChanged = adjacentRanksChanged;
+                  }
+                  
+                  
+                  
                   inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -4495,22 +5427,22 @@ namespace peanoclaw {
                   
                   
                   
-                  inline bool getWasCreatedInThisIteration() const 
+                  inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     return _persistentRecords._wasCreatedInThisIteration;
+                     return _persistentRecords._ageInGridIterations;
                   }
                   
                   
                   
-                  inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                  inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     _persistentRecords._wasCreatedInThisIteration = wasCreatedInThisIteration;
+                     _persistentRecords._ageInGridIterations = ageInGridIterations;
                   }
                   
                   
@@ -4830,7 +5762,7 @@ namespace peanoclaw {
                 *
                 * 		   build date: 22-10-2013 20:59
                 *
-                * @date   28/10/2013 11:29
+                * @date   28/11/2013 11:13
                 */
                class peanoclaw::records::VertexPacked { 
                   
@@ -4842,6 +5774,8 @@ namespace peanoclaw {
                      
                      struct PersistentRecords {
                         tarch::la::Vector<TWO_POWER_D,int> _indicesOfAdjacentCellDescriptions;
+                        tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration;
+                        int _ageInGridIterations;
                         int _adjacentCellsHeight;
                         tarch::la::Vector<DIMENSIONS,double> _x;
                         int _level;
@@ -4849,13 +5783,13 @@ namespace peanoclaw {
                         /** mapping of records:
                         || Member 	|| startbit 	|| length
                          |  adjacentSubcellsEraseVeto	| startbit 0	| #bits TWO_POWER_D
-                         |  shouldRefine	| startbit TWO_POWER_D + 0	| #bits 1
-                         |  wasCreatedInThisIteration	| startbit TWO_POWER_D + 1	| #bits 1
+                         |  adjacentRanksChanged	| startbit TWO_POWER_D + 0	| #bits 1
+                         |  shouldRefine	| startbit TWO_POWER_D + 1	| #bits 1
                          |  isHangingNode	| startbit TWO_POWER_D + 2	| #bits 1
                          |  refinementControl	| startbit TWO_POWER_D + 3	| #bits 3
                          |  insideOutsideDomain	| startbit TWO_POWER_D + 6	| #bits 2
                          */
-                        short int _packedRecords0;
+                        int _packedRecords0;
                         
                         /**
                          * Generated
@@ -4865,7 +5799,7 @@ namespace peanoclaw {
                         /**
                          * Generated
                          */
-                        PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+                        PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
                         
                         
                         /**
@@ -4950,10 +5884,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                           mask = static_cast<short int>(mask << (0));
-                           short int tmp = static_cast<short int>(_packedRecords0 & mask);
-                           tmp = static_cast<short int>(tmp >> (0));
+                           int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                           mask = static_cast<int>(mask << (0));
+                           int tmp = static_cast<int>(_packedRecords0 & mask);
+                           tmp = static_cast<int>(tmp >> (0));
                            std::bitset<TWO_POWER_D> result = tmp;
                            return result;
                         }
@@ -4984,10 +5918,91 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                           mask = static_cast<short int>(mask << (0));
-                           _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-                           _packedRecords0 = static_cast<short int>(_packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                           int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                           mask = static_cast<int>(mask << (0));
+                           _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+                           _packedRecords0 = static_cast<int>(_packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                        }
+                        
+                        
+                        
+                        /**
+                         * Generated and optimized
+                         * 
+                         * If you realise a for loop using exclusively arrays (vectors) and compile 
+                         * with -DUseManualAlignment you may add 
+                         * \code
+                         #pragma vector aligned
+                         #pragma simd
+                         \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                         * 
+                         * The alignment is tied to the unpacked records, i.e. for packed class
+                         * variants the machine's natural alignment is switched off to recude the  
+                         * memory footprint. Do not use any SSE/AVX operations or 
+                         * vectorisation on the result for the packed variants, as the data is misaligned. 
+                         * If you rely on vectorisation, convert the underlying record 
+                         * into the unpacked version first. 
+                         * 
+                         * @see convert()
+                         */
+                        inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           return _adjacentRanksInFormerIteration;
+                        }
+                        
+                        
+                        
+                        /**
+                         * Generated and optimized
+                         * 
+                         * If you realise a for loop using exclusively arrays (vectors) and compile 
+                         * with -DUseManualAlignment you may add 
+                         * \code
+                         #pragma vector aligned
+                         #pragma simd
+                         \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                         * 
+                         * The alignment is tied to the unpacked records, i.e. for packed class
+                         * variants the machine's natural alignment is switched off to recude the  
+                         * memory footprint. Do not use any SSE/AVX operations or 
+                         * vectorisation on the result for the packed variants, as the data is misaligned. 
+                         * If you rely on vectorisation, convert the underlying record 
+                         * into the unpacked version first. 
+                         * 
+                         * @see convert()
+                         */
+                        inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           _adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                        }
+                        
+                        
+                        
+                        inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           int mask = 1 << (TWO_POWER_D);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+                        }
+                        
+                        
+                        
+                        inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           int mask = 1 << (TWO_POWER_D);
+   _packedRecords0 = static_cast<int>( adjacentRanksChanged ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                         }
                         
                         
@@ -4997,8 +6012,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                           int mask = 1 << (TWO_POWER_D + 1);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                         }
                         
@@ -5009,31 +6024,28 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D);
-   _packedRecords0 = static_cast<short int>( shouldRefine ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                           int mask = 1 << (TWO_POWER_D + 1);
+   _packedRecords0 = static_cast<int>( shouldRefine ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                         }
                         
                         
                         
-                        inline bool getWasCreatedInThisIteration() const 
+                        inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 1);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   return (tmp != 0);
+                           return _ageInGridIterations;
                         }
                         
                         
                         
-                        inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                        inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 1);
-   _packedRecords0 = static_cast<short int>( wasCreatedInThisIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                           _ageInGridIterations = ageInGridIterations;
                         }
                         
                         
@@ -5043,8 +6055,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 2);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                           int mask = 1 << (TWO_POWER_D + 2);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                         }
                         
@@ -5055,8 +6067,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 2);
-   _packedRecords0 = static_cast<short int>( isHangingNode ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                           int mask = 1 << (TWO_POWER_D + 2);
+   _packedRecords0 = static_cast<int>( isHangingNode ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                         }
                         
                         
@@ -5066,10 +6078,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 3));
+                           int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 3));
    assertion(( tmp >= 0 &&  tmp <= 6));
    return (RefinementControl) tmp;
                         }
@@ -5082,10 +6094,10 @@ namespace peanoclaw {
  #endif 
  {
                            assertion((refinementControl >= 0 && refinementControl <= 6));
-   short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<short int>(_packedRecords0 | refinementControl << (TWO_POWER_D + 3));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | refinementControl << (TWO_POWER_D + 3));
                         }
                         
                         
@@ -5115,10 +6127,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 6));
+                           int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 6));
    assertion(( tmp >= 0 &&  tmp <= 2));
    return (InsideOutsideDomain) tmp;
                         }
@@ -5131,10 +6143,10 @@ namespace peanoclaw {
  #endif 
  {
                            assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
-   short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<short int>(_packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
+   int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
                         }
                         
                         
@@ -5238,12 +6250,12 @@ namespace peanoclaw {
                      /**
                       * Generated
                       */
-                     VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+                     VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
                      
                      /**
                       * Generated
                       */
-                     VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+                     VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
                      
                      /**
                       * Generated
@@ -5359,10 +6371,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                        mask = static_cast<short int>(mask << (0));
-                        short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-                        tmp = static_cast<short int>(tmp >> (0));
+                        int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                        mask = static_cast<int>(mask << (0));
+                        int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+                        tmp = static_cast<int>(tmp >> (0));
                         std::bitset<TWO_POWER_D> result = tmp;
                         return result;
                      }
@@ -5393,10 +6405,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                        mask = static_cast<short int>(mask << (0));
-                        _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-                        _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                        int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                        mask = static_cast<int>(mask << (0));
+                        _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+                        _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
                      }
                      
                      
@@ -5446,13 +6458,120 @@ namespace peanoclaw {
                      
                      
                      
+                     /**
+                      * Generated and optimized
+                      * 
+                      * If you realise a for loop using exclusively arrays (vectors) and compile 
+                      * with -DUseManualAlignment you may add 
+                      * \code
+                      #pragma vector aligned
+                      #pragma simd
+                      \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                      * 
+                      * The alignment is tied to the unpacked records, i.e. for packed class
+                      * variants the machine's natural alignment is switched off to recude the  
+                      * memory footprint. Do not use any SSE/AVX operations or 
+                      * vectorisation on the result for the packed variants, as the data is misaligned. 
+                      * If you rely on vectorisation, convert the underlying record 
+                      * into the unpacked version first. 
+                      * 
+                      * @see convert()
+                      */
+                     inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _persistentRecords._adjacentRanksInFormerIteration;
+                     }
+                     
+                     
+                     
+                     /**
+                      * Generated and optimized
+                      * 
+                      * If you realise a for loop using exclusively arrays (vectors) and compile 
+                      * with -DUseManualAlignment you may add 
+                      * \code
+                      #pragma vector aligned
+                      #pragma simd
+                      \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                      * 
+                      * The alignment is tied to the unpacked records, i.e. for packed class
+                      * variants the machine's natural alignment is switched off to recude the  
+                      * memory footprint. Do not use any SSE/AVX operations or 
+                      * vectorisation on the result for the packed variants, as the data is misaligned. 
+                      * If you rely on vectorisation, convert the underlying record 
+                      * into the unpacked version first. 
+                      * 
+                      * @see convert()
+                      */
+                     inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _persistentRecords._adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                     }
+                     
+                     
+                     
+                     inline int getAdjacentRanksInFormerIteration(int elementIndex) const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        assertion(elementIndex>=0);
+                        assertion(elementIndex<TWO_POWER_D);
+                        return _persistentRecords._adjacentRanksInFormerIteration[elementIndex];
+                        
+                     }
+                     
+                     
+                     
+                     inline void setAdjacentRanksInFormerIteration(int elementIndex, const int& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        assertion(elementIndex>=0);
+                        assertion(elementIndex<TWO_POWER_D);
+                        _persistentRecords._adjacentRanksInFormerIteration[elementIndex]= adjacentRanksInFormerIteration;
+                        
+                     }
+                     
+                     
+                     
+                     inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        int mask = 1 << (TWO_POWER_D);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+                     }
+                     
+                     
+                     
+                     inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        int mask = 1 << (TWO_POWER_D);
+   _persistentRecords._packedRecords0 = static_cast<int>( adjacentRanksChanged ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     }
+                     
+                     
+                     
                      inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                        int mask = 1 << (TWO_POWER_D + 1);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -5463,31 +6582,28 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D);
-   _persistentRecords._packedRecords0 = static_cast<short int>( shouldRefine ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                        int mask = 1 << (TWO_POWER_D + 1);
+   _persistentRecords._packedRecords0 = static_cast<int>( shouldRefine ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                      }
                      
                      
                      
-                     inline bool getWasCreatedInThisIteration() const 
+                     inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D + 1);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   return (tmp != 0);
+                        return _persistentRecords._ageInGridIterations;
                      }
                      
                      
                      
-                     inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                     inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D + 1);
-   _persistentRecords._packedRecords0 = static_cast<short int>( wasCreatedInThisIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                        _persistentRecords._ageInGridIterations = ageInGridIterations;
                      }
                      
                      
@@ -5497,8 +6613,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D + 2);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                        int mask = 1 << (TWO_POWER_D + 2);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -5509,8 +6625,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (TWO_POWER_D + 2);
-   _persistentRecords._packedRecords0 = static_cast<short int>( isHangingNode ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                        int mask = 1 << (TWO_POWER_D + 2);
+   _persistentRecords._packedRecords0 = static_cast<int>( isHangingNode ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                      }
                      
                      
@@ -5520,10 +6636,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 3));
+                        int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 3));
    assertion(( tmp >= 0 &&  tmp <= 6));
    return (RefinementControl) tmp;
                      }
@@ -5536,10 +6652,10 @@ namespace peanoclaw {
  #endif 
  {
                         assertion((refinementControl >= 0 && refinementControl <= 6));
-   short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | refinementControl << (TWO_POWER_D + 3));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | refinementControl << (TWO_POWER_D + 3));
                      }
                      
                      
@@ -5609,10 +6725,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 6));
+                        int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 6));
    assertion(( tmp >= 0 &&  tmp <= 2));
    return (InsideOutsideDomain) tmp;
                      }
@@ -5625,10 +6741,10 @@ namespace peanoclaw {
  #endif 
  {
                         assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
-   short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
+   int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
                      }
                      
                      
@@ -5826,7 +6942,7 @@ namespace peanoclaw {
                 *
                 * 		   build date: 22-10-2013 20:59
                 *
-                * @date   28/10/2013 11:29
+                * @date   28/11/2013 11:13
                 */
                class peanoclaw::records::Vertex { 
                   
@@ -5853,8 +6969,14 @@ namespace peanoclaw {
                         #else
                         std::bitset<TWO_POWER_D> _adjacentSubcellsEraseVeto;
                         #endif
+                        #ifdef UseManualAlignment
+                        tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration __attribute__((aligned(VectorisationAlignment)));
+                        #else
+                        tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration;
+                        #endif
+                        bool _adjacentRanksChanged;
                         bool _shouldRefine;
-                        bool _wasCreatedInThisIteration;
+                        int _ageInGridIterations;
                         bool _isHangingNode;
                         RefinementControl _refinementControl;
                         int _adjacentCellsHeight;
@@ -5873,7 +6995,7 @@ namespace peanoclaw {
                         /**
                          * Generated
                          */
-                        PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+                        PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                         
                         
                         /**
@@ -5992,6 +7114,84 @@ namespace peanoclaw {
                         
                         
                         
+                        /**
+                         * Generated and optimized
+                         * 
+                         * If you realise a for loop using exclusively arrays (vectors) and compile 
+                         * with -DUseManualAlignment you may add 
+                         * \code
+                         #pragma vector aligned
+                         #pragma simd
+                         \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                         * 
+                         * The alignment is tied to the unpacked records, i.e. for packed class
+                         * variants the machine's natural alignment is switched off to recude the  
+                         * memory footprint. Do not use any SSE/AVX operations or 
+                         * vectorisation on the result for the packed variants, as the data is misaligned. 
+                         * If you rely on vectorisation, convert the underlying record 
+                         * into the unpacked version first. 
+                         * 
+                         * @see convert()
+                         */
+                        inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           return _adjacentRanksInFormerIteration;
+                        }
+                        
+                        
+                        
+                        /**
+                         * Generated and optimized
+                         * 
+                         * If you realise a for loop using exclusively arrays (vectors) and compile 
+                         * with -DUseManualAlignment you may add 
+                         * \code
+                         #pragma vector aligned
+                         #pragma simd
+                         \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                         * 
+                         * The alignment is tied to the unpacked records, i.e. for packed class
+                         * variants the machine's natural alignment is switched off to recude the  
+                         * memory footprint. Do not use any SSE/AVX operations or 
+                         * vectorisation on the result for the packed variants, as the data is misaligned. 
+                         * If you rely on vectorisation, convert the underlying record 
+                         * into the unpacked version first. 
+                         * 
+                         * @see convert()
+                         */
+                        inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           _adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                        }
+                        
+                        
+                        
+                        inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           return _adjacentRanksChanged;
+                        }
+                        
+                        
+                        
+                        inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           _adjacentRanksChanged = adjacentRanksChanged;
+                        }
+                        
+                        
+                        
                         inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -6012,22 +7212,22 @@ namespace peanoclaw {
                         
                         
                         
-                        inline bool getWasCreatedInThisIteration() const 
+                        inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                           return _wasCreatedInThisIteration;
+                           return _ageInGridIterations;
                         }
                         
                         
                         
-                        inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                        inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                           _wasCreatedInThisIteration = wasCreatedInThisIteration;
+                           _ageInGridIterations = ageInGridIterations;
                         }
                         
                         
@@ -6211,12 +7411,12 @@ namespace peanoclaw {
                      /**
                       * Generated
                       */
-                     Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+                     Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                      
                      /**
                       * Generated
                       */
-                     Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+                     Vertex(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                      
                      /**
                       * Generated
@@ -6404,6 +7604,110 @@ namespace peanoclaw {
                      
                      
                      
+                     /**
+                      * Generated and optimized
+                      * 
+                      * If you realise a for loop using exclusively arrays (vectors) and compile 
+                      * with -DUseManualAlignment you may add 
+                      * \code
+                      #pragma vector aligned
+                      #pragma simd
+                      \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                      * 
+                      * The alignment is tied to the unpacked records, i.e. for packed class
+                      * variants the machine's natural alignment is switched off to recude the  
+                      * memory footprint. Do not use any SSE/AVX operations or 
+                      * vectorisation on the result for the packed variants, as the data is misaligned. 
+                      * If you rely on vectorisation, convert the underlying record 
+                      * into the unpacked version first. 
+                      * 
+                      * @see convert()
+                      */
+                     inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _persistentRecords._adjacentRanksInFormerIteration;
+                     }
+                     
+                     
+                     
+                     /**
+                      * Generated and optimized
+                      * 
+                      * If you realise a for loop using exclusively arrays (vectors) and compile 
+                      * with -DUseManualAlignment you may add 
+                      * \code
+                      #pragma vector aligned
+                      #pragma simd
+                      \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                      * 
+                      * The alignment is tied to the unpacked records, i.e. for packed class
+                      * variants the machine's natural alignment is switched off to recude the  
+                      * memory footprint. Do not use any SSE/AVX operations or 
+                      * vectorisation on the result for the packed variants, as the data is misaligned. 
+                      * If you rely on vectorisation, convert the underlying record 
+                      * into the unpacked version first. 
+                      * 
+                      * @see convert()
+                      */
+                     inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _persistentRecords._adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                     }
+                     
+                     
+                     
+                     inline int getAdjacentRanksInFormerIteration(int elementIndex) const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        assertion(elementIndex>=0);
+                        assertion(elementIndex<TWO_POWER_D);
+                        return _persistentRecords._adjacentRanksInFormerIteration[elementIndex];
+                        
+                     }
+                     
+                     
+                     
+                     inline void setAdjacentRanksInFormerIteration(int elementIndex, const int& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        assertion(elementIndex>=0);
+                        assertion(elementIndex<TWO_POWER_D);
+                        _persistentRecords._adjacentRanksInFormerIteration[elementIndex]= adjacentRanksInFormerIteration;
+                        
+                     }
+                     
+                     
+                     
+                     inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _persistentRecords._adjacentRanksChanged;
+                     }
+                     
+                     
+                     
+                     inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _persistentRecords._adjacentRanksChanged = adjacentRanksChanged;
+                     }
+                     
+                     
+                     
                      inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -6424,22 +7728,22 @@ namespace peanoclaw {
                      
                      
                      
-                     inline bool getWasCreatedInThisIteration() const 
+                     inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        return _persistentRecords._wasCreatedInThisIteration;
+                        return _persistentRecords._ageInGridIterations;
                      }
                      
                      
                      
-                     inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                     inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                        _persistentRecords._wasCreatedInThisIteration = wasCreatedInThisIteration;
+                        _persistentRecords._ageInGridIterations = ageInGridIterations;
                      }
                      
                      
@@ -6759,7 +8063,7 @@ namespace peanoclaw {
                    *
                    * 		   build date: 22-10-2013 20:59
                    *
-                   * @date   28/10/2013 11:29
+                   * @date   28/11/2013 11:13
                    */
                   class peanoclaw::records::VertexPacked { 
                      
@@ -6771,20 +8075,22 @@ namespace peanoclaw {
                         
                         struct PersistentRecords {
                            tarch::la::Vector<TWO_POWER_D,int> _indicesOfAdjacentCellDescriptions;
+                           tarch::la::Vector<TWO_POWER_D,int> _adjacentRanksInFormerIteration;
+                           int _ageInGridIterations;
                            int _adjacentCellsHeight;
                            tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
                            
                            /** mapping of records:
                            || Member 	|| startbit 	|| length
                             |  adjacentSubcellsEraseVeto	| startbit 0	| #bits TWO_POWER_D
-                            |  shouldRefine	| startbit TWO_POWER_D + 0	| #bits 1
-                            |  wasCreatedInThisIteration	| startbit TWO_POWER_D + 1	| #bits 1
+                            |  adjacentRanksChanged	| startbit TWO_POWER_D + 0	| #bits 1
+                            |  shouldRefine	| startbit TWO_POWER_D + 1	| #bits 1
                             |  isHangingNode	| startbit TWO_POWER_D + 2	| #bits 1
                             |  refinementControl	| startbit TWO_POWER_D + 3	| #bits 3
                             |  insideOutsideDomain	| startbit TWO_POWER_D + 6	| #bits 2
                             |  adjacentSubtreeForksIntoOtherRank	| startbit TWO_POWER_D + 8	| #bits 1
                             */
-                           short int _packedRecords0;
+                           int _packedRecords0;
                            
                            /**
                             * Generated
@@ -6794,7 +8100,7 @@ namespace peanoclaw {
                            /**
                             * Generated
                             */
-                           PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+                           PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                            
                            
                            /**
@@ -6879,10 +8185,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                              mask = static_cast<short int>(mask << (0));
-                              short int tmp = static_cast<short int>(_packedRecords0 & mask);
-                              tmp = static_cast<short int>(tmp >> (0));
+                              int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                              mask = static_cast<int>(mask << (0));
+                              int tmp = static_cast<int>(_packedRecords0 & mask);
+                              tmp = static_cast<int>(tmp >> (0));
                               std::bitset<TWO_POWER_D> result = tmp;
                               return result;
                            }
@@ -6913,10 +8219,91 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                              mask = static_cast<short int>(mask << (0));
-                              _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-                              _packedRecords0 = static_cast<short int>(_packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                              int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                              mask = static_cast<int>(mask << (0));
+                              _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+                              _packedRecords0 = static_cast<int>(_packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                           }
+                           
+                           
+                           
+                           /**
+                            * Generated and optimized
+                            * 
+                            * If you realise a for loop using exclusively arrays (vectors) and compile 
+                            * with -DUseManualAlignment you may add 
+                            * \code
+                            #pragma vector aligned
+                            #pragma simd
+                            \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                            * 
+                            * The alignment is tied to the unpacked records, i.e. for packed class
+                            * variants the machine's natural alignment is switched off to recude the  
+                            * memory footprint. Do not use any SSE/AVX operations or 
+                            * vectorisation on the result for the packed variants, as the data is misaligned. 
+                            * If you rely on vectorisation, convert the underlying record 
+                            * into the unpacked version first. 
+                            * 
+                            * @see convert()
+                            */
+                           inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              return _adjacentRanksInFormerIteration;
+                           }
+                           
+                           
+                           
+                           /**
+                            * Generated and optimized
+                            * 
+                            * If you realise a for loop using exclusively arrays (vectors) and compile 
+                            * with -DUseManualAlignment you may add 
+                            * \code
+                            #pragma vector aligned
+                            #pragma simd
+                            \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                            * 
+                            * The alignment is tied to the unpacked records, i.e. for packed class
+                            * variants the machine's natural alignment is switched off to recude the  
+                            * memory footprint. Do not use any SSE/AVX operations or 
+                            * vectorisation on the result for the packed variants, as the data is misaligned. 
+                            * If you rely on vectorisation, convert the underlying record 
+                            * into the unpacked version first. 
+                            * 
+                            * @see convert()
+                            */
+                           inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              _adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                           }
+                           
+                           
+                           
+                           inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              int mask = 1 << (TWO_POWER_D);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+                           }
+                           
+                           
+                           
+                           inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              int mask = 1 << (TWO_POWER_D);
+   _packedRecords0 = static_cast<int>( adjacentRanksChanged ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                            }
                            
                            
@@ -6926,8 +8313,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = 1 << (TWO_POWER_D);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                              int mask = 1 << (TWO_POWER_D + 1);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                            }
                            
@@ -6938,31 +8325,28 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = 1 << (TWO_POWER_D);
-   _packedRecords0 = static_cast<short int>( shouldRefine ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                              int mask = 1 << (TWO_POWER_D + 1);
+   _packedRecords0 = static_cast<int>( shouldRefine ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                            }
                            
                            
                            
-                           inline bool getWasCreatedInThisIteration() const 
+                           inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = 1 << (TWO_POWER_D + 1);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   return (tmp != 0);
+                              return _ageInGridIterations;
                            }
                            
                            
                            
-                           inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                           inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = 1 << (TWO_POWER_D + 1);
-   _packedRecords0 = static_cast<short int>( wasCreatedInThisIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                              _ageInGridIterations = ageInGridIterations;
                            }
                            
                            
@@ -6972,8 +8356,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = 1 << (TWO_POWER_D + 2);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                              int mask = 1 << (TWO_POWER_D + 2);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                            }
                            
@@ -6984,8 +8368,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = 1 << (TWO_POWER_D + 2);
-   _packedRecords0 = static_cast<short int>( isHangingNode ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                              int mask = 1 << (TWO_POWER_D + 2);
+   _packedRecords0 = static_cast<int>( isHangingNode ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                            }
                            
                            
@@ -6995,10 +8379,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 3));
+                              int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 3));
    assertion(( tmp >= 0 &&  tmp <= 6));
    return (RefinementControl) tmp;
                            }
@@ -7011,10 +8395,10 @@ namespace peanoclaw {
  #endif 
  {
                               assertion((refinementControl >= 0 && refinementControl <= 6));
-   short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<short int>(_packedRecords0 | refinementControl << (TWO_POWER_D + 3));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | refinementControl << (TWO_POWER_D + 3));
                            }
                            
                            
@@ -7044,10 +8428,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 6));
+                              int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 6));
    assertion(( tmp >= 0 &&  tmp <= 2));
    return (InsideOutsideDomain) tmp;
                            }
@@ -7060,10 +8444,10 @@ namespace peanoclaw {
  #endif 
  {
                               assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
-   short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<short int>(_packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
+   int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
                            }
                            
                            
@@ -7131,8 +8515,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = 1 << (TWO_POWER_D + 8);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                              int mask = 1 << (TWO_POWER_D + 8);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                            }
                            
@@ -7143,8 +8527,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                              short int mask = 1 << (TWO_POWER_D + 8);
-   _packedRecords0 = static_cast<short int>( adjacentSubtreeForksIntoOtherRank ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                              int mask = 1 << (TWO_POWER_D + 8);
+   _packedRecords0 = static_cast<int>( adjacentSubtreeForksIntoOtherRank ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                            }
                            
                            
@@ -7170,12 +8554,12 @@ namespace peanoclaw {
                         /**
                          * Generated
                          */
-                        VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+                        VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                         
                         /**
                          * Generated
                          */
-                        VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const bool& shouldRefine, const bool& wasCreatedInThisIteration, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+                        VertexPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const std::bitset<TWO_POWER_D>& adjacentSubcellsEraseVeto, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration, const bool& adjacentRanksChanged, const bool& shouldRefine, const int& ageInGridIterations, const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                         
                         /**
                          * Generated
@@ -7291,10 +8675,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                           mask = static_cast<short int>(mask << (0));
-                           short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-                           tmp = static_cast<short int>(tmp >> (0));
+                           int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                           mask = static_cast<int>(mask << (0));
+                           int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+                           tmp = static_cast<int>(tmp >> (0));
                            std::bitset<TWO_POWER_D> result = tmp;
                            return result;
                         }
@@ -7325,10 +8709,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = (short int) (1 << (TWO_POWER_D)) - 1 ;
-                           mask = static_cast<short int>(mask << (0));
-                           _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-                           _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
+                           int mask = (int) (1 << (TWO_POWER_D)) - 1 ;
+                           mask = static_cast<int>(mask << (0));
+                           _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+                           _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | adjacentSubcellsEraseVeto.to_ulong() << (0));
                         }
                         
                         
@@ -7378,13 +8762,120 @@ namespace peanoclaw {
                         
                         
                         
+                        /**
+                         * Generated and optimized
+                         * 
+                         * If you realise a for loop using exclusively arrays (vectors) and compile 
+                         * with -DUseManualAlignment you may add 
+                         * \code
+                         #pragma vector aligned
+                         #pragma simd
+                         \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                         * 
+                         * The alignment is tied to the unpacked records, i.e. for packed class
+                         * variants the machine's natural alignment is switched off to recude the  
+                         * memory footprint. Do not use any SSE/AVX operations or 
+                         * vectorisation on the result for the packed variants, as the data is misaligned. 
+                         * If you rely on vectorisation, convert the underlying record 
+                         * into the unpacked version first. 
+                         * 
+                         * @see convert()
+                         */
+                        inline tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanksInFormerIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           return _persistentRecords._adjacentRanksInFormerIteration;
+                        }
+                        
+                        
+                        
+                        /**
+                         * Generated and optimized
+                         * 
+                         * If you realise a for loop using exclusively arrays (vectors) and compile 
+                         * with -DUseManualAlignment you may add 
+                         * \code
+                         #pragma vector aligned
+                         #pragma simd
+                         \endcode to this for loop to enforce your compiler to use SSE/AVX.
+                         * 
+                         * The alignment is tied to the unpacked records, i.e. for packed class
+                         * variants the machine's natural alignment is switched off to recude the  
+                         * memory footprint. Do not use any SSE/AVX operations or 
+                         * vectorisation on the result for the packed variants, as the data is misaligned. 
+                         * If you rely on vectorisation, convert the underlying record 
+                         * into the unpacked version first. 
+                         * 
+                         * @see convert()
+                         */
+                        inline void setAdjacentRanksInFormerIteration(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           _persistentRecords._adjacentRanksInFormerIteration = (adjacentRanksInFormerIteration);
+                        }
+                        
+                        
+                        
+                        inline int getAdjacentRanksInFormerIteration(int elementIndex) const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           assertion(elementIndex>=0);
+                           assertion(elementIndex<TWO_POWER_D);
+                           return _persistentRecords._adjacentRanksInFormerIteration[elementIndex];
+                           
+                        }
+                        
+                        
+                        
+                        inline void setAdjacentRanksInFormerIteration(int elementIndex, const int& adjacentRanksInFormerIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           assertion(elementIndex>=0);
+                           assertion(elementIndex<TWO_POWER_D);
+                           _persistentRecords._adjacentRanksInFormerIteration[elementIndex]= adjacentRanksInFormerIteration;
+                           
+                        }
+                        
+                        
+                        
+                        inline bool getAdjacentRanksChanged() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           int mask = 1 << (TWO_POWER_D);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+                        }
+                        
+                        
+                        
+                        inline void setAdjacentRanksChanged(const bool& adjacentRanksChanged) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                           int mask = 1 << (TWO_POWER_D);
+   _persistentRecords._packedRecords0 = static_cast<int>( adjacentRanksChanged ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                        }
+                        
+                        
+                        
                         inline bool getShouldRefine() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                           int mask = 1 << (TWO_POWER_D + 1);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                         }
                         
@@ -7395,31 +8886,28 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D);
-   _persistentRecords._packedRecords0 = static_cast<short int>( shouldRefine ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                           int mask = 1 << (TWO_POWER_D + 1);
+   _persistentRecords._packedRecords0 = static_cast<int>( shouldRefine ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                         }
                         
                         
                         
-                        inline bool getWasCreatedInThisIteration() const 
+                        inline int getAgeInGridIterations() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 1);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   return (tmp != 0);
+                           return _persistentRecords._ageInGridIterations;
                         }
                         
                         
                         
-                        inline void setWasCreatedInThisIteration(const bool& wasCreatedInThisIteration) 
+                        inline void setAgeInGridIterations(const int& ageInGridIterations) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 1);
-   _persistentRecords._packedRecords0 = static_cast<short int>( wasCreatedInThisIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                           _persistentRecords._ageInGridIterations = ageInGridIterations;
                         }
                         
                         
@@ -7429,8 +8917,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 2);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                           int mask = 1 << (TWO_POWER_D + 2);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                         }
                         
@@ -7441,8 +8929,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 2);
-   _persistentRecords._packedRecords0 = static_cast<short int>( isHangingNode ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                           int mask = 1 << (TWO_POWER_D + 2);
+   _persistentRecords._packedRecords0 = static_cast<int>( isHangingNode ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                         }
                         
                         
@@ -7452,10 +8940,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 3));
+                           int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 3));
    assertion(( tmp >= 0 &&  tmp <= 6));
    return (RefinementControl) tmp;
                         }
@@ -7468,10 +8956,10 @@ namespace peanoclaw {
  #endif 
  {
                            assertion((refinementControl >= 0 && refinementControl <= 6));
-   short int mask =  (1 << (3)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 3));
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | refinementControl << (TWO_POWER_D + 3));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 3));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | refinementControl << (TWO_POWER_D + 3));
                         }
                         
                         
@@ -7541,10 +9029,10 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<short int>(tmp >> (TWO_POWER_D + 6));
+                           int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (TWO_POWER_D + 6));
    assertion(( tmp >= 0 &&  tmp <= 2));
    return (InsideOutsideDomain) tmp;
                         }
@@ -7557,10 +9045,10 @@ namespace peanoclaw {
  #endif 
  {
                            assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
-   short int mask =  (1 << (2)) - 1;
-   mask = static_cast<short int>(mask << (TWO_POWER_D + 6));
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
+   int mask =  (1 << (2)) - 1;
+   mask = static_cast<int>(mask << (TWO_POWER_D + 6));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | insideOutsideDomain << (TWO_POWER_D + 6));
                         }
                         
                         
@@ -7654,8 +9142,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 8);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                           int mask = 1 << (TWO_POWER_D + 8);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                         }
                         
@@ -7666,8 +9154,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                           short int mask = 1 << (TWO_POWER_D + 8);
-   _persistentRecords._packedRecords0 = static_cast<short int>( adjacentSubtreeForksIntoOtherRank ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                           int mask = 1 << (TWO_POWER_D + 8);
+   _persistentRecords._packedRecords0 = static_cast<int>( adjacentSubtreeForksIntoOtherRank ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                         }
                         
                         
