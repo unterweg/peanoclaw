@@ -87,7 +87,15 @@ bool peanoclaw::mappings::SolveTimestep::shouldAdvanceInTime(
                             coarseGridVertices,
                             coarseGridVerticesEnumerator,
                             peanoclaw::records::Vertex::Refining
+                          ) 
+                          &&
+                          !peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag
+                          (
+                            coarseGridVertices,
+                            coarseGridVerticesEnumerator,
+                            peanoclaw::records::Vertex::RefinementTriggered
                           );
+
 
   //Are all adjacent vertices set correctly?
   bool allAdjacentVerticesValid = true;
@@ -493,10 +501,10 @@ void peanoclaw::mappings::SolveTimestep::touchVertexFirstTime(
   logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
   //TODO unterweg debug
-  logInfo("", "Refinement management for vertex at " << fineGridX << " on level " << (coarseGridVerticesEnumerator.getLevel() + 1) << " on rank " << tarch::parallel::Node::getInstance().getRank() << ": "
+  /*logInfo("", "Refinement management for vertex at " << fineGridX << " on level " << (coarseGridVerticesEnumerator.getLevel() + 1) << " on rank " << tarch::parallel::Node::getInstance().getRank() << ": "
       << fineGridVertex.shouldErase() << ", "
       << fineGridVertex.getCurrentAdjacentCellsHeight() << ", "
-      << fineGridVertex.isHangingNode());
+      << fineGridVertex.isHangingNode());*/
 
   // Application driven refinement control
   if(
