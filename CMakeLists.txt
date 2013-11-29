@@ -82,6 +82,7 @@ set(PEANOCLAW_SOURCES
     src/peanoclaw/statistics/ParallelGridValidator.cpp
     src/peanoclaw/statistics/SubgridStatistics.cpp
     src/peanoclaw/statistics/ParallelStatistics.cpp
+    src/peanoclaw/statistics/TimeIntervalStatistics.cpp
 
     src/peanoclaw/parallel/MasterWorkerAndForkJoinCommunicator.cpp
     src/peanoclaw/parallel/NeighbourCommunicator.cpp

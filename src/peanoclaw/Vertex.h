@@ -138,7 +138,7 @@ class peanoclaw::Vertex: public peano::grid::Vertex< peanoclaw::records::Vertex 
      * Resets the flags indicating the subcells that
      * should be erased.
      */
-    void resetSubcellEraseVetos();
+    void resetSubcellsEraseVeto();
 
     /**
      * States that a subcell in the given quadrant/octant must
