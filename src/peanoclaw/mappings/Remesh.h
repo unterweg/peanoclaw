@@ -92,6 +92,8 @@ class peanoclaw::mappings::Remesh {
 
     peanoclaw::State const* _state;
 
+    int _iterationNumber;
+
     int _rootLevel;
 
   public:

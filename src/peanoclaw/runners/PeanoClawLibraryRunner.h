@@ -12,13 +12,12 @@
 #include "tarch/la/Vector.h"
 
 #include "peanoclaw/repositories/Repository.h"
+#include "peanoclaw/parallel/PeanoClawControlLoopLoadBalancer.h"
 
 #include "tarch/logging/Log.h"
 #include "tarch/timing/Watch.h"
 
 #include "peano/geometry/Hexahedron.h"
-
-#include "peanoclaw/PeanoClawControlLoopLoadBalancer.h"
 
 namespace peanoclaw {
 
@@ -61,7 +60,7 @@ private:
 
   bool _validateGrid;
 
-  PeanoClawControlLoopLoadBalancer _controlLoopLoadBalancer;
+  peanoclaw::parallel::PeanoClawControlLoopLoadBalancer _controlLoopLoadBalancer;
 
   /**
    * Initializes geometry and grid.
@@ -75,8 +74,6 @@ private:
    * Initializes the MPI environment
    */
   void initializeParallelEnvironment();
-
-  void updateOracle();
 
   void iterateRemesh();
 
@@ -123,6 +120,8 @@ public:
 
   const peanoclaw::State& getState();
   void configureGlobalTimestep(double time);
-  void runNextPossibleTimestep(bool plot);
+  void runNextPossibleTimestep();
+
+  void updateOracle();
 };
 #endif /* PEANO_APPLICATIONS_PEANOCLAW_RUNNERS_PEANOCLAWLIBRARYRUNNER_H_ */

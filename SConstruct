@@ -48,7 +48,7 @@ def addPeanoClawFlags(libpath, libs, cpppath, cppdefines):
    if(environment['PLATFORM'] == 'darwin'):
      ccflags.append('-flat_namespace')
      linkerflags.append('-flat_namespace')
-   elif build == 'release' or build == 'asserts':
+   elif build == 'release':
      cppdefines.append('_GLIBCXX_DEBUG')
      cppdefines.append('NDEBUG')
      
@@ -80,7 +80,9 @@ try:
 except ImportError:
   pass
 p3SourcePath = join(p3Path, 'src')
+toolboxSourcePath = join(p3Path, 'toolboxes')
 cpppath.append(p3SourcePath)
+cpppath.append(toolboxSourcePath)
 
 # Platform specific settings
 environment = Environment()
@@ -549,19 +551,10 @@ sourcesPeanoBase = [
   Glob(join(buildpath, 'kernel/*.cpp'))
 ]
 
-sourcesLoadBalancingToolBox = [
-  Glob(join(buildpath, 'kernel/mpibalancing/*.cpp')),
-  Glob(join(buildpath, 'kernel/mpibalancing/ControlLoopLoadBalancer/*.cpp')),
-  Glob(join(buildpath, 'kernel/mpibalancing/ControlLoopLoadBalancer/strategies/*.cpp'))
-]
-
 sourcesToolBox = [
-  Glob(join(buildpath, 'kernel/peano/toolbox/solver/*.cpp')),
-  Glob(join(buildpath, 'kernel/peano/toolbox/solver/configurations/*.cpp')),
-  Glob(join(buildpath, 'kernel/peano/toolbox/solver/tests/*.cpp')),
-  Glob(join(buildpath, 'kernel/peano/toolbox/stencil/*.cpp')),
-  Glob(join(buildpath, 'kernel/peano/toolbox/refinement/*.cpp')),
-  sourcesLoadBalancingToolBox
+  Glob(join(buildpath, 'toolboxes/mpibalancing/*.cpp')),
+  Glob(join(buildpath, 'toolboxes/mpibalancing/ControlLoopLoadBalancer/*.cpp')),
+  Glob(join(buildpath, 'toolboxes/mpibalancing/ControlLoopLoadBalancer/strategies/*.cpp'))
 ]
 
 sourcesToolBoxVHH = [
@@ -585,7 +578,6 @@ sourcesPeanoClaw = [
   Glob(join(buildpath, 'peanoclaw/runners/*.cpp')),
   Glob(join(buildpath, 'peanoclaw/statistics/*.cpp')),
   Glob(join(buildpath, 'peanoclaw/tests/*.cpp')),
-  sourcesToolBox
 	]
 
 ##### Define sources of application peanoclaw
@@ -608,7 +600,8 @@ source = [
    sourcesTComponents,
    sourcesPeanoBase,
    sourcesPeanoClaw,
-   sourcesParallel
+   sourcesParallel,
+   sourcesToolBox
    ]
 
 if solver == 'pyclaw':

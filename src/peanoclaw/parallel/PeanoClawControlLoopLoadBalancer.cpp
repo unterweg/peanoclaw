@@ -1,26 +1,24 @@
-#include "PeanoClawControlLoopLoadBalancer.h"
+#include "peanoclaw/parallel/PeanoClawControlLoopLoadBalancer.h"
 #include "mpibalancing/ControlLoopLoadBalancer/strategies/JoinDueToEraseStrategy.h"
 #include "mpibalancing/ControlLoopLoadBalancer/strategies/ThresholdStrategy.h"
 #include "mpibalancing/ControlLoopLoadBalancer/Reductions.h"
 
 using namespace  mpibalancing::ControlLoopLoadBalancer;
 
-tarch::logging::Log PeanoClawStrategy::_log("PeanoClawStrategy");
- 
-PeanoClawStrategy::PeanoClawStrategy(
-    History<mpibalancing::ControlLoopLoadBalancer::WorkerData>& masterHistory, 
+peanoclaw::parallel::PeanoClawStrategy::PeanoClawStrategy(
+    History<mpibalancing::ControlLoopLoadBalancer::WorkerData>& masterHistory,
     HistorySet<int, mpibalancing::ControlLoopLoadBalancer::WorkerData>& workerHistorySet,
     History<mpibalancing::ControlLoopLoadBalancer::GridStateData>& gridStateHistory
 ) :
-    _masterHistory(masterHistory), 
-    _workerHistorySet(workerHistorySet), 
+    _masterHistory(masterHistory),
+    _workerHistorySet(workerHistorySet),
     _gridStateHistory(gridStateHistory)
 {
 }
 
-PeanoClawStrategy::~PeanoClawStrategy() {}
+peanoclaw::parallel::PeanoClawStrategy::~PeanoClawStrategy() {}
 
-int PeanoClawStrategy::run( int worker ) {
+int peanoclaw::parallel::PeanoClawStrategy::run( int worker ) {
     int result = peano::parallel::loadbalancing::Continue;
     const WorkerData& workerData = _workerHistorySet.getHistory(worker).getPastItem(1);
     const GridStateData& gridStateData = _gridStateHistory.getPastItem(1);
@@ -50,7 +48,7 @@ int PeanoClawStrategy::run( int worker ) {
 #if 0
             mpibalancing::ControlLoopLoadBalancer::reductions::EraseIssueReduction eraseIssueReduction;
             _workerHistorySet.reduce(eraseIssueReduction);
- 
+
             int join_result = _joinDueToEraseStrategy.run(worker);
 
             if (join_result == peano::parallel::loadbalancing::ForkAllChildrenAndBecomeAdministrativeRank) {
@@ -68,30 +66,28 @@ int PeanoClawStrategy::run( int worker ) {
 
 // --------------------------------------------------------------------------------------------------------
 
-tarch::logging::Log PeanoClawControlLoopLoadBalancer::_log("PeanoClawControlLoopLoadBalancer");
-
-PeanoClawControlLoopLoadBalancer::PeanoClawControlLoopLoadBalancer() :
+peanoclaw::parallel::PeanoClawControlLoopLoadBalancer::PeanoClawControlLoopLoadBalancer() :
     _strategy(_masterHistory,_workerHistorySet,_gridStateHistory),
     _filterStrategy(_masterHistory,_workerHistorySet,_gridStateHistory)
 {
     _loadBalancingSuspended = false;
 }
 
-PeanoClawControlLoopLoadBalancer::~PeanoClawControlLoopLoadBalancer() {}
- 
-HistorySet<int, WorkerData >& PeanoClawControlLoopLoadBalancer::getWorkerHistorySet() {
+peanoclaw::parallel::PeanoClawControlLoopLoadBalancer::~PeanoClawControlLoopLoadBalancer() {}
+
+HistorySet<int, WorkerData >& peanoclaw::parallel::PeanoClawControlLoopLoadBalancer::getWorkerHistorySet() {
     return _workerHistorySet;
 }
 
-History<WorkerData>& PeanoClawControlLoopLoadBalancer::getMasterHistory() {
+History<WorkerData>& peanoclaw::parallel::PeanoClawControlLoopLoadBalancer::getMasterHistory() {
     return _masterHistory;
 }
 
-History<GridStateData>& PeanoClawControlLoopLoadBalancer::getGridStateHistory() {
+History<GridStateData>& peanoclaw::parallel::PeanoClawControlLoopLoadBalancer::getGridStateHistory() {
     return _gridStateHistory;
 }
 
-Strategy& PeanoClawControlLoopLoadBalancer::getStrategy(void) {
+Strategy& peanoclaw::parallel::PeanoClawControlLoopLoadBalancer::getStrategy(void) {
     if (_loadBalancingSuspended) {
         return _continueStrategy;
     } else {
@@ -99,10 +95,10 @@ Strategy& PeanoClawControlLoopLoadBalancer::getStrategy(void) {
     }
 }
 
-FilterStrategy& PeanoClawControlLoopLoadBalancer::getFilterStrategy(void) {
+FilterStrategy& peanoclaw::parallel::PeanoClawControlLoopLoadBalancer::getFilterStrategy(void) {
     return _filterStrategy;
 }
 
-void PeanoClawControlLoopLoadBalancer::suspendLoadBalancing(bool flag) {
+void peanoclaw::parallel::PeanoClawControlLoopLoadBalancer::suspendLoadBalancing(bool flag) {
     _loadBalancingSuspended = flag;
 }
