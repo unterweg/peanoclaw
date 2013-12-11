@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <map>
+#include <set>
 #include <vector>
 
 #ifdef SharedTBB
@@ -89,19 +90,60 @@ private:
    */
   tarch::plotter::griddata::Writer::CellDataWriter*                                             _cellAgeWriter;
 
+  #ifdef Parallel
+  /**
+   * Writes the current MPI rank of the cell.
+   */
+  tarch::plotter::griddata::Writer::CellDataWriter*                                             _cellRankWriter;
+  #endif
+
   double _gap;
 
+  std::set<int> _plotQ;
+
+  std::set<int> _plotAux;
+
+  bool _plotMetainformation;
+
+  /**
+   * Plots a single subcell.
+   */
+  void plotSubcell(
+    const Patch&                         patch,
+    tarch::la::Vector<DIMENSIONS, int>   subcellIndex,
+    peanoclaw::Vertex * const            vertices,
+    const peano::grid::VertexEnumerator& enumerator
+  );
+
+  /**
+   * Computes the gradient for a subcell within the given
+   * subgrid.
+   */
+  tarch::la::Vector<DIMENSIONS, double> computeGradient(
+    const Patch&                       patch,
+    tarch::la::Vector<DIMENSIONS, int> subcellIndex,
+    int                                unknown
+  );
+
 public:
+  /**
+   * @param plotQ A list containing the indices of the q fields
+   * that should be plotted. An empty vector is currently considered as
+   * plotting all values.
+   */
   PatchPlotter(
     tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter& vtkWriter,
     int unknownsPerSubcell,
-    int auxFieldsPerSubcell
+    int auxFieldsPerSubcell,
+    std::set<int> plotQ = std::set<int>(),
+    std::set<int> plotAux = std::set<int>(),
+    bool plotMetainformation = true
   );
 
   ~PatchPlotter();
 
   void plotPatch(
-    Patch& patch,
+    const Patch& patch,
     peanoclaw::Vertex * const        vertices,
     const peano::grid::VertexEnumerator&              enumerator
   );

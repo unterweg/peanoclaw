@@ -250,7 +250,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
     state.enableRefinementCriterion(false);
     tarch::la::Vector<DIMENSIONS, double> currentMinimalSubgridSize;
-    int maximumLevel = 1;
+    int maximumLevel = 2;
     do {
 
       logDebug("PeanoClawLibraryRunner", "Iterating with maximumLevel=" << maximumLevel);
@@ -261,11 +261,13 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
       _repository->getState().setInitialMaximalSubgridSize(currentMinimalSubgridSize);
 
+      logInfo("PeanoClawLibraryRunner", "Creating grid up to level " << maximumLevel << "...");
       do {
+        logInfo("PeanoClawLibraryRunner", "Initialize iteration...");
         iterateInitialiseGrid();
         iterateInitialiseGrid(); //TODO unterweg: Raus?
 
-        logInfo("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
+//        logInfo("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
       } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
       maximumLevel += 1;
@@ -276,8 +278,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
     _repository->getState().setInitialMaximalSubgridSize(initialMaximalSubgridSize);
     do {
       logDebug("PeanoClawLibraryRunner", "Iterate with Refinement Criterion");
-      //iterateInitialiseGrid();
-      iterateInitialiseGrid();
+      logInfo("PeanoClawLibraryRunner", "Creating initial grid...");
       iterateInitialiseGrid();
       iterateInitialiseGrid(); //TODO unterweg: Raus?
     } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
@@ -346,10 +347,13 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
       || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);
  
   configureGlobalTimestep(time);
+
+  //Iterate over grid until next global timestep...
   do {
       runNextPossibleTimestep(plotSubsteps);
   } while(!_repository->getState().getAllPatchesEvolvedToGlobalTimestep());
 
+  //Plot
   if(_configuration.plotAtOutputTimes() && !plotSubsteps) {
     _repository->getState().setPlotNumber(_plotNumber);
     iteratePlot();
@@ -441,10 +445,8 @@ void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep(bool pl
     _repository->getState().resetGlobalTimeIntervals();
     _repository->getState().resetMinimalTimestep();
     _repository->getState().setAllPatchesEvolvedToGlobalTimestep(true);
-    
-    //_controlLoopLoadBalancer.suspendLoadBalancing(true);
+
     iterateSolveTimestep(plotSubsteps);
-    //_controlLoopLoadBalancer.suspendLoadBalancing(false);
 
     _repository->getState().plotStatisticsForLastGridIteration();
 
