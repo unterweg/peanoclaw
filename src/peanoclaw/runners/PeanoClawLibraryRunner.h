@@ -120,7 +120,7 @@ public:
 
   const peanoclaw::State& getState();
   void configureGlobalTimestep(double time);
-  void runNextPossibleTimestep();
+  void runNextPossibleTimestep(bool plot);
 
   void updateOracle();
 };

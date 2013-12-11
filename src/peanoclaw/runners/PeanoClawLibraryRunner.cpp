@@ -190,7 +190,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
   _totalRuntime(0.0),
   _numerics(numerics),
-  _validateGrid(false)
+  _validateGrid(true)
 {
   #ifndef Asserts
   _validateGrid = false;
@@ -250,7 +250,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
     state.enableRefinementCriterion(false);
     tarch::la::Vector<DIMENSIONS, double> currentMinimalSubgridSize;
-    int maximumLevel = 2;
+    int maximumLevel = 1;
     do {
 
       logDebug("PeanoClawLibraryRunner", "Iterating with maximumLevel=" << maximumLevel);
@@ -268,7 +268,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
         logInfo("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
       } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
-      maximumLevel += 2;
+      maximumLevel += 1;
     } while(tarch::la::oneGreater(currentMinimalSubgridSize, initialMaximalSubgridSize));
     #endif
 
@@ -276,7 +276,8 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
     _repository->getState().setInitialMaximalSubgridSize(initialMaximalSubgridSize);
     do {
       logDebug("PeanoClawLibraryRunner", "Iterate with Refinement Criterion");
-//      iterateInitialiseGrid();
+      //iterateInitialiseGrid();
+      iterateInitialiseGrid();
       iterateInitialiseGrid();
       iterateInitialiseGrid(); //TODO unterweg: Raus?
     } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
@@ -440,8 +441,10 @@ void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep(bool pl
     _repository->getState().resetGlobalTimeIntervals();
     _repository->getState().resetMinimalTimestep();
     _repository->getState().setAllPatchesEvolvedToGlobalTimestep(true);
-
+    
+    //_controlLoopLoadBalancer.suspendLoadBalancing(true);
     iterateSolveTimestep(plotSubsteps);
+    //_controlLoopLoadBalancer.suspendLoadBalancing(false);
 
     _repository->getState().plotStatisticsForLastGridIteration();
 

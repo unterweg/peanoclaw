@@ -86,6 +86,8 @@ set(PEANOCLAW_SOURCES
 
     src/peanoclaw/parallel/MasterWorkerAndForkJoinCommunicator.cpp
     src/peanoclaw/parallel/NeighbourCommunicator.cpp
+    src/peanoclaw/parallel/SubgridCommunicator.cpp
+    src/peanoclaw/parallel/PeanoClawControlLoopLoadBalancer.cpp
 
     src/peanoclaw/native/NativeKernel.cpp   
     src/peanoclaw/native/SWEKernel.cpp   
@@ -94,9 +96,6 @@ set(PEANOCLAW_SOURCES
     # swe part
     src/peanoclaw/native/SWE/src/blocks/SWE_Block.cpp
     src/peanoclaw/native/SWE/src/blocks/SWE_WavePropagationBlock.cpp
-
-    # load balancing part
-    src/peanoclaw/PeanoClawControlLoopLoadBalancer.cpp
 )
 
 execute_process ( COMMAND python -c "from numpy import get_include; print get_include()" OUTPUT_VARIABLE NUMPY_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE )
