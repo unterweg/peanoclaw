@@ -14,6 +14,8 @@
 peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::VertexMap peanoclaw::mappings::Remesh::_vertexPositionToIndexMap;
 peanoclaw::parallel::NeighbourCommunicator::RemoteSubgridMap               peanoclaw::mappings::Remesh::_remoteSubgridMap;
 
+tarch::timing::Watch peanoclaw::mappings::Remesh::_spacetreeCommunicationWaitingTimeWatch("", "", false);
+
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
@@ -74,17 +76,22 @@ peanoclaw::mappings::Remesh::Remesh()
   _isInitializing(false),
   _useDimensionalSplittingOptimization(false),
   _parallelStatistics(""),
+  _totalParallelStatistics("Simulation"),
   _state(),
   _iterationNumber(0) {
   logTraceIn( "Remesh()" );
-  // @todo Insert your code here
+
+  _spacetreeCommunicationWaitingTimeWatch.stopTimer();
+
   logTraceOut( "Remesh()" );
 }
 
 
 peanoclaw::mappings::Remesh::~Remesh() {
   logTraceIn( "~Remesh()" );
-  // @todo Insert your code here
+
+  _totalParallelStatistics.logTotalStatistics();
+
   logTraceOut( "~Remesh()" );
 }
 
@@ -193,7 +200,7 @@ void peanoclaw::mappings::Remesh::destroyHangingVertex(
   for(int i = 0; i < TWO_POWER_D; i++) {
     if(fineGridVertex.getAdjacentCellDescriptionIndex(i) != -1) {
       Patch subgrid(fineGridVertex.getAdjacentCellDescriptionIndex(i));
-      assertion1(!subgrid.isRemote() || subgrid.getLevel() <= coarseGridVerticesEnumerator.getLevel(), subgrid);
+      assertion2(!subgrid.isRemote() || subgrid.getLevel() <= coarseGridVerticesEnumerator.getLevel(), subgrid, fineGridVertex);
     }
   }
   #endif
@@ -525,7 +532,7 @@ void peanoclaw::mappings::Remesh::prepareSendToNeighbour(
   logTraceInWith3Arguments( "prepareSendToNeighbour(...)", vertex, toRank, level );
 
   peanoclaw::parallel::NeighbourCommunicator communicator(toRank, x, level, h, _remoteSubgridMap, _parallelStatistics);
-  communicator.sendSubgridsForVertex(vertex, x, h, level);
+  communicator.sendSubgridsForVertex(vertex, x, h, level, *_state);
 
   logTraceOut( "prepareSendToNeighbour(...)" );
 }
@@ -552,7 +559,7 @@ void peanoclaw::mappings::Remesh::prepareCopyToRemoteNode(
 ) {
   logTraceInWith5Arguments( "prepareCopyToRemoteNode(...)", localCell, toRank, cellCentre, cellSize, level );
 
-  logInfo("prepareCopyToRemoteNode", "Copying data from rank " << tarch::parallel::Node::getInstance().getRank() << " to " << toRank
+  logDebug("prepareCopyToRemoteNode", "Copying data from rank " << tarch::parallel::Node::getInstance().getRank() << " to " << toRank
       << " position:" << (cellCentre - cellSize / 2.0) << ", level:" << level
       << ", isInside:" << localCell.isInside()
       << ", assignedToRemoteRank:" << localCell.isAssignedToRemoteRank()
@@ -643,6 +650,7 @@ bool peanoclaw::mappings::Remesh::prepareSendToWorker(
     fineGridPositionOfCell,
     worker
   );
+  bool requiresReduction = false;
 
   if(fineGridCell.isInside()){
 
@@ -656,10 +664,15 @@ bool peanoclaw::mappings::Remesh::prepareSendToWorker(
 
     peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator communicator(worker, fineGridVerticesEnumerator.getCellCenter(), fineGridVerticesEnumerator.getLevel(), false);
     communicator.sendPatch(fineGridCell.getCellDescriptionIndex());
+
+    //TODO unterweg dissertation: Subgitter müssen auch auf virtuell geschaltet werden, wenn sie
+    //von einer Ghostlayer überlappt werden und mit einem Worker geshared sind.
+    Patch subgrid(fineGridCell);
+    requiresReduction = subgrid.isVirtual();
   }
 
   logTraceOut( "prepareSendToWorker(...)" );
-  return true;
+  return requiresReduction;
 }
 
 void peanoclaw::mappings::Remesh::prepareSendToMaster(
@@ -768,9 +781,7 @@ void peanoclaw::mappings::Remesh::receiveDataFromMaster(
 
     int temporaryCellDescriptionIndex = CellDescriptionHeap::getInstance().createData();
     CellDescription temporaryCellDescription;
-    temporaryCellDescription.setUNewIndex(-1);
-//    temporaryCellDescription.setUOldIndex(-1);
-//    temporaryCellDescription.setAuxIndex(-1);
+    temporaryCellDescription.setUIndex(-1);
     temporaryCellDescription.setPosition(
       receivedVerticesEnumerator.getVertexPosition(tarch::la::Vector<DIMENSIONS, int>(0))
     );
@@ -779,7 +790,10 @@ void peanoclaw::mappings::Remesh::receiveDataFromMaster(
     CellDescriptionHeap::getInstance().getData(temporaryCellDescriptionIndex).push_back(temporaryCellDescription);
     receivedCell.setCellDescriptionIndex(temporaryCellDescriptionIndex);
 
+    tarch::timing::Watch masterWorkerSubgridCommunicationWatch("", "", false);
     communicator.receivePatch(temporaryCellDescriptionIndex);
+    masterWorkerSubgridCommunicationWatch.stopTimer();
+    _parallelStatistics.addWaitingTimeForMasterWorkerSubgridCommunication(masterWorkerSubgridCommunicationWatch.getCalendarTime());
   } else {
     receivedCell.setCellDescriptionIndex(-1);
   }
@@ -914,6 +928,10 @@ void peanoclaw::mappings::Remesh::enterCell(
   assertion(patch.isLeaf() || !patch.isLeaf());
 
   #ifdef Parallel
+  if(!_isInitializing) {
+    fineGridCell.setCellIsAForkCandidate(true);
+  }
+
   assertionEquals4(patch.getLevel(),
     fineGridVerticesEnumerator.getLevel(),
     patch,
@@ -1021,10 +1039,27 @@ void peanoclaw::mappings::Remesh::leaveCell(
   if(!fineGridCell.isAssignedToRemoteRank()) {
     //Count number of adjacent subgrids
     ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
-    parallelSubgrid.countNumberOfAdjacentParallelSubgrids(
+    parallelSubgrid.countNumberOfAdjacentParallelSubgridsAndSetGhostlayerOverlap(
       fineGridVertices,
       fineGridVerticesEnumerator
     );
+  }
+
+  //Avoid erasing when one coarse grid vertex is refining.
+  if(peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
+       coarseGridVertices,
+       coarseGridVerticesEnumerator,
+       peanoclaw::Vertex::Records::RefinementTriggered
+     )
+     ||
+     peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
+       coarseGridVertices,
+       coarseGridVerticesEnumerator,
+       peanoclaw::Vertex::Records::Refining
+     )) {
+    for(int i = 0; i < TWO_POWER_D; i++) {
+      coarseGridVertices[coarseGridVerticesEnumerator(i)].setSubcellEraseVeto(i);
+    }
   }
 
   logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
@@ -1035,6 +1070,12 @@ void peanoclaw::mappings::Remesh::beginIteration(
   peanoclaw::State&  solverState
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
+  _spacetreeCommunicationWaitingTimeWatch.stopTimer();
+
+  _parallelStatistics = peanoclaw::statistics::ParallelStatistics("Iteration");
+  if(_iterationNumber > 0) {
+    _parallelStatistics.addWaitingTimeForMasterWorkerSpacetreeCommunication(_spacetreeCommunicationWaitingTimeWatch.getCalendarTime());
+  }
 
   //TODO unterweg debug
   #ifdef Parallel
@@ -1072,7 +1113,6 @@ void peanoclaw::mappings::Remesh::beginIteration(
   _initialMinimalMeshWidth = solverState.getInitialMaximalSubgridSize();
   _isInitializing = solverState.getIsInitializing();
   _useDimensionalSplittingOptimization = solverState.useDimensionalSplittingOptimization();
-  _parallelStatistics = peanoclaw::statistics::ParallelStatistics("Iteration");
   _state = &solverState;
 
   //Reset touched for all hanging vertex descriptions
@@ -1087,18 +1127,21 @@ void peanoclaw::mappings::Remesh::beginIteration(
   }
 
   #ifdef Parallel
+  tarch::timing::Watch neighborSubgridCommunicationWatch("", "", false);
   DataHeap::getInstance().startToSendSynchronousData();
   DataHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
   CellDescriptionHeap::getInstance().startToSendSynchronousData();
   CellDescriptionHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
+  neighborSubgridCommunicationWatch.stopTimer();
+  _parallelStatistics.addWaitingTimeForNeighborSubgridCommunication(neighborSubgridCommunicationWatch.getCalendarTime());
 
-  if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    solverState.resetLocalHeightOfWorkerTree();
-
-    logDebug("beginIteration(State)", "Height of worker tree in last grid iteration was " << solverState.getGlobalHeightOfWorkerTreeDuringLastIteration());
-  } else {
-    solverState.increaseLocalHeightOfWorkerTree();
-  }
+//  if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
+//    solverState.resetLocalHeightOfWorkerTree();
+//
+//    logDebug("beginIteration(State)", "Height of worker tree in last grid iteration was " << solverState.getGlobalHeightOfWorkerTreeDuringLastIteration());
+//  } else {
+//    solverState.increaseLocalHeightOfWorkerTree();
+//  }
   #endif
 
   _rootLevel = -1;
@@ -1114,16 +1157,20 @@ void peanoclaw::mappings::Remesh::endIteration(
 
   delete _gridLevelTransfer;
 
-  _parallelStatistics.logStatistics();
+  _parallelStatistics.logIterationStatistics();
+  _totalParallelStatistics.merge(_parallelStatistics);
 
   DataHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());
   CellDescriptionHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());
 
+  #ifdef Parallel
   if(tarch::parallel::Node::getInstance().isGlobalMaster() || _state->isJoiningWithMaster()) {
     CellDescriptionHeap::getInstance().finishedToSendSynchronousData();
     DataHeap::getInstance().finishedToSendSynchronousData();
   }
+  #endif
 
+  _spacetreeCommunicationWaitingTimeWatch.startTimer();
   logTraceOutWith1Argument( "endIteration(State)", solverState);
 }
 

@@ -34,7 +34,7 @@ namespace peanoclaw {
     *
     * 		   build date: 22-10-2013 20:59
     *
-    * @date   02/12/2013 13:51
+    * @date   27/01/2014 14:59
     */
    class peanoclaw::records::State { 
       
@@ -73,15 +73,13 @@ namespace peanoclaw {
             tarch::la::Vector<DIMENSIONS,double> _domainSize;
             #endif
             int _plotNumber;
-            int _subPlotNumber;
             double _startMaximumGlobalTimeInterval;
             double _endMaximumGlobalTimeInterval;
             double _startMinimumGlobalTimeInterval;
             double _endMinimumGlobalTimeInterval;
             double _minimalTimestep;
             double _totalNumberOfCellUpdates;
-            int _localHeightOfWorkerTree;
-            int _globalHeightOfWorkerTreeDuringLastIteration;
+            bool _reduceReductions;
             #ifdef UseManualAlignment
             tarch::la::Vector<DIMENSIONS,double> _minMeshWidth __attribute__((aligned(VectorisationAlignment)));
             #else
@@ -120,7 +118,7 @@ namespace peanoclaw {
             /**
              * Generated
              */
-            PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const int& localHeightOfWorkerTree, const int& globalHeightOfWorkerTreeDuringLastIteration, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
+            PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
             
             
             inline bool getIsInitializing() const 
@@ -555,26 +553,6 @@ namespace peanoclaw {
             
             
             
-            inline int getSubPlotNumber() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               return _subPlotNumber;
-            }
-            
-            
-            
-            inline void setSubPlotNumber(const int& subPlotNumber) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               _subPlotNumber = subPlotNumber;
-            }
-            
-            
-            
             inline double getStartMaximumGlobalTimeInterval() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -695,42 +673,22 @@ namespace peanoclaw {
             
             
             
-            inline int getLocalHeightOfWorkerTree() const 
+            inline bool getReduceReductions() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               return _localHeightOfWorkerTree;
+               return _reduceReductions;
             }
             
             
             
-            inline void setLocalHeightOfWorkerTree(const int& localHeightOfWorkerTree) 
+            inline void setReduceReductions(const bool& reduceReductions) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               _localHeightOfWorkerTree = localHeightOfWorkerTree;
-            }
-            
-            
-            
-            inline int getGlobalHeightOfWorkerTreeDuringLastIteration() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               return _globalHeightOfWorkerTreeDuringLastIteration;
-            }
-            
-            
-            
-            inline void setGlobalHeightOfWorkerTreeDuringLastIteration(const int& globalHeightOfWorkerTreeDuringLastIteration) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               _globalHeightOfWorkerTreeDuringLastIteration = globalHeightOfWorkerTreeDuringLastIteration;
+               _reduceReductions = reduceReductions;
             }
             
             
@@ -1270,7 +1228,7 @@ namespace peanoclaw {
          /**
           * Generated
           */
-         State(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const int& localHeightOfWorkerTree, const int& globalHeightOfWorkerTreeDuringLastIteration, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
+         State(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
          
          /**
           * Generated
@@ -1814,26 +1772,6 @@ namespace peanoclaw {
          
          
          
-         inline int getSubPlotNumber() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-            return _persistentRecords._subPlotNumber;
-         }
-         
-         
-         
-         inline void setSubPlotNumber(const int& subPlotNumber) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-            _persistentRecords._subPlotNumber = subPlotNumber;
-         }
-         
-         
-         
          inline double getStartMaximumGlobalTimeInterval() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -1954,42 +1892,22 @@ namespace peanoclaw {
          
          
          
-         inline int getLocalHeightOfWorkerTree() const 
+         inline bool getReduceReductions() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-            return _persistentRecords._localHeightOfWorkerTree;
+            return _persistentRecords._reduceReductions;
          }
          
          
          
-         inline void setLocalHeightOfWorkerTree(const int& localHeightOfWorkerTree) 
+         inline void setReduceReductions(const bool& reduceReductions) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-            _persistentRecords._localHeightOfWorkerTree = localHeightOfWorkerTree;
-         }
-         
-         
-         
-         inline int getGlobalHeightOfWorkerTreeDuringLastIteration() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-            return _persistentRecords._globalHeightOfWorkerTreeDuringLastIteration;
-         }
-         
-         
-         
-         inline void setGlobalHeightOfWorkerTreeDuringLastIteration(const int& globalHeightOfWorkerTreeDuringLastIteration) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-            _persistentRecords._globalHeightOfWorkerTreeDuringLastIteration = globalHeightOfWorkerTreeDuringLastIteration;
+            _persistentRecords._reduceReductions = reduceReductions;
          }
          
          
@@ -2633,35 +2551,27 @@ namespace peanoclaw {
        *
        * 		   build date: 22-10-2013 20:59
        *
-       * @date   02/12/2013 13:51
+       * @date   27/01/2014 14:59
        */
       class peanoclaw::records::StatePacked { 
          
          public:
             
             struct PersistentRecords {
-               bool _isInitializing;
-               bool _isRefinementCriterionEnabled;
-               int _unknownsPerSubcell;
-               int _auxiliarFieldsPerSubcell;
                tarch::la::Vector<DIMENSIONS,double> _initialMaximalSubgridSize;
                tarch::la::Vector<DIMENSIONS,int> _defaultSubdivisionFactor;
-               int _defaultGhostWidthLayer;
                double _initialTimestepSize;
                bool _useDimensionalSplittingOptimization;
                double _globalTimestepEndTime;
                tarch::la::Vector<DIMENSIONS,double> _domainOffset;
                tarch::la::Vector<DIMENSIONS,double> _domainSize;
                int _plotNumber;
-               int _subPlotNumber;
                double _startMaximumGlobalTimeInterval;
                double _endMaximumGlobalTimeInterval;
                double _startMinimumGlobalTimeInterval;
                double _endMinimumGlobalTimeInterval;
                double _minimalTimestep;
                double _totalNumberOfCellUpdates;
-               int _localHeightOfWorkerTree;
-               int _globalHeightOfWorkerTreeDuringLastIteration;
                tarch::la::Vector<DIMENSIONS,double> _minMeshWidth;
                tarch::la::Vector<DIMENSIONS,double> _maxMeshWidth;
                double _numberOfInnerVertices;
@@ -2679,17 +2589,23 @@ namespace peanoclaw {
                
                /** mapping of records:
                || Member 	|| startbit 	|| length
-                |  allPatchesEvolvedToGlobalTimestep	| startbit 0	| #bits 1
-                |  hasRefined	| startbit 1	| #bits 1
-                |  hasTriggeredRefinementForNextIteration	| startbit 2	| #bits 1
-                |  hasErased	| startbit 3	| #bits 1
-                |  hasTriggeredEraseForNextIteration	| startbit 4	| #bits 1
-                |  hasChangedVertexOrCellState	| startbit 5	| #bits 1
-                |  reduceStateAndCell	| startbit 6	| #bits 1
-                |  couldNotEraseDueToDecompositionFlag	| startbit 7	| #bits 1
-                |  subWorkerIsInvolvedInJoinOrFork	| startbit 8	| #bits 1
+                |  isInitializing	| startbit 0	| #bits 1
+                |  isRefinementCriterionEnabled	| startbit 1	| #bits 1
+                |  unknownsPerSubcell	| startbit 2	| #bits 3
+                |  auxiliarFieldsPerSubcell	| startbit 5	| #bits 3
+                |  defaultGhostWidthLayer	| startbit 8	| #bits 3
+                |  allPatchesEvolvedToGlobalTimestep	| startbit 11	| #bits 1
+                |  reduceReductions	| startbit 12	| #bits 1
+                |  hasRefined	| startbit 13	| #bits 1
+                |  hasTriggeredRefinementForNextIteration	| startbit 14	| #bits 1
+                |  hasErased	| startbit 15	| #bits 1
+                |  hasTriggeredEraseForNextIteration	| startbit 16	| #bits 1
+                |  hasChangedVertexOrCellState	| startbit 17	| #bits 1
+                |  reduceStateAndCell	| startbit 18	| #bits 1
+                |  couldNotEraseDueToDecompositionFlag	| startbit 19	| #bits 1
+                |  subWorkerIsInvolvedInJoinOrFork	| startbit 20	| #bits 1
                 */
-               short int _packedRecords0;
+               int _packedRecords0;
                
                /**
                 * Generated
@@ -2699,7 +2615,7 @@ namespace peanoclaw {
                /**
                 * Generated
                 */
-               PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const int& localHeightOfWorkerTree, const int& globalHeightOfWorkerTreeDuringLastIteration, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
+               PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
                
                
                inline bool getIsInitializing() const 
@@ -2707,7 +2623,9 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  return _isInitializing;
+                  int mask = 1 << (0);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
                }
                
                
@@ -2717,7 +2635,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  _isInitializing = isInitializing;
+                  int mask = 1 << (0);
+   _packedRecords0 = static_cast<int>( isInitializing ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -2727,7 +2646,9 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  return _isRefinementCriterionEnabled;
+                  int mask = 1 << (1);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
                }
                
                
@@ -2737,7 +2658,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  _isRefinementCriterionEnabled = isRefinementCriterionEnabled;
+                  int mask = 1 << (1);
+   _packedRecords0 = static_cast<int>( isRefinementCriterionEnabled ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -2747,7 +2669,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  return _unknownsPerSubcell;
+                  int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (2));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (2));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                }
                
                
@@ -2757,7 +2684,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  _unknownsPerSubcell = unknownsPerSubcell;
+                  assertion((unknownsPerSubcell >= 0 && unknownsPerSubcell <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (2));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | unknownsPerSubcell << (2));
                }
                
                
@@ -2767,7 +2698,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  return _auxiliarFieldsPerSubcell;
+                  int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (5));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (5));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                }
                
                
@@ -2777,7 +2713,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  _auxiliarFieldsPerSubcell = auxiliarFieldsPerSubcell;
+                  assertion((auxiliarFieldsPerSubcell >= 0 && auxiliarFieldsPerSubcell <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (5));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | auxiliarFieldsPerSubcell << (5));
                }
                
                
@@ -2903,7 +2843,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  return _defaultGhostWidthLayer;
+                  int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (8));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (8));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                }
                
                
@@ -2913,7 +2858,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  _defaultGhostWidthLayer = defaultGhostWidthLayer;
+                  assertion((defaultGhostWidthLayer >= 0 && defaultGhostWidthLayer <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (8));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | defaultGhostWidthLayer << (8));
                }
                
                
@@ -2983,8 +2932,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (0);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (11);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -2995,8 +2944,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (0);
-   _packedRecords0 = static_cast<short int>( allPatchesEvolvedToGlobalTimestep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (11);
+   _packedRecords0 = static_cast<int>( allPatchesEvolvedToGlobalTimestep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3137,26 +3086,6 @@ namespace peanoclaw {
                
                
                
-               inline int getSubPlotNumber() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                  return _subPlotNumber;
-               }
-               
-               
-               
-               inline void setSubPlotNumber(const int& subPlotNumber) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                  _subPlotNumber = subPlotNumber;
-               }
-               
-               
-               
                inline double getStartMaximumGlobalTimeInterval() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -3277,42 +3206,25 @@ namespace peanoclaw {
                
                
                
-               inline int getLocalHeightOfWorkerTree() const 
+               inline bool getReduceReductions() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  return _localHeightOfWorkerTree;
+                  int mask = 1 << (12);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
                }
                
                
                
-               inline void setLocalHeightOfWorkerTree(const int& localHeightOfWorkerTree) 
+               inline void setReduceReductions(const bool& reduceReductions) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  _localHeightOfWorkerTree = localHeightOfWorkerTree;
-               }
-               
-               
-               
-               inline int getGlobalHeightOfWorkerTreeDuringLastIteration() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                  return _globalHeightOfWorkerTreeDuringLastIteration;
-               }
-               
-               
-               
-               inline void setGlobalHeightOfWorkerTreeDuringLastIteration(const int& globalHeightOfWorkerTreeDuringLastIteration) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                  _globalHeightOfWorkerTreeDuringLastIteration = globalHeightOfWorkerTreeDuringLastIteration;
+                  int mask = 1 << (12);
+   _packedRecords0 = static_cast<int>( reduceReductions ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3658,8 +3570,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (1);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (13);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -3670,8 +3582,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (1);
-   _packedRecords0 = static_cast<short int>( hasRefined ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (13);
+   _packedRecords0 = static_cast<int>( hasRefined ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3681,8 +3593,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (2);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (14);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -3693,8 +3605,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (2);
-   _packedRecords0 = static_cast<short int>( hasTriggeredRefinementForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (14);
+   _packedRecords0 = static_cast<int>( hasTriggeredRefinementForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3704,8 +3616,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (3);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (15);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -3716,8 +3628,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (3);
-   _packedRecords0 = static_cast<short int>( hasErased ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (15);
+   _packedRecords0 = static_cast<int>( hasErased ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3727,8 +3639,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (4);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (16);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -3739,8 +3651,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (4);
-   _packedRecords0 = static_cast<short int>( hasTriggeredEraseForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (16);
+   _packedRecords0 = static_cast<int>( hasTriggeredEraseForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3750,8 +3662,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (5);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (17);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -3762,8 +3674,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (5);
-   _packedRecords0 = static_cast<short int>( hasChangedVertexOrCellState ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (17);
+   _packedRecords0 = static_cast<int>( hasChangedVertexOrCellState ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3793,8 +3705,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (6);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (18);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -3805,8 +3717,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (6);
-   _packedRecords0 = static_cast<short int>( reduceStateAndCell ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (18);
+   _packedRecords0 = static_cast<int>( reduceStateAndCell ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3816,8 +3728,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (7);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (19);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -3828,8 +3740,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (7);
-   _packedRecords0 = static_cast<short int>( couldNotEraseDueToDecompositionFlag ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (19);
+   _packedRecords0 = static_cast<int>( couldNotEraseDueToDecompositionFlag ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3839,8 +3751,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (8);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                  int mask = 1 << (20);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
                
@@ -3851,8 +3763,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  short int mask = 1 << (8);
-   _packedRecords0 = static_cast<short int>( subWorkerIsInvolvedInJoinOrFork ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  int mask = 1 << (20);
+   _packedRecords0 = static_cast<int>( subWorkerIsInvolvedInJoinOrFork ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
                
@@ -3876,7 +3788,7 @@ namespace peanoclaw {
             /**
              * Generated
              */
-            StatePacked(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const int& localHeightOfWorkerTree, const int& globalHeightOfWorkerTreeDuringLastIteration, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
+            StatePacked(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
             
             /**
              * Generated
@@ -3889,7 +3801,9 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               return _persistentRecords._isInitializing;
+               int mask = 1 << (0);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
             }
             
             
@@ -3899,7 +3813,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               _persistentRecords._isInitializing = isInitializing;
+               int mask = 1 << (0);
+   _persistentRecords._packedRecords0 = static_cast<int>( isInitializing ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -3909,7 +3824,9 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               return _persistentRecords._isRefinementCriterionEnabled;
+               int mask = 1 << (1);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
             }
             
             
@@ -3919,7 +3836,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               _persistentRecords._isRefinementCriterionEnabled = isRefinementCriterionEnabled;
+               int mask = 1 << (1);
+   _persistentRecords._packedRecords0 = static_cast<int>( isRefinementCriterionEnabled ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -3929,7 +3847,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               return _persistentRecords._unknownsPerSubcell;
+               int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (2));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (2));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
             }
             
             
@@ -3939,7 +3862,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               _persistentRecords._unknownsPerSubcell = unknownsPerSubcell;
+               assertion((unknownsPerSubcell >= 0 && unknownsPerSubcell <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (2));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | unknownsPerSubcell << (2));
             }
             
             
@@ -3949,7 +3876,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               return _persistentRecords._auxiliarFieldsPerSubcell;
+               int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (5));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (5));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
             }
             
             
@@ -3959,7 +3891,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               _persistentRecords._auxiliarFieldsPerSubcell = auxiliarFieldsPerSubcell;
+               assertion((auxiliarFieldsPerSubcell >= 0 && auxiliarFieldsPerSubcell <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (5));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | auxiliarFieldsPerSubcell << (5));
             }
             
             
@@ -4137,7 +4073,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               return _persistentRecords._defaultGhostWidthLayer;
+               int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (8));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (8));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
             }
             
             
@@ -4147,7 +4088,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               _persistentRecords._defaultGhostWidthLayer = defaultGhostWidthLayer;
+               assertion((defaultGhostWidthLayer >= 0 && defaultGhostWidthLayer <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (8));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | defaultGhostWidthLayer << (8));
             }
             
             
@@ -4217,8 +4162,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (0);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (11);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -4229,8 +4174,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (0);
-   _persistentRecords._packedRecords0 = static_cast<short int>( allPatchesEvolvedToGlobalTimestep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (11);
+   _persistentRecords._packedRecords0 = static_cast<int>( allPatchesEvolvedToGlobalTimestep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -4423,26 +4368,6 @@ namespace peanoclaw {
             
             
             
-            inline int getSubPlotNumber() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               return _persistentRecords._subPlotNumber;
-            }
-            
-            
-            
-            inline void setSubPlotNumber(const int& subPlotNumber) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               _persistentRecords._subPlotNumber = subPlotNumber;
-            }
-            
-            
-            
             inline double getStartMaximumGlobalTimeInterval() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -4563,42 +4488,25 @@ namespace peanoclaw {
             
             
             
-            inline int getLocalHeightOfWorkerTree() const 
+            inline bool getReduceReductions() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               return _persistentRecords._localHeightOfWorkerTree;
+               int mask = 1 << (12);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
             }
             
             
             
-            inline void setLocalHeightOfWorkerTree(const int& localHeightOfWorkerTree) 
+            inline void setReduceReductions(const bool& reduceReductions) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-               _persistentRecords._localHeightOfWorkerTree = localHeightOfWorkerTree;
-            }
-            
-            
-            
-            inline int getGlobalHeightOfWorkerTreeDuringLastIteration() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               return _persistentRecords._globalHeightOfWorkerTreeDuringLastIteration;
-            }
-            
-            
-            
-            inline void setGlobalHeightOfWorkerTreeDuringLastIteration(const int& globalHeightOfWorkerTreeDuringLastIteration) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-               _persistentRecords._globalHeightOfWorkerTreeDuringLastIteration = globalHeightOfWorkerTreeDuringLastIteration;
+               int mask = 1 << (12);
+   _persistentRecords._packedRecords0 = static_cast<int>( reduceReductions ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -4996,8 +4904,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (1);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (13);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -5008,8 +4916,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (1);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasRefined ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (13);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasRefined ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -5019,8 +4927,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (2);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (14);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -5031,8 +4939,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (2);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasTriggeredRefinementForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (14);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasTriggeredRefinementForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -5042,8 +4950,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (3);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (15);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -5054,8 +4962,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (3);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasErased ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (15);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasErased ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -5065,8 +4973,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (4);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (16);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -5077,8 +4985,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (4);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasTriggeredEraseForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (16);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasTriggeredEraseForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -5088,8 +4996,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (5);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (17);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -5100,8 +5008,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (5);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasChangedVertexOrCellState ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (17);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasChangedVertexOrCellState ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -5131,8 +5039,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (6);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (18);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -5143,8 +5051,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (6);
-   _persistentRecords._packedRecords0 = static_cast<short int>( reduceStateAndCell ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (18);
+   _persistentRecords._packedRecords0 = static_cast<int>( reduceStateAndCell ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -5154,8 +5062,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (7);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (19);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -5166,8 +5074,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (7);
-   _persistentRecords._packedRecords0 = static_cast<short int>( couldNotEraseDueToDecompositionFlag ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (19);
+   _persistentRecords._packedRecords0 = static_cast<int>( couldNotEraseDueToDecompositionFlag ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -5177,8 +5085,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (8);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+               int mask = 1 << (20);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
             
@@ -5189,8 +5097,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               short int mask = 1 << (8);
-   _persistentRecords._packedRecords0 = static_cast<short int>( subWorkerIsInvolvedInJoinOrFork ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               int mask = 1 << (20);
+   _persistentRecords._packedRecords0 = static_cast<int>( subWorkerIsInvolvedInJoinOrFork ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
             
@@ -5263,7 +5171,7 @@ namespace peanoclaw {
           *
           * 		   build date: 22-10-2013 20:59
           *
-          * @date   02/12/2013 13:51
+          * @date   27/01/2014 14:59
           */
          class peanoclaw::records::State { 
             
@@ -5302,7 +5210,6 @@ namespace peanoclaw {
                   tarch::la::Vector<DIMENSIONS,double> _domainSize;
                   #endif
                   int _plotNumber;
-                  int _subPlotNumber;
                   double _startMaximumGlobalTimeInterval;
                   double _endMaximumGlobalTimeInterval;
                   double _startMinimumGlobalTimeInterval;
@@ -5344,7 +5251,7 @@ namespace peanoclaw {
                   /**
                    * Generated
                    */
-                  PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+                  PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
                   
                   
                   inline bool getIsInitializing() const 
@@ -5775,26 +5682,6 @@ namespace peanoclaw {
  #endif 
  {
                      _plotNumber = plotNumber;
-                  }
-                  
-                  
-                  
-                  inline int getSubPlotNumber() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                     return _subPlotNumber;
-                  }
-                  
-                  
-                  
-                  inline void setSubPlotNumber(const int& subPlotNumber) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                     _subPlotNumber = subPlotNumber;
                   }
                   
                   
@@ -6394,7 +6281,7 @@ namespace peanoclaw {
                /**
                 * Generated
                 */
-               State(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+               State(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
                
                /**
                 * Generated
@@ -6934,26 +6821,6 @@ namespace peanoclaw {
  #endif 
  {
                   _persistentRecords._plotNumber = plotNumber;
-               }
-               
-               
-               
-               inline int getSubPlotNumber() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                  return _persistentRecords._subPlotNumber;
-               }
-               
-               
-               
-               inline void setSubPlotNumber(const int& subPlotNumber) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                  _persistentRecords._subPlotNumber = subPlotNumber;
                }
                
                
@@ -7657,27 +7524,21 @@ namespace peanoclaw {
              *
              * 		   build date: 22-10-2013 20:59
              *
-             * @date   02/12/2013 13:51
+             * @date   27/01/2014 14:59
              */
             class peanoclaw::records::StatePacked { 
                
                public:
                   
                   struct PersistentRecords {
-                     bool _isInitializing;
-                     bool _isRefinementCriterionEnabled;
-                     int _unknownsPerSubcell;
-                     int _auxiliarFieldsPerSubcell;
                      tarch::la::Vector<DIMENSIONS,double> _initialMaximalSubgridSize;
                      tarch::la::Vector<DIMENSIONS,int> _defaultSubdivisionFactor;
-                     int _defaultGhostWidthLayer;
                      double _initialTimestepSize;
                      bool _useDimensionalSplittingOptimization;
                      double _globalTimestepEndTime;
                      tarch::la::Vector<DIMENSIONS,double> _domainOffset;
                      tarch::la::Vector<DIMENSIONS,double> _domainSize;
                      int _plotNumber;
-                     int _subPlotNumber;
                      double _startMaximumGlobalTimeInterval;
                      double _endMaximumGlobalTimeInterval;
                      double _startMinimumGlobalTimeInterval;
@@ -7701,14 +7562,19 @@ namespace peanoclaw {
                      
                      /** mapping of records:
                      || Member 	|| startbit 	|| length
-                      |  allPatchesEvolvedToGlobalTimestep	| startbit 0	| #bits 1
-                      |  hasRefined	| startbit 1	| #bits 1
-                      |  hasTriggeredRefinementForNextIteration	| startbit 2	| #bits 1
-                      |  hasErased	| startbit 3	| #bits 1
-                      |  hasTriggeredEraseForNextIteration	| startbit 4	| #bits 1
-                      |  hasChangedVertexOrCellState	| startbit 5	| #bits 1
+                      |  isInitializing	| startbit 0	| #bits 1
+                      |  isRefinementCriterionEnabled	| startbit 1	| #bits 1
+                      |  unknownsPerSubcell	| startbit 2	| #bits 3
+                      |  auxiliarFieldsPerSubcell	| startbit 5	| #bits 3
+                      |  defaultGhostWidthLayer	| startbit 8	| #bits 3
+                      |  allPatchesEvolvedToGlobalTimestep	| startbit 11	| #bits 1
+                      |  hasRefined	| startbit 12	| #bits 1
+                      |  hasTriggeredRefinementForNextIteration	| startbit 13	| #bits 1
+                      |  hasErased	| startbit 14	| #bits 1
+                      |  hasTriggeredEraseForNextIteration	| startbit 15	| #bits 1
+                      |  hasChangedVertexOrCellState	| startbit 16	| #bits 1
                       */
-                     short int _packedRecords0;
+                     int _packedRecords0;
                      
                      /**
                       * Generated
@@ -7718,7 +7584,7 @@ namespace peanoclaw {
                      /**
                       * Generated
                       */
-                     PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+                     PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
                      
                      
                      inline bool getIsInitializing() const 
@@ -7726,7 +7592,9 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        return _isInitializing;
+                        int mask = 1 << (0);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
                      }
                      
                      
@@ -7736,7 +7604,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        _isInitializing = isInitializing;
+                        int mask = 1 << (0);
+   _packedRecords0 = static_cast<int>( isInitializing ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -7746,7 +7615,9 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        return _isRefinementCriterionEnabled;
+                        int mask = 1 << (1);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
                      }
                      
                      
@@ -7756,7 +7627,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        _isRefinementCriterionEnabled = isRefinementCriterionEnabled;
+                        int mask = 1 << (1);
+   _packedRecords0 = static_cast<int>( isRefinementCriterionEnabled ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -7766,7 +7638,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        return _unknownsPerSubcell;
+                        int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (2));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (2));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                      }
                      
                      
@@ -7776,7 +7653,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        _unknownsPerSubcell = unknownsPerSubcell;
+                        assertion((unknownsPerSubcell >= 0 && unknownsPerSubcell <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (2));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | unknownsPerSubcell << (2));
                      }
                      
                      
@@ -7786,7 +7667,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        return _auxiliarFieldsPerSubcell;
+                        int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (5));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (5));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                      }
                      
                      
@@ -7796,7 +7682,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        _auxiliarFieldsPerSubcell = auxiliarFieldsPerSubcell;
+                        assertion((auxiliarFieldsPerSubcell >= 0 && auxiliarFieldsPerSubcell <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (5));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | auxiliarFieldsPerSubcell << (5));
                      }
                      
                      
@@ -7922,7 +7812,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        return _defaultGhostWidthLayer;
+                        int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (8));
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (8));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                      }
                      
                      
@@ -7932,7 +7827,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        _defaultGhostWidthLayer = defaultGhostWidthLayer;
+                        assertion((defaultGhostWidthLayer >= 0 && defaultGhostWidthLayer <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (8));
+   _packedRecords0 = static_cast<int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<int>(_packedRecords0 | defaultGhostWidthLayer << (8));
                      }
                      
                      
@@ -8002,8 +7901,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (0);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                        int mask = 1 << (11);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -8014,8 +7913,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (0);
-   _packedRecords0 = static_cast<short int>( allPatchesEvolvedToGlobalTimestep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        int mask = 1 << (11);
+   _packedRecords0 = static_cast<int>( allPatchesEvolvedToGlobalTimestep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -8152,26 +8051,6 @@ namespace peanoclaw {
  #endif 
  {
                         _plotNumber = plotNumber;
-                     }
-                     
-                     
-                     
-                     inline int getSubPlotNumber() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                        return _subPlotNumber;
-                     }
-                     
-                     
-                     
-                     inline void setSubPlotNumber(const int& subPlotNumber) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                        _subPlotNumber = subPlotNumber;
                      }
                      
                      
@@ -8637,8 +8516,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (1);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                        int mask = 1 << (12);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -8649,8 +8528,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (1);
-   _packedRecords0 = static_cast<short int>( hasRefined ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        int mask = 1 << (12);
+   _packedRecords0 = static_cast<int>( hasRefined ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -8660,8 +8539,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (2);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                        int mask = 1 << (13);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -8672,8 +8551,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (2);
-   _packedRecords0 = static_cast<short int>( hasTriggeredRefinementForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        int mask = 1 << (13);
+   _packedRecords0 = static_cast<int>( hasTriggeredRefinementForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -8683,8 +8562,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (3);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                        int mask = 1 << (14);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -8695,8 +8574,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (3);
-   _packedRecords0 = static_cast<short int>( hasErased ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        int mask = 1 << (14);
+   _packedRecords0 = static_cast<int>( hasErased ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -8706,8 +8585,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (4);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                        int mask = 1 << (15);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -8718,8 +8597,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (4);
-   _packedRecords0 = static_cast<short int>( hasTriggeredEraseForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        int mask = 1 << (15);
+   _packedRecords0 = static_cast<int>( hasTriggeredEraseForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -8729,8 +8608,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (5);
-   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+                        int mask = 1 << (16);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
                      
@@ -8741,8 +8620,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        short int mask = 1 << (5);
-   _packedRecords0 = static_cast<short int>( hasChangedVertexOrCellState ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        int mask = 1 << (16);
+   _packedRecords0 = static_cast<int>( hasChangedVertexOrCellState ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
                      
@@ -8786,7 +8665,7 @@ namespace peanoclaw {
                   /**
                    * Generated
                    */
-                  StatePacked(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const int& subPlotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+                  StatePacked(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& auxiliarFieldsPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingOptimization, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
                   
                   /**
                    * Generated
@@ -8799,7 +8678,9 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     return _persistentRecords._isInitializing;
+                     int mask = 1 << (0);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
                   }
                   
                   
@@ -8809,7 +8690,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     _persistentRecords._isInitializing = isInitializing;
+                     int mask = 1 << (0);
+   _persistentRecords._packedRecords0 = static_cast<int>( isInitializing ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
@@ -8819,7 +8701,9 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     return _persistentRecords._isRefinementCriterionEnabled;
+                     int mask = 1 << (1);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
                   }
                   
                   
@@ -8829,7 +8713,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     _persistentRecords._isRefinementCriterionEnabled = isRefinementCriterionEnabled;
+                     int mask = 1 << (1);
+   _persistentRecords._packedRecords0 = static_cast<int>( isRefinementCriterionEnabled ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
@@ -8839,7 +8724,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     return _persistentRecords._unknownsPerSubcell;
+                     int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (2));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (2));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                   }
                   
                   
@@ -8849,7 +8739,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     _persistentRecords._unknownsPerSubcell = unknownsPerSubcell;
+                     assertion((unknownsPerSubcell >= 0 && unknownsPerSubcell <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (2));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | unknownsPerSubcell << (2));
                   }
                   
                   
@@ -8859,7 +8753,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     return _persistentRecords._auxiliarFieldsPerSubcell;
+                     int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (5));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (5));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                   }
                   
                   
@@ -8869,7 +8768,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     _persistentRecords._auxiliarFieldsPerSubcell = auxiliarFieldsPerSubcell;
+                     assertion((auxiliarFieldsPerSubcell >= 0 && auxiliarFieldsPerSubcell <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (5));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | auxiliarFieldsPerSubcell << (5));
                   }
                   
                   
@@ -9047,7 +8950,12 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     return _persistentRecords._defaultGhostWidthLayer;
+                     int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (8));
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<int>(tmp >> (8));
+   assertion(( tmp >= 0 &&  tmp <= 7));
+   return (int) tmp;
                   }
                   
                   
@@ -9057,7 +8965,11 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     _persistentRecords._defaultGhostWidthLayer = defaultGhostWidthLayer;
+                     assertion((defaultGhostWidthLayer >= 0 && defaultGhostWidthLayer <= 7));
+   int mask =  (1 << (3)) - 1;
+   mask = static_cast<int>(mask << (8));
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<int>(_persistentRecords._packedRecords0 | defaultGhostWidthLayer << (8));
                   }
                   
                   
@@ -9127,8 +9039,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (0);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                     int mask = 1 << (11);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
                   
@@ -9139,8 +9051,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (0);
-   _persistentRecords._packedRecords0 = static_cast<short int>( allPatchesEvolvedToGlobalTimestep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     int mask = 1 << (11);
+   _persistentRecords._packedRecords0 = static_cast<int>( allPatchesEvolvedToGlobalTimestep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
@@ -9329,26 +9241,6 @@ namespace peanoclaw {
  #endif 
  {
                      _persistentRecords._plotNumber = plotNumber;
-                  }
-                  
-                  
-                  
-                  inline int getSubPlotNumber() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                     return _persistentRecords._subPlotNumber;
-                  }
-                  
-                  
-                  
-                  inline void setSubPlotNumber(const int& subPlotNumber) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                     _persistentRecords._subPlotNumber = subPlotNumber;
                   }
                   
                   
@@ -9866,8 +9758,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (1);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                     int mask = 1 << (12);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
                   
@@ -9878,8 +9770,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (1);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasRefined ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     int mask = 1 << (12);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasRefined ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
@@ -9889,8 +9781,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (2);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                     int mask = 1 << (13);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
                   
@@ -9901,8 +9793,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (2);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasTriggeredRefinementForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     int mask = 1 << (13);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasTriggeredRefinementForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
@@ -9912,8 +9804,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (3);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                     int mask = 1 << (14);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
                   
@@ -9924,8 +9816,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (3);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasErased ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     int mask = 1 << (14);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasErased ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
@@ -9935,8 +9827,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (4);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                     int mask = 1 << (15);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
                   
@@ -9947,8 +9839,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (4);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasTriggeredEraseForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     int mask = 1 << (15);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasTriggeredEraseForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   
@@ -9958,8 +9850,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (5);
-   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+                     int mask = 1 << (16);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
                   
@@ -9970,8 +9862,8 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     short int mask = 1 << (5);
-   _persistentRecords._packedRecords0 = static_cast<short int>( hasChangedVertexOrCellState ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     int mask = 1 << (16);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasChangedVertexOrCellState ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
                   

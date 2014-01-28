@@ -281,20 +281,14 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::updatePatchStateDu
     CellDescription& remoteCellDescription = CellDescriptionHeap::getInstance().getData(remoteCellDescriptionIndex).at(0);
 
     assertion1(localCellDescriptionIndex != -1, localPatch);
-    if(remoteCellDescription.getUNewIndex() != -1) {
+    if(remoteCellDescription.getUIndex() != -1) {
       assertion1(localPatch.isVirtual() || localPatch.isLeaf(), localPatch);
 
       //Delete current content of patch
       DataHeap::getInstance().deleteData(localPatch.getUNewIndex());
-//      DataHeap::getInstance().deleteData(localPatch.getUOldIndex());
-//      if(localPatch.getAuxIndex() != -1) {
-//        DataHeap::getInstance().deleteData(localPatch.getAuxIndex());
-//      }
 
       //Merge
-      localCellDescription.setUNewIndex(remoteCellDescription.getUNewIndex());
-//      localCellDescription.setUOldIndex(remoteCellDescription.getUOldIndex());
-//      localCellDescription.setAuxIndex(remoteCellDescription.getAuxIndex());
+      localCellDescription.setUIndex(remoteCellDescription.getUIndex());
     }
 
     CellDescriptionHeap::getInstance().deleteData(remoteCellDescriptionIndex);
@@ -455,7 +449,6 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::restrictRefinement
   logTraceInWith2Arguments( "restrictRefinementFlagsToCoarseVertices(...)", fineGridVertex, localPositionOfHangingNode );
 
   tarch::la::Vector<DIMENSIONS,int>   toCoarseGridVertex;
-
   for (int d=0; d<DIMENSIONS; d++) {
     if(localPositionOfHangingNode(d) < 2) {
       toCoarseGridVertex(d) = 0;
@@ -490,11 +483,10 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::restrictDestroyedS
   }
 
   //Skip update for coarse patch in next grid iteration
-  coarseSubgrid.setSkipNextGridIteration(1);
+  coarseSubgrid.setSkipNextGridIteration(2);
 
   //Set demanded mesh width for coarse cell to coarse cell size. Otherwise
   //the coarse patch might get refined immediately.
   coarseSubgrid.setDemandedMeshWidth(coarseSubgrid.getSubcellSize()(0));
 }
-
 

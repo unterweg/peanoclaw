@@ -183,14 +183,18 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   int unknownsPerSubcell,
   int auxiliarFieldsPerSubcell,
   double initialTimestepSize,
-  bool useDimensionalSplittingOptimization
+  bool useDimensionalSplittingOptimization,
+  bool reduceReductions,
+  int  forkLevelIncrement
 ) :
   _plotNumber(1),
   _configuration(configuration),
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
   _totalRuntime(0.0),
   _numerics(numerics),
-  _validateGrid(true)
+  _validateGrid(true),
+  _initializationWatch("Total initialization", "", false),
+  _simulationWatch("Total simulation", "", false)
 {
   #ifndef Asserts
   _validateGrid = false;
@@ -239,6 +243,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setInitialTimestepSize(initialTimestepSize);
   state.setDomain(domainOffset, domainSize);
   state.setUseDimensionalSplittingOptimization(useDimensionalSplittingOptimization && !_configuration.disableDimensionalSplittingOptimization());
+  state.setReduceReductions(reduceReductions);
 
   //Initialise Grid (two iterations needed to set the initial ghostlayers of patches neighboring refined patches)
   state.setIsInitializing(true);
@@ -256,7 +261,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
       logDebug("PeanoClawLibraryRunner", "Iterating with maximumLevel=" << maximumLevel);
 
       for(int d = 0; d < DIMENSIONS; d++) {
-        currentMinimalSubgridSize(d) = std::max(initialMaximalSubgridSize(d), domainSize(d) / pow(3.0, maximumLevel));
+        currentMinimalSubgridSize(d) = std::max(initialMaximalSubgridSize(d), domainSize(d) / pow(3.0, maximumLevel - 1));
       }
 
       _repository->getState().setInitialMaximalSubgridSize(currentMinimalSubgridSize);
@@ -270,7 +275,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 //        logInfo("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
       } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
-      maximumLevel += 1;
+      maximumLevel += forkLevelIncrement;
     } while(tarch::la::oneGreater(currentMinimalSubgridSize, initialMaximalSubgridSize));
     #endif
 
@@ -293,6 +298,9 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   #ifdef Parallel
   }
   #endif
+
+  _initializationWatch.stopTimer();
+  _iterationTimer.startTimer();
 }
 
 peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
@@ -313,13 +321,19 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
   CellDescriptionHeap::getInstance().plotStatistics();
   DataHeap::getInstance().plotStatistics();
 
+  _simulationWatch.stopTimer();
+  if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    logInfo("~PeanoClawLibraryRunner", "Time for initialization: " << _initializationWatch.getCalendarTime());
+    logInfo("~PeanoClawLibraryRunner", "Time for simulation: " << _simulationWatch.getCalendarTime());
+  }
+
   #ifdef Parallel
   if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
   #endif
-    _repository->getState().plotTotalStatistics();
+  _repository->getState().plotTotalStatistics();
 
-    _repository->logIterationStatistics();
-    _repository->terminate();
+  _repository->logIterationStatistics();
+  _repository->terminate();
   #ifdef Parallel
   }
   #endif

@@ -30,7 +30,7 @@ peanoclaw::Patch peanoclaw::tests::createPatch(
   cellDescriptions.push_back(peanoclaw::records::CellDescription());
   peanoclaw::records::CellDescription& cellDescription = CellDescriptionHeap::getInstance().getData(cellDescriptionIndex).at(0);
   cellDescription.setSubdivisionFactor(subdivisionFactor);
-  cellDescription.setGhostLayerWidth(ghostlayerWidth);
+  cellDescription.setGhostlayerWidth(ghostlayerWidth);
   cellDescription.setUnknownsPerSubcell(unknownsPerSubcell);
   cellDescription.setSize(size);
   cellDescription.setPosition(position);
@@ -54,33 +54,7 @@ peanoclaw::Patch peanoclaw::tests::createPatch(
     data.setU(0.0);
     uNew.push_back(data);
   }
-  cellDescription.setUNewIndex(uNewIndex);
-
-  //uOld array
-//  if(!virtualPatch) {
-//    int uOldIndex = heap.createData();
-//    std::vector<peanoclaw::records::Data>& uOld = heap.getData(uOldIndex);
-//    for(int i = 0; i < tarch::la::aPowI(DIMENSIONS, (subdivisionFactor+2*ghostlayerWidth)) * unknownsPerSubcell; i++) {
-//      peanoclaw::records::Data data;
-//      data.setU(0.0);
-//      uOld.push_back(data);
-//    }
-//    cellDescription.setUOldIndex(uOldIndex);
-//  } else {
-//    cellDescription.setUOldIndex(-1);
-//  }
-
-  //Initialise aux array
-//  if(auxFieldsPerSubcell > 0) {
-//    cellDescription.setAuxIndex(DataHeap::getInstance().createData());
-//    std::vector<peanoclaw::records::Data>& auxArray =
-//        DataHeap::getInstance().getData(cellDescription.getAuxIndex());
-//    for(int i = 0; i < tarch::la::aPowI(DIMENSIONS, subdivisionFactor + 2*ghostlayerWidth) * auxFieldsPerSubcell; i++) {
-//      auxArray.push_back(-1.0);
-//    }
-//  } else {
-//    cellDescription.setAuxIndex(-1);
-//  }
+  cellDescription.setUIndex(uNewIndex);
 
   return Patch(cellDescription);
 }

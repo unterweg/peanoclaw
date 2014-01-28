@@ -12,6 +12,26 @@
 
 tarch::logging::Log peanoclaw::ParallelSubgrid::_log("peanoclaw::ParallelSubgrid");
 
+void peanoclaw::ParallelSubgrid::listRemoteRankAndAddSharedVertex(
+  int  remoteRank,
+  bool setRanks[THREE_POWER_D_MINUS_ONE]
+) {
+  //Search slot to store remote rank
+  for(int i = 0; i < THREE_POWER_D_MINUS_ONE; i++) {
+    if(_cellDescription->getAdjacentRanks(i) == remoteRank
+       || _cellDescription->getAdjacentRanks(i) == -1) {
+      _cellDescription->setAdjacentRanks(i, remoteRank);
+      if(!setRanks[i]) {
+        setRanks[i] = true;
+        _cellDescription->setNumberOfSharedAdjacentVertices(i,
+          _cellDescription->getNumberOfSharedAdjacentVertices(i) + 1
+        );
+      }
+      break;
+    }
+  }
+}
+
 peanoclaw::ParallelSubgrid::ParallelSubgrid(
   CellDescription& cellDescription
 ) : _cellDescription(&cellDescription) {
@@ -49,21 +69,28 @@ bool peanoclaw::ParallelSubgrid::wasCurrentStateSent() const {
   #endif
 }
 
-void peanoclaw::ParallelSubgrid::decreaseNumberOfSharedAdjacentVertices() {
+void peanoclaw::ParallelSubgrid::decreaseNumberOfSharedAdjacentVertices(int remoteRank) {
   #ifdef Parallel
-  _cellDescription->setNumberOfSharedAdjacentVertices(_cellDescription->getNumberOfSharedAdjacentVertices() - 1);
+  for(int i = 0; i < THREE_POWER_D_MINUS_ONE; i++) {
+    if(_cellDescription->getAdjacentRanks(i) == remoteRank) {
+      _cellDescription->setNumberOfSharedAdjacentVertices(
+        i, _cellDescription->getNumberOfSharedAdjacentVertices(i) - 1
+      );
+      break;
+    }
+  }
   #endif
 }
 
-int peanoclaw::ParallelSubgrid::getAdjacentRank() const {
+tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int> peanoclaw::ParallelSubgrid::getAdjacentRanks() const {
   #ifdef Parallel
-  return _cellDescription->getAdjacentRank();
+  return _cellDescription->getAdjacentRanks();
   #else
-  return -1;
+  return tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int>(-1);
   #endif
 }
 
-int peanoclaw::ParallelSubgrid::getNumberOfSharedAdjacentVertices() const {
+tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int> peanoclaw::ParallelSubgrid::getNumberOfSharedAdjacentVertices() const {
   #ifdef Parallel
   return _cellDescription->getNumberOfSharedAdjacentVertices();
   #else
@@ -71,9 +98,37 @@ int peanoclaw::ParallelSubgrid::getNumberOfSharedAdjacentVertices() const {
   #endif
 }
 
+int peanoclaw::ParallelSubgrid::getNumberOfSharedAdjacentVertices(int remoteRank) const {
+  #ifdef Parallel
+  for(int i = 0; i < THREE_POWER_D_MINUS_ONE; i++) {
+    if(_cellDescription->getAdjacentRanks(i) == remoteRank) {
+      _cellDescription->getNumberOfSharedAdjacentVertices(i);
+    }
+  }
+  assertionFail("Should not occur!");
+  return -1;
+  #else
+  return 0;
+  #endif
+}
+
+tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int> peanoclaw::ParallelSubgrid::getAllNumbersOfTransfersToBeSkipped() const {
+  #ifdef Parallel
+  return _cellDescription->getNumberOfTransfersToBeSkipped();
+  #else
+  return 0;
+  #endif
+}
+
 int peanoclaw::ParallelSubgrid::getNumberOfTransfersToBeSkipped() const {
   #ifdef Parallel
-  return _cellDescription->getNumberOfSkippedTransfers();
+  int localRank = tarch::parallel::Node::getInstance().getRank();
+  for(int i = 0; i < THREE_POWER_D_MINUS_ONE; i++) {
+    if(_cellDescription->getAdjacentRanks(i) == localRank) {
+      return _cellDescription->getNumberOfTransfersToBeSkipped(i);
+    }
+  }
+  return 0;
   #else
   return 0;
   #endif
@@ -81,69 +136,64 @@ int peanoclaw::ParallelSubgrid::getNumberOfTransfersToBeSkipped() const {
 
 void peanoclaw::ParallelSubgrid::decreaseNumberOfTransfersToBeSkipped() {
   #ifdef Parallel
-  _cellDescription->setNumberOfSkippedTransfers(_cellDescription->getNumberOfSkippedTransfers() - 1);
+  int localRank = tarch::parallel::Node::getInstance().getRank();
+  for(int i = 0; i < THREE_POWER_D_MINUS_ONE; i++) {
+    if(_cellDescription->getAdjacentRanks(i) == localRank) {
+      _cellDescription->setNumberOfTransfersToBeSkipped(
+        _cellDescription->getNumberOfTransfersToBeSkipped() - 1
+      );
+      break;
+    }
+  }
   #endif
 }
 
 void peanoclaw::ParallelSubgrid::resetNumberOfTransfersToBeSkipped() {
   #ifdef Parallel
-  _cellDescription->setNumberOfSkippedTransfers(0);
+  _cellDescription->setNumberOfTransfersToBeSkipped(0);
   #endif
 }
 
-void peanoclaw::ParallelSubgrid::countNumberOfAdjacentParallelSubgrids (
+void peanoclaw::ParallelSubgrid::countNumberOfAdjacentParallelSubgridsAndSetGhostlayerOverlap (
   peanoclaw::Vertex * const            vertices,
   const peano::grid::VertexEnumerator& verticesEnumerator
 ) {
   #ifdef Parallel
-//  assertion1(_cellDescription->getNumberOfSharedAdjacentVertices() <= 0, _cellDescription->toString());
+  for(int i = 0; i < THREE_POWER_D_MINUS_ONE; i++) {
+    _cellDescription->setAdjacentRanks(i, -1);
+    _cellDescription->setNumberOfSharedAdjacentVertices(i, 0);
+  }
 
-  int adjacentRank = -1;
-  int localRank = tarch::parallel::Node::getInstance().getRank();
-  int numberOfSharedAdjacentVertices = 0;
-  for(int i = 0; i < TWO_POWER_D; i++) {
-    Vertex& vertex = vertices[verticesEnumerator(i)];
-
-    if(!vertex.isHangingNode()) {
-      bool oneAdjacentRemoteRank = false;
-      bool moreThanOneAdjacentRemoteRanks = false;
-
-      for(int j = 0; j < TWO_POWER_D; j++) {
-        if(
-            vertex.getAdjacentRanks()(j) != localRank
-            && vertex.getAdjacentRanks()(j) != 0
-          ) {
-          if(adjacentRank == -1) {
-            adjacentRank = vertex.getAdjacentRanks()(j);
-            oneAdjacentRemoteRank = true;
-          } else if(vertex.getAdjacentRanks()(j) == adjacentRank) {
-            oneAdjacentRemoteRank = true;
-          } else {
-            moreThanOneAdjacentRemoteRanks = true;
-            break;
-          }
-        }
-      }
-
-      if(oneAdjacentRemoteRank && !moreThanOneAdjacentRemoteRanks) {
-        numberOfSharedAdjacentVertices++;
-      } else if (moreThanOneAdjacentRemoteRanks) {
-        adjacentRank = -1;
-        numberOfSharedAdjacentVertices = -1;
-      }
+  int entry = 0;
+  for(int vertexIndex = 0; vertexIndex < TWO_POWER_D; vertexIndex++) {
+    bool setRanks[THREE_POWER_D_MINUS_ONE];
+    for(int i = 0; i < THREE_POWER_D_MINUS_ONE; i++) {
+      setRanks[i] = false;
     }
 
-    if(numberOfSharedAdjacentVertices == -1) {
-      //There are more than one adjacent ranks
-      break;
+    for(int subgridIndex = 0; subgridIndex < TWO_POWER_D; subgridIndex++) {
+      int adjacentRank = vertices[verticesEnumerator(vertexIndex)].getAdjacentRanks()(subgridIndex);
+
+      if(adjacentRank != tarch::parallel::Node::getInstance().getRank()) {
+
+        //Count shared vertices and add adjacent ranks
+        listRemoteRankAndAddSharedVertex(adjacentRank, setRanks);
+
+        int adjacentSubgridDescriptionIndex
+          = vertices[verticesEnumerator(vertexIndex)].getAdjacentCellDescriptionIndexInPeanoOrder(subgridIndex);
+        if(adjacentSubgridDescriptionIndex == -1) {
+          //No adjacent subgrid present. -> Not copied from the remote rank, yet. -> Copy complete ghostlayer.
+
+        } else {
+          Patch adjacentSubgrid(adjacentSubgridDescriptionIndex);
+          tarch::la::Vector<DIMENSIONS, double> continuousGhostlayerWidth
+            = (double)adjacentSubgrid.getGhostlayerWidth() * adjacentSubgrid.getSubcellSize();
+        }
+      }
     }
   }
 
-  assertion2(numberOfSharedAdjacentVertices <= TWO_POWER_D, numberOfSharedAdjacentVertices, _cellDescription->toString());
-
-  _cellDescription->setAdjacentRank(adjacentRank);
-  _cellDescription->setNumberOfSharedAdjacentVertices(numberOfSharedAdjacentVertices);
-  _cellDescription->setNumberOfSkippedTransfers(std::max(0, numberOfSharedAdjacentVertices-1));
+  _cellDescription->setNumberOfTransfersToBeSkipped(_cellDescription->getNumberOfSharedAdjacentVertices() - 1);
   #endif
 }
 
@@ -165,17 +215,3 @@ bool peanoclaw::ParallelSubgrid::isAdjacentToLocalSubdomain(
   #endif
 }
 
-//bool isAdjacentToRemoteSubdomain(
-//  peanoclaw::Vertex * const            fineGridVertices,
-//  const peano::grid::VertexEnumerator& fineGridVerticesEnumerator
-//) {
-//  #ifdef Parallel
-//  bool isAdjacentToRemoteRank = false;
-//  for(int i = 0; i < TWO_POWER_D; i++) {
-//    isAdjacentToRemoteRank |= fineGridVertices[fineGridVerticesEnumerator(i)].isAdjacentToRemoteRank();
-//  }
-//  return isAdjacentToRemoteRank;
-//  #else
-//  return false;
-//  #endif
-//}

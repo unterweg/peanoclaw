@@ -62,6 +62,9 @@ private:
 
   peanoclaw::parallel::PeanoClawControlLoopLoadBalancer _controlLoopLoadBalancer;
 
+  tarch::timing::Watch _initializationWatch;
+  tarch::timing::Watch _simulationWatch;
+
   /**
    * Initializes geometry and grid.
    */
@@ -100,7 +103,9 @@ public:
     int unknownsPerSubcell,
     int auxiliarFieldsPerSubcell,
     double initialTimestepSize,
-    bool useDimensionalSplitting
+    bool useDimensionalSplitting,
+    bool reduceReductions,
+    int  forkLevelIncrement = 1
   );
 
   virtual ~PeanoClawLibraryRunner();

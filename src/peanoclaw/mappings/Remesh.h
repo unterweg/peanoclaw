@@ -89,10 +89,14 @@ class peanoclaw::mappings::Remesh {
     bool _useDimensionalSplittingOptimization;
 
     peanoclaw::statistics::ParallelStatistics _parallelStatistics;
+    peanoclaw::statistics::ParallelStatistics _totalParallelStatistics;
 
     peanoclaw::State const* _state;
 
     int _iterationNumber;
+
+    //Watches
+    static tarch::timing::Watch _spacetreeCommunicationWaitingTimeWatch;
 
     int _rootLevel;
 

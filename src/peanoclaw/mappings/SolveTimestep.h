@@ -18,6 +18,8 @@
 #include "peanoclaw/statistics/LevelStatistics.h"
 #include "peanoclaw/statistics/SubgridStatistics.h"
 
+#include <map>
+
 namespace peanoclaw {
   namespace mappings {
     class SolveTimestep;
@@ -62,23 +64,7 @@ class peanoclaw::mappings::SolveTimestep {
 
     bool _useDimensionalSplittingOptimization;
 
-    /**
-     * Determines whether the given patch should be advanced in time.
-     *
-     * TODO unterweg debug
-     * Here we may not block timestepping if a coarse vertex has
-     * an Erase_Triggered but only if it is Erasing. In serial both
-     * works but in parallel a triggered erase may be postboned due
-     * to the parallel grid topology.
-     */
-    bool shouldAdvanceInTime(
-      const peanoclaw::Patch&                  patch,
-      double                                   maximumTimestepDueToGlobalTimestep,
-      peanoclaw::Vertex * const                fineGridVertices,
-      const peano::grid::VertexEnumerator&     fineGridVerticesEnumerator,
-      peanoclaw::Vertex * const                coarseGridVertices,
-      const peano::grid::VertexEnumerator&     coarseGridVerticesEnumerator
-    );
+    std::map<int, int> _estimatedRemainingIterationsUntilGlobalTimestep;
 
     /**
      * Fills the boundary layers of the given patch.

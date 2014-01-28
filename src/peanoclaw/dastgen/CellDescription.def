@@ -5,10 +5,11 @@ Packed-Type: int;
 Constant: DIMENSIONS;
 Constant: DIMENSIONS_TIMES_TWO;
 Constant: TWO_POWER_D;
+Constant: THREE_POWER_D_MINUS_ONE;
 
 class peanoclaw::records::CellDescription {
-  parallelise persistent int  subdivisionFactor[DIMENSIONS];
-  parallelise packed persistent int  ghostLayerWidth from 0 to 15;
+  parallelise persistent int  subdivisionFactor[DIMENSIONS] from -1 to 1048575;
+  parallelise packed persistent int  ghostlayerWidth from 0 to 15;
   parallelise packed persistent int  unknownsPerSubcell from 0 to 15;
   parallelise packed persistent int  auxiliarFieldsPerSubcell from 0 to 15;
   parallelise packed persistent int  level from 0 to 31;
@@ -23,17 +24,17 @@ class peanoclaw::records::CellDescription {
    * have been avoided. I.e. if this number is n, then the
    * next n receives for this subgrid will be padding subgrids.
    */
-  parallelise packed persistent int numberOfSkippedTransfers from 0 to 8;
+  parallelise persistent int numberOfTransfersToBeSkipped[THREE_POWER_D_MINUS_ONE] from 0 to 8;
   
   /**
    * Adjacent MPI rank if only one other rank is adjacent. Otherwise -1.
    */
-  persistent int adjacentRank;
+  //persistent int adjacentRank;
   /**
    * Number adjacent vertices that are shared between the local and the
    * remote rank. This number is only valid if there is only one rank adjacent.
    */
-  persistent int numberOfSharedAdjacentVertices;
+  persistent int numberOfSharedAdjacentVertices[THREE_POWER_D_MINUS_ONE] from 1 to 8;
   
   /**
    * Indicates, whether the current state of the subgrid has been send to 
@@ -46,6 +47,18 @@ class peanoclaw::records::CellDescription {
    * of the grid changed.
    */
   persistent packed bool adjacentRanksChanged;
+  
+  /**
+   * Holds for every adajcent subgrid on the same level to which rank it
+   * belongs.
+   */
+  persistent parallelise int adjacentRanks[THREE_POWER_D_MINUS_ONE];
+  
+  /**
+   * Holds the number of cells that are overlapped by an adjacent subgrid
+   * held on a different rank.
+   */
+  persistent int overlapByRemoteGhostlayer[THREE_POWER_D_MINUS_ONE];
   #endif
 
   parallelise persistent double position[DIMENSIONS];
@@ -163,7 +176,5 @@ class peanoclaw::records::CellDescription {
    * Heap data indices
    */
   parallelise persistent int cellDescriptionIndex;
-  //parallelise persistent int uOldIndex;
-  parallelise persistent int uNewIndex;
-  //parallelise persistent int auxIndex;
+  parallelise persistent int uIndex;
 };

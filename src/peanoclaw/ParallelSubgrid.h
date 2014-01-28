@@ -32,6 +32,17 @@ class peanoclaw::ParallelSubgrid {
 
     CellDescription* _cellDescription;
 
+    /**
+     * Inserts the given remote rank into the list of adjacent
+     * ranks. Furthermore, it adds the vertex to the number
+     * of shared vertices with this remote rank as long as this
+     * has not been done already.
+     */
+    void listRemoteRankAndAddSharedVertex(
+      int  remoteRank,
+      bool setRanks[THREE_POWER_D_MINUS_ONE]
+    );
+
   public:
   ParallelSubgrid(
     CellDescription& cellDescription
@@ -62,26 +73,26 @@ class peanoclaw::ParallelSubgrid {
   /**
    * Decreases the number of shared adjacent vertices by one.
    */
-  void decreaseNumberOfSharedAdjacentVertices();
+  void decreaseNumberOfSharedAdjacentVertices(int remoteRank);
 
   /**
    * Returns the adjacent rank or -1 if no or more than one ranks are adjacent
    * to this subgrid.
    */
-  int getAdjacentRank() const;
+  tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int> getAdjacentRanks() const;
 
   /**
    * Returns the number of adjacent vertices that are shared between this and
    * the adjacent rank.
-   * Returns 0 if no ranks are adjacent.
-   * Returns -1 if more than one ranks are adjacent.
    */
-  int getNumberOfSharedAdjacentVertices() const;
+  tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int> getNumberOfSharedAdjacentVertices() const;
+  int getNumberOfSharedAdjacentVertices(int remoteRank) const;
 
   /**
    * Returns the number of additional transfers for this subgrid that have to
    * be skipped.
    */
+  tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int> getAllNumbersOfTransfersToBeSkipped() const;
   int getNumberOfTransfersToBeSkipped() const;
 
   /**
@@ -98,8 +109,12 @@ class peanoclaw::ParallelSubgrid {
   /**
    * Counts how many of the adjacent subgrids belong to a different MPI rank
    * and how many vertices are involved in the communication.
+   *
+   * Also, it checks for all adjacent subgrids that reside on the same level
+   * whether they belong to a remote rank. If they do, the rank is set to
+   * the current subgrid and the overlap of the ghostlayer is stored as well.
    */
-  void countNumberOfAdjacentParallelSubgrids(
+  void countNumberOfAdjacentParallelSubgridsAndSetGhostlayerOverlap(
     peanoclaw::Vertex * const            vertices,
     const peano::grid::VertexEnumerator& verticesEnumerator
   );
@@ -113,15 +128,6 @@ class peanoclaw::ParallelSubgrid {
     peanoclaw::Vertex * const            fineGridVertices,
     const peano::grid::VertexEnumerator& fineGridVerticesEnumerator
   );
-
-  /**
-   * Determines whether the subgrid is adjacent to a remote subdomain. I.e.
-   * if one of the adjacent vertices is shared with a remote rank.
-   */
-//  bool isAdjacentToRemoteSubdomain(
-//    peanoclaw::Vertex * const            fineGridVertices,
-//    const peano::grid::VertexEnumerator& fineGridVerticesEnumerator
-//  );
 };
 
 #endif /* PEANOCLAW_PARALLELSUBGRID_H_ */

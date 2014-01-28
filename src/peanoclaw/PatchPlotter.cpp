@@ -56,7 +56,7 @@ void peanoclaw::PatchPlotter::plotSubcell(
 
     if(_plotMetainformation) {
       _cellSubdivisionFactorWriter->plotCell(number, patch.getSubdivisionFactor()(0));
-      _cellGhostLayerWidthWriter->plotCell(number, patch.getGhostLayerWidth());
+      _cellGhostLayerWidthWriter->plotCell(number, patch.getGhostlayerWidth());
       _cellTimeOldWriter->plotCell(number, patch.getTimeIntervals().getCurrentTime());
       _cellTimeNewWriter->plotCell(number, patch.getTimeIntervals().getCurrentTime() + patch.getTimeIntervals().getTimestepSize());
       _cellDemandedMeshWidthWriter->plotCell(number, patch.getDemandedMeshWidth());
@@ -91,7 +91,7 @@ peanoclaw::PatchPlotter::PatchPlotter(
   std::set<int> plotQ,
   std::set<int> plotAux,
   bool plotMetainformation
-) : _vtkWriter(vtkWriter), _gap(0.0), _plotQ(plotQ), _plotAux(plotAux), _plotMetainformation(plotMetainformation) {
+) : _vtkWriter(vtkWriter), _gap(0.015), _plotQ(plotQ), _plotAux(plotAux), _plotMetainformation(plotMetainformation) {
 
   _vertex2IndexMap.clear();
   _vertexWriter     = _vtkWriter.createVertexWriter();

@@ -12,6 +12,7 @@
 #include "peanoclaw/State.h"
 #include "peanoclaw/records/CellDescription.h"
 #include "peanoclaw/statistics/LevelStatistics.h"
+#include "peanoclaw/statistics/TimeIntervalStatistics.h"
 
 #include "peano/grid/VertexEnumerator.h"
 
@@ -34,21 +35,23 @@ class peanoclaw::statistics::SubgridStatistics {
 
     int                           _levelStatisticsIndex;
     std::vector<LevelStatistics>* _levelStatistics;
+    int                           _timeIntervalStatisticsIndex;
+    TimeIntervalStatistics*       _timeIntervalStatistics;
 
-    int    _minimalPatchIndex;
-    int    _minimalPatchParentIndex;
-    double _minimalPatchTime;
-    double _startMaximumLocalTimeInterval;
-    double _endMaximumLocalTimeInterval;
-    double _startMinimumLocalTimeInterval;
-    double _endMinimumLocalTimeInterval;
-    double _minimalTimestep;
-    bool   _allPatchesEvolvedToGlobalTimestep;
-    double _averageGlobalTimeInterval;
-    double _globalTimestepEndTime;
-
-    bool   _minimalPatchBlockedDueToCoarsening;
-    bool   _minimalPatchBlockedDueToGlobalTimestep;
+//    int    _minimalPatchIndex;
+//    int    _minimalPatchParentIndex;
+//    double _minimalPatchTime;
+//    double _startMaximumLocalTimeInterval;
+//    double _endMaximumLocalTimeInterval;
+//    double _startMinimumLocalTimeInterval;
+//    double _endMinimumLocalTimeInterval;
+//    double _minimalTimestep;
+//    bool   _allPatchesEvolvedToGlobalTimestep;
+//    double _averageGlobalTimeInterval;
+//    double _globalTimestepEndTime;
+//
+//    bool   _minimalPatchBlockedDueToCoarsening;
+//    bool   _minimalPatchBlockedDueToGlobalTimestep;
 
     bool   _isFinalized;
 
@@ -56,6 +59,11 @@ class peanoclaw::statistics::SubgridStatistics {
      * Reserves a Heap-vector for the level statistics.
      */
     void initializeLevelStatistics();
+
+    /**
+     * Reserves a Heap-vector for the time interval statistics.
+     */
+    void initializeTimeIntervalStatistics();
 
     /**
      * Logs the statistics to the info-logger.
@@ -73,12 +81,6 @@ class peanoclaw::statistics::SubgridStatistics {
     void addSubgridToLevelStatistics(
       const Patch& subgrid
     );
-
-    /**
-     * Gives an estimate on how many iterations have to be done for this subgrid
-     * to reach the global timestep.
-     */
-    int estimateRemainingIterationsUntilGlobalSubgrid(Patch subgrid) const;
 
   public:
     /**
@@ -99,9 +101,9 @@ class peanoclaw::statistics::SubgridStatistics {
     SubgridStatistics(const std::vector<LevelStatistics>& levelStatistics);
 
     /**
-     * Constructs a SubgridStatistics by receiving it from the worker.
+     * Copy-constructor.
      */
-    SubgridStatistics(int workerRank);
+//    SubgridStatistics(const SubgridStatistics& toCopy);
 
     /**
      * Destructor.
@@ -172,19 +174,9 @@ class peanoclaw::statistics::SubgridStatistics {
     void sendToMaster(int masterRank);
 
     /**
-     * Returns the estimated number of iterations to reach the global timestep
-     * with all subgrids.
+     * Receives the level statistics from a worker rank.
      */
-    int getEstimatedIterationsUntilGlobalTimestep() const;
-
-    /**
-     * States that the restriktion of a worker was skipped. I.e. there is no
-     * information whether this worker has evolved completely to the global
-     * timestep and the statistics assumes that this is not the case.
-     * Hence, as long as restrictions are skipped, the current global timestep
-     * cannot be finished.
-     */
-    void restrictionFromWorkerSkipped();
+    void receiveFromWorker(int workerRank);
     #endif
 };
 #endif /* PEANOCLAW_STATISTICS_SUBGRIDSTATISTICS_H_ */

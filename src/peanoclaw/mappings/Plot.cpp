@@ -456,8 +456,8 @@ void peanoclaw::mappings::Plot::beginIteration(
   _vtkWriter.clear();
 
   std::set<int> plotQ;
-//  plotQ.insert(0);
-//  plotQ.insert(4);
+  plotQ.insert(0);
+  plotQ.insert(4);
   std::set<int> plotAux;
 
   _patchPlotter = new PatchPlotter(
@@ -466,7 +466,7 @@ void peanoclaw::mappings::Plot::beginIteration(
     solverState.getAuxiliarFieldsPerSubcell(),
     plotQ,
     plotAux,
-    false
+    true
   );
 
   logTraceOutWith1Argument( "beginIteration(State)", solverState);

@@ -40,7 +40,7 @@ void configureLogFilter(bool enablePeanoLogging) {
   tarch::logging::CommandLineLogger::getInstance().clearFilterList();
 
   if(enablePeanoLogging) {
-    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", true ) );
+    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
     tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
 
     //Disable Peano
@@ -108,6 +108,7 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   double initialTimestepSize,
   char* configurationFile,
   bool useDimensionalSplittingOptimization,
+  bool reduceReductions,
   InitializationCallback initializationCallback,
   BoundaryConditionCallback boundaryConditionCallback,
   SolverCallback solverCallback,
@@ -116,6 +117,7 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   InterPatchCommunicationCallback restrictionCallback,
   InterPatchCommunicationCallback fluxCorrectionCallback,
   bool enablePeanoLogging,
+  int forkLevelIncrement,
   int *rank
 ) {
   peano::fillLookupTables();
@@ -190,7 +192,9 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
     unknownsPerSubcell,
     auxiliarFieldsPerSubcell,
     initialTimestepSize,
-    useDimensionalSplittingOptimization
+    useDimensionalSplittingOptimization,
+    reduceReductions,
+    forkLevelIncrement
   );
 
   assertion(runner != 0);
