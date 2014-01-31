@@ -78,7 +78,8 @@ peanoclaw::mappings::Remesh::Remesh()
   _parallelStatistics(""),
   _totalParallelStatistics("Simulation"),
   _state(),
-  _iterationNumber(0) {
+  _iterationNumber(0),
+  _iterationWatch("", "", false) {
   logTraceIn( "Remesh()" );
 
   _spacetreeCommunicationWaitingTimeWatch.stopTimer();
@@ -672,6 +673,7 @@ bool peanoclaw::mappings::Remesh::prepareSendToWorker(
   }
 
   logTraceOut( "prepareSendToWorker(...)" );
+
   return requiresReduction;
 }
 
@@ -739,7 +741,11 @@ void peanoclaw::mappings::Remesh::mergeWithMaster(
   communicator.mergeWorkerStateIntoMasterState(workerState, masterState);
 
   if(fineGridCell.isInside()) {
+
+    tarch::timing::Watch masterWorkerSubgridCommunicationWatch("", "", false);
     communicator.receivePatch(fineGridCell.getCellDescriptionIndex());
+    masterWorkerSubgridCommunicationWatch.stopTimer();
+    _parallelStatistics.addWaitingTimeForMasterWorkerSubgridCommunication(masterWorkerSubgridCommunicationWatch.getCalendarTime());
 
     assertionEquals1(
       fineGridCell.getCellDescriptionIndex(),
@@ -960,44 +966,6 @@ void peanoclaw::mappings::Remesh::enterCell(
     assertion1(isRefining, patch);
   }
   #endif
- 
-  if (_rootLevel == -1) {
-      //std::cout << "root found @ " << fineGridVerticesEnumerator.getLevel() << std::endl;
-      _rootLevel = fineGridVerticesEnumerator.getLevel();
-  }
-
-#if 0
-  int forkCandidate = (fineGridVerticesEnumerator.getLevel() - _rootLevel) % 2;
-  if (forkCandidate == 0) { 
-      //std::cout << "level " << fineGridVerticesEnumerator.getLevel() << " is allowed to fork" << std::endl;
-      fineGridCell.setCellIsAForkCandidate(true);
-  } else {
-      fineGridCell.setCellIsAForkCandidate(false);
-  }
-#endif
- 
-#if 1
-  if (fineGridVerticesEnumerator.getLevel() == _rootLevel * 2) { // 2 as a multiplier works AWESOME for 1024 ranks, for < 1024, a modulo approach seems to be better
-                                                                 // TODO: use gcd style, determine level which allocates most processes, then subtract number of processes and restart, but ignore some intermediate levels
-                                                                 //     - e.g. use first level as kick starter and then the desired levels
-                                                                 //     - e.g. use second level as kick starter and then the desired levels
-                                                                 //     - e.g. use first and second level as kick starter and then the desired levels
-    if (!fineGridCell.isAssignedToRemoteRank()) {
-      #ifdef Parallel
-      fineGridCell.setCellIsAForkCandidate(true);
-      #endif
-       //std::cout << "got a fork candidate " << std::endl;
-    } else {
-       //std::cout << "already forked candidate " << std::endl;
-    }
-  } else {
-    #ifdef Parallel
-    fineGridCell.setCellIsAForkCandidate(false);
-    #endif
-  }
-#endif
-
-
   logTraceOutWith2Arguments( "enterCell(...)", fineGridCell, patch );
 }
 
@@ -1070,8 +1038,8 @@ void peanoclaw::mappings::Remesh::beginIteration(
   peanoclaw::State&  solverState
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
-  _spacetreeCommunicationWaitingTimeWatch.stopTimer();
 
+  _spacetreeCommunicationWaitingTimeWatch.stopTimer();
   _parallelStatistics = peanoclaw::statistics::ParallelStatistics("Iteration");
   if(_iterationNumber > 0) {
     _parallelStatistics.addWaitingTimeForMasterWorkerSpacetreeCommunication(_spacetreeCommunicationWaitingTimeWatch.getCalendarTime());
@@ -1144,8 +1112,7 @@ void peanoclaw::mappings::Remesh::beginIteration(
 //  }
   #endif
 
-  _rootLevel = -1;
-
+  _iterationWatch.startTimer();
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
 
@@ -1154,6 +1121,11 @@ void peanoclaw::mappings::Remesh::endIteration(
   peanoclaw::State&  solverState
 ) {
   logTraceInWith1Argument( "endIteration(State)", solverState );
+  _iterationWatch.stopTimer();
+  logInfo("logStatistics()", "Waiting time for iteration: "
+      << _iterationWatch.getCalendarTime() << " (total), "
+      << _iterationWatch.getCalendarTime() << " (average) "
+      << 1 << " samples");
 
   delete _gridLevelTransfer;
 

@@ -58,9 +58,8 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializePeano(
 void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment() {
   //Distributed Memory
   #if defined(Parallel)
-  /*
-  //tarch::parallel::Node::getInstance().setTimeOutWarning(4500);
-  //tarch::parallel::Node::getInstance().setDeadlockTimeOut(9000);
+  tarch::parallel::Node::getInstance().setTimeOutWarning(4500);
+  tarch::parallel::Node::getInstance().setDeadlockTimeOut(9000);
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     tarch::parallel::NodePool::getInstance().setStrategy( new tarch::parallel::FCFSNodePoolStrategy() );
@@ -73,52 +72,16 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
   );
 
   // have to be the same for all ranks
-  peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(64);
-  peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(64);
-  */
- 
-  //tarch::parallel::NodePool::getInstance().restart();
-  
-  peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
-        //new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(true)
-        new mpibalancing::OracleForOnePhaseControlLoopWrapper(true, _controlLoopLoadBalancer)
-  );
+  peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(1024);
+  peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(1024);
   #endif
 
   //Shared Memory
-#ifdef SharedMemoryParallelisation
-  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(
-    true, // multithreading
-    false,
-    1, // splitTheThree
-    false, // pipelineDescendProcessing
-    false, // pipelineAscendProcessing
-    tarch::la::aPowI(DIMENSIONS,3*3*3*3/2), // smallestGrainSizeForAscendDescend
-    3, // grainSizeForAsendDescend
-    tarch::la::aPowI(DIMENSIONS,9/2), // smallestGrainSizeForEnterLeaveCell
-    2, // grainSizeForEnterLevelCell
-    tarch::la::aPowI(DIMENSIONS,3*3*3*3+1), // smallestGrainSizeForTouchFirstLast
-    64, // grainSizeForTouchFirstLast
-    tarch::la::aPowI(DIMENSIONS,3*3*3), // smallestGrainSizeForSplitLoadStore
-    8, // grainSizeForSplitLoadStore
-    -1, // adapterNumber
-   peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling // methodTrace
-    )
-  );
-  /*peano::datatraversal::autotuning::Oracle::getInstance().setOracle( 
-          new sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize()
-          //new sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize( peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid  )
-  );*/
-#endif
-
+  #ifdef SharedMemoryParallelisation
+  tarch::multicore::tbb::Core::getInstance().configure(1);
+  #endif
+  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
 }
-
-void peanoclaw::runners::PeanoClawLibraryRunner::iterateRemesh() {
-  updateOracle();
-  _repository->switchToRemesh();
-  _repository->iterate();
-}
-
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateInitialiseGrid() {
   if(_validateGrid) {
@@ -208,13 +171,6 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   initializeParallelEnvironment();
 
   //Initialize pseudo geometry (Has to be done after initializeParallelEnvironment()
-
-  //tarch::la::Vector<DIMENSIONS,double> boundingBoxOffset(-1.0/7.0);
-  tarch::la::Vector<DIMENSIONS,double> boundingBoxOffset = domainOffset;
-  tarch::la::Vector<DIMENSIONS,double> boundingBoxSize = domainSize;
-  boundingBoxSize *= 1.0; // (9.0/7.0);
-
-  //Initialize pseudo geometry
   _geometry =
     new  peano::geometry::Hexahedron (
       domainSize,  // width
@@ -340,14 +296,11 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
   delete _repository;
   delete _geometry;
 
-  CellDescriptionHeap::getInstance().restart();
-  DataHeap::getInstance().restart();
-
   #ifdef Parallel
-  //tarch::parallel::NodePool::getInstance().terminate();
+  tarch::parallel::NodePool::getInstance().terminate();
   #endif
-  //peano::shutdownParallelEnvironment();
-  //peano::shutdownSharedMemoryEnvironment();
+  peano::shutdownParallelEnvironment();
+  peano::shutdownSharedMemoryEnvironment();
 
   logTraceOut("~PeanoClawLibraryRunner");
 }
@@ -364,7 +317,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
 
   //Iterate over grid until next global timestep...
   do {
-      runNextPossibleTimestep(plotSubsteps);
+      runNextPossibleTimestep();
   } while(!_repository->getState().getAllPatchesEvolvedToGlobalTimestep());
 
   //Plot
@@ -409,7 +362,16 @@ int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
 
       bool continueToIterate = true;
       while (continueToIterate) {
-        switch (_repository->continueToIterate()) {
+
+        tarch::timing::Watch masterWorkerSpacetreeWatch("", "", false);
+        peanoclaw::repositories::Repository::ContinueCommand continueCommand = _repository->continueToIterate();
+        masterWorkerSpacetreeWatch.stopTimer();
+        logInfo("", "Waiting time for vertical spacetree communication: "
+              << masterWorkerSpacetreeWatch.getCalendarTime() << " (total), "
+              << masterWorkerSpacetreeWatch.getCalendarTime() << " (average) "
+              << 1 << " samples");
+
+        switch (continueCommand) {
           case peanoclaw::repositories::Repository::Continue:
             updateOracle();
             _repository->iterate();
@@ -435,21 +397,15 @@ int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
   return 0;
 }
 
-const peanoclaw::State& peanoclaw::runners::PeanoClawLibraryRunner::getState() {
-    return _repository->getState();
-}
-
 void peanoclaw::runners::PeanoClawLibraryRunner::configureGlobalTimestep(double time) {
   _repository->getState().setGlobalTimestepEndTime(time);
   _repository->getState().setNumerics(_numerics);
   _repository->getState().setPlotNumber(_plotNumber);
 }
 
-void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep(bool plot) {
-    /*
+void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep() {
     bool plotSubsteps = _configuration.plotSubsteps()
-      || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);*/
-    bool plotSubsteps = plot;
+      || (_configuration.plotSubstepsAfterOutputTime() != -1 && _configuration.plotSubstepsAfterOutputTime() <= _plotNumber);
 
     logInfo("evolveToTime", "Solving timestep " << (_plotNumber-1) << " with maximum global time interval ("
         << _repository->getState().getStartMaximumGlobalTimeInterval() << ", " << _repository->getState().getEndMaximumGlobalTimeInterval() << ")"
