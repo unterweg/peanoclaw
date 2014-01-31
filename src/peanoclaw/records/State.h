@@ -34,7 +34,7 @@ namespace peanoclaw {
     *
     * 		   build date: 22-10-2013 20:59
     *
-    * @date   27/01/2014 19:17
+    * @date   27/01/2014 14:59
     */
    class peanoclaw::records::State { 
       
@@ -2551,7 +2551,7 @@ namespace peanoclaw {
        *
        * 		   build date: 22-10-2013 20:59
        *
-       * @date   27/01/2014 19:17
+       * @date   27/01/2014 14:59
        */
       class peanoclaw::records::StatePacked { 
          
@@ -2561,6 +2561,7 @@ namespace peanoclaw {
                tarch::la::Vector<DIMENSIONS,double> _initialMaximalSubgridSize;
                tarch::la::Vector<DIMENSIONS,int> _defaultSubdivisionFactor;
                double _initialTimestepSize;
+               bool _useDimensionalSplittingOptimization;
                double _globalTimestepEndTime;
                tarch::la::Vector<DIMENSIONS,double> _domainOffset;
                tarch::la::Vector<DIMENSIONS,double> _domainSize;
@@ -2593,17 +2594,16 @@ namespace peanoclaw {
                 |  unknownsPerSubcell	| startbit 2	| #bits 3
                 |  auxiliarFieldsPerSubcell	| startbit 5	| #bits 3
                 |  defaultGhostWidthLayer	| startbit 8	| #bits 3
-                |  useDimensionalSplittingOptimization	| startbit 11	| #bits 1
-                |  allPatchesEvolvedToGlobalTimestep	| startbit 12	| #bits 1
-                |  reduceReductions	| startbit 13	| #bits 1
-                |  hasRefined	| startbit 14	| #bits 1
-                |  hasTriggeredRefinementForNextIteration	| startbit 15	| #bits 1
-                |  hasErased	| startbit 16	| #bits 1
-                |  hasTriggeredEraseForNextIteration	| startbit 17	| #bits 1
-                |  hasChangedVertexOrCellState	| startbit 18	| #bits 1
-                |  reduceStateAndCell	| startbit 19	| #bits 1
-                |  couldNotEraseDueToDecompositionFlag	| startbit 20	| #bits 1
-                |  subWorkerIsInvolvedInJoinOrFork	| startbit 21	| #bits 1
+                |  allPatchesEvolvedToGlobalTimestep	| startbit 11	| #bits 1
+                |  reduceReductions	| startbit 12	| #bits 1
+                |  hasRefined	| startbit 13	| #bits 1
+                |  hasTriggeredRefinementForNextIteration	| startbit 14	| #bits 1
+                |  hasErased	| startbit 15	| #bits 1
+                |  hasTriggeredEraseForNextIteration	| startbit 16	| #bits 1
+                |  hasChangedVertexOrCellState	| startbit 17	| #bits 1
+                |  reduceStateAndCell	| startbit 18	| #bits 1
+                |  couldNotEraseDueToDecompositionFlag	| startbit 19	| #bits 1
+                |  subWorkerIsInvolvedInJoinOrFork	| startbit 20	| #bits 1
                 */
                int _packedRecords0;
                
@@ -2892,9 +2892,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (11);
-   int tmp = static_cast<int>(_packedRecords0 & mask);
-   return (tmp != 0);
+                  return _useDimensionalSplittingOptimization;
                }
                
                
@@ -2904,8 +2902,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (11);
-   _packedRecords0 = static_cast<int>( useDimensionalSplittingOptimization ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                  _useDimensionalSplittingOptimization = useDimensionalSplittingOptimization;
                }
                
                
@@ -2935,7 +2932,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (12);
+                  int mask = 1 << (11);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -2947,7 +2944,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (12);
+                  int mask = 1 << (11);
    _packedRecords0 = static_cast<int>( allPatchesEvolvedToGlobalTimestep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3214,7 +3211,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (13);
+                  int mask = 1 << (12);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3226,7 +3223,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (13);
+                  int mask = 1 << (12);
    _packedRecords0 = static_cast<int>( reduceReductions ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3573,7 +3570,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (14);
+                  int mask = 1 << (13);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3585,7 +3582,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (14);
+                  int mask = 1 << (13);
    _packedRecords0 = static_cast<int>( hasRefined ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3596,7 +3593,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (15);
+                  int mask = 1 << (14);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3608,7 +3605,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (15);
+                  int mask = 1 << (14);
    _packedRecords0 = static_cast<int>( hasTriggeredRefinementForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3619,7 +3616,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (16);
+                  int mask = 1 << (15);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3631,7 +3628,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (16);
+                  int mask = 1 << (15);
    _packedRecords0 = static_cast<int>( hasErased ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3642,7 +3639,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (17);
+                  int mask = 1 << (16);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3654,7 +3651,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (17);
+                  int mask = 1 << (16);
    _packedRecords0 = static_cast<int>( hasTriggeredEraseForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3665,7 +3662,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (18);
+                  int mask = 1 << (17);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3677,7 +3674,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (18);
+                  int mask = 1 << (17);
    _packedRecords0 = static_cast<int>( hasChangedVertexOrCellState ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3708,7 +3705,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (19);
+                  int mask = 1 << (18);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3720,7 +3717,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (19);
+                  int mask = 1 << (18);
    _packedRecords0 = static_cast<int>( reduceStateAndCell ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3731,7 +3728,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (20);
+                  int mask = 1 << (19);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3743,7 +3740,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (20);
+                  int mask = 1 << (19);
    _packedRecords0 = static_cast<int>( couldNotEraseDueToDecompositionFlag ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -3754,7 +3751,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (21);
+                  int mask = 1 << (20);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -3766,7 +3763,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (21);
+                  int mask = 1 << (20);
    _packedRecords0 = static_cast<int>( subWorkerIsInvolvedInJoinOrFork ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -4125,9 +4122,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (11);
-   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
-   return (tmp != 0);
+               return _persistentRecords._useDimensionalSplittingOptimization;
             }
             
             
@@ -4137,8 +4132,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (11);
-   _persistentRecords._packedRecords0 = static_cast<int>( useDimensionalSplittingOptimization ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+               _persistentRecords._useDimensionalSplittingOptimization = useDimensionalSplittingOptimization;
             }
             
             
@@ -4168,7 +4162,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (12);
+               int mask = 1 << (11);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -4180,7 +4174,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (12);
+               int mask = 1 << (11);
    _persistentRecords._packedRecords0 = static_cast<int>( allPatchesEvolvedToGlobalTimestep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -4499,7 +4493,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (13);
+               int mask = 1 << (12);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -4511,7 +4505,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (13);
+               int mask = 1 << (12);
    _persistentRecords._packedRecords0 = static_cast<int>( reduceReductions ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -4910,7 +4904,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (14);
+               int mask = 1 << (13);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -4922,7 +4916,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (14);
+               int mask = 1 << (13);
    _persistentRecords._packedRecords0 = static_cast<int>( hasRefined ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -4933,7 +4927,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (15);
+               int mask = 1 << (14);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -4945,7 +4939,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (15);
+               int mask = 1 << (14);
    _persistentRecords._packedRecords0 = static_cast<int>( hasTriggeredRefinementForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -4956,7 +4950,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (16);
+               int mask = 1 << (15);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -4968,7 +4962,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (16);
+               int mask = 1 << (15);
    _persistentRecords._packedRecords0 = static_cast<int>( hasErased ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -4979,7 +4973,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (17);
+               int mask = 1 << (16);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -4991,7 +4985,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (17);
+               int mask = 1 << (16);
    _persistentRecords._packedRecords0 = static_cast<int>( hasTriggeredEraseForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -5002,7 +4996,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (18);
+               int mask = 1 << (17);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -5014,7 +5008,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (18);
+               int mask = 1 << (17);
    _persistentRecords._packedRecords0 = static_cast<int>( hasChangedVertexOrCellState ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -5045,7 +5039,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (19);
+               int mask = 1 << (18);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -5057,7 +5051,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (19);
+               int mask = 1 << (18);
    _persistentRecords._packedRecords0 = static_cast<int>( reduceStateAndCell ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -5068,7 +5062,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (20);
+               int mask = 1 << (19);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -5080,7 +5074,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (20);
+               int mask = 1 << (19);
    _persistentRecords._packedRecords0 = static_cast<int>( couldNotEraseDueToDecompositionFlag ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -5091,7 +5085,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (21);
+               int mask = 1 << (20);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -5103,7 +5097,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (21);
+               int mask = 1 << (20);
    _persistentRecords._packedRecords0 = static_cast<int>( subWorkerIsInvolvedInJoinOrFork ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -5177,7 +5171,7 @@ namespace peanoclaw {
           *
           * 		   build date: 22-10-2013 20:59
           *
-          * @date   27/01/2014 19:17
+          * @date   27/01/2014 14:59
           */
          class peanoclaw::records::State { 
             
@@ -7530,7 +7524,7 @@ namespace peanoclaw {
              *
              * 		   build date: 22-10-2013 20:59
              *
-             * @date   27/01/2014 19:17
+             * @date   27/01/2014 14:59
              */
             class peanoclaw::records::StatePacked { 
                
@@ -7540,6 +7534,7 @@ namespace peanoclaw {
                      tarch::la::Vector<DIMENSIONS,double> _initialMaximalSubgridSize;
                      tarch::la::Vector<DIMENSIONS,int> _defaultSubdivisionFactor;
                      double _initialTimestepSize;
+                     bool _useDimensionalSplittingOptimization;
                      double _globalTimestepEndTime;
                      tarch::la::Vector<DIMENSIONS,double> _domainOffset;
                      tarch::la::Vector<DIMENSIONS,double> _domainSize;
@@ -7572,13 +7567,12 @@ namespace peanoclaw {
                       |  unknownsPerSubcell	| startbit 2	| #bits 3
                       |  auxiliarFieldsPerSubcell	| startbit 5	| #bits 3
                       |  defaultGhostWidthLayer	| startbit 8	| #bits 3
-                      |  useDimensionalSplittingOptimization	| startbit 11	| #bits 1
-                      |  allPatchesEvolvedToGlobalTimestep	| startbit 12	| #bits 1
-                      |  hasRefined	| startbit 13	| #bits 1
-                      |  hasTriggeredRefinementForNextIteration	| startbit 14	| #bits 1
-                      |  hasErased	| startbit 15	| #bits 1
-                      |  hasTriggeredEraseForNextIteration	| startbit 16	| #bits 1
-                      |  hasChangedVertexOrCellState	| startbit 17	| #bits 1
+                      |  allPatchesEvolvedToGlobalTimestep	| startbit 11	| #bits 1
+                      |  hasRefined	| startbit 12	| #bits 1
+                      |  hasTriggeredRefinementForNextIteration	| startbit 13	| #bits 1
+                      |  hasErased	| startbit 14	| #bits 1
+                      |  hasTriggeredEraseForNextIteration	| startbit 15	| #bits 1
+                      |  hasChangedVertexOrCellState	| startbit 16	| #bits 1
                       */
                      int _packedRecords0;
                      
@@ -7867,9 +7861,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (11);
-   int tmp = static_cast<int>(_packedRecords0 & mask);
-   return (tmp != 0);
+                        return _useDimensionalSplittingOptimization;
                      }
                      
                      
@@ -7879,8 +7871,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (11);
-   _packedRecords0 = static_cast<int>( useDimensionalSplittingOptimization ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                        _useDimensionalSplittingOptimization = useDimensionalSplittingOptimization;
                      }
                      
                      
@@ -7910,7 +7901,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (12);
+                        int mask = 1 << (11);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
@@ -7922,7 +7913,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (12);
+                        int mask = 1 << (11);
    _packedRecords0 = static_cast<int>( allPatchesEvolvedToGlobalTimestep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
@@ -8525,7 +8516,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (13);
+                        int mask = 1 << (12);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
@@ -8537,7 +8528,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (13);
+                        int mask = 1 << (12);
    _packedRecords0 = static_cast<int>( hasRefined ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
@@ -8548,7 +8539,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (14);
+                        int mask = 1 << (13);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
@@ -8560,7 +8551,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (14);
+                        int mask = 1 << (13);
    _packedRecords0 = static_cast<int>( hasTriggeredRefinementForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
@@ -8571,7 +8562,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (15);
+                        int mask = 1 << (14);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
@@ -8583,7 +8574,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (15);
+                        int mask = 1 << (14);
    _packedRecords0 = static_cast<int>( hasErased ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
@@ -8594,7 +8585,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (16);
+                        int mask = 1 << (15);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
@@ -8606,7 +8597,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (16);
+                        int mask = 1 << (15);
    _packedRecords0 = static_cast<int>( hasTriggeredEraseForNextIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
@@ -8617,7 +8608,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (17);
+                        int mask = 1 << (16);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                      }
@@ -8629,7 +8620,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                        int mask = 1 << (17);
+                        int mask = 1 << (16);
    _packedRecords0 = static_cast<int>( hasChangedVertexOrCellState ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                      }
                      
@@ -9008,9 +8999,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (11);
-   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
-   return (tmp != 0);
+                     return _persistentRecords._useDimensionalSplittingOptimization;
                   }
                   
                   
@@ -9020,8 +9009,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (11);
-   _persistentRecords._packedRecords0 = static_cast<int>( useDimensionalSplittingOptimization ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                     _persistentRecords._useDimensionalSplittingOptimization = useDimensionalSplittingOptimization;
                   }
                   
                   
@@ -9051,7 +9039,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (12);
+                     int mask = 1 << (11);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
@@ -9063,7 +9051,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (12);
+                     int mask = 1 << (11);
    _persistentRecords._packedRecords0 = static_cast<int>( allPatchesEvolvedToGlobalTimestep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
@@ -9770,7 +9758,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (13);
+                     int mask = 1 << (12);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
@@ -9782,7 +9770,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (13);
+                     int mask = 1 << (12);
    _persistentRecords._packedRecords0 = static_cast<int>( hasRefined ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
@@ -9793,7 +9781,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (14);
+                     int mask = 1 << (13);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
@@ -9805,7 +9793,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (14);
+                     int mask = 1 << (13);
    _persistentRecords._packedRecords0 = static_cast<int>( hasTriggeredRefinementForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
@@ -9816,7 +9804,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (15);
+                     int mask = 1 << (14);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
@@ -9828,7 +9816,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (15);
+                     int mask = 1 << (14);
    _persistentRecords._packedRecords0 = static_cast<int>( hasErased ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
@@ -9839,7 +9827,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (16);
+                     int mask = 1 << (15);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
@@ -9851,7 +9839,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (16);
+                     int mask = 1 << (15);
    _persistentRecords._packedRecords0 = static_cast<int>( hasTriggeredEraseForNextIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   
@@ -9862,7 +9850,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (17);
+                     int mask = 1 << (16);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
                   }
@@ -9874,7 +9862,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                     int mask = 1 << (17);
+                     int mask = 1 << (16);
    _persistentRecords._packedRecords0 = static_cast<int>( hasChangedVertexOrCellState ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
                   }
                   

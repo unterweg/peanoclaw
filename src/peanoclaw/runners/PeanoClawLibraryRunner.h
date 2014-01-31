@@ -78,8 +78,6 @@ private:
    */
   void initializeParallelEnvironment();
 
-  void iterateRemesh();
-
   void iterateInitialiseGrid();
 
   void iteratePlot();
@@ -123,9 +121,8 @@ public:
   void gatherCurrentSolution();
   int runWorker();
 
-  const peanoclaw::State& getState();
   void configureGlobalTimestep(double time);
-  void runNextPossibleTimestep(bool plot);
+  void runNextPossibleTimestep();
 
   void updateOracle();
 };

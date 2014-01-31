@@ -46,9 +46,8 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createSWENumerics(
   );
 }
 
-#endif
+#else
 
-#if defined(PEANOCLAW_PYCLAW)
 peanoclaw::Numerics* peanoclaw::NumericsFactory::createPyClawNumerics(
   InitializationCallback initializationCallback,
   BoundaryConditionCallback boundaryConditionCallback,
