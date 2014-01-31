@@ -1,3 +1,95 @@
+cmake_minimum_required(VERSION 2.8)
+project(PEANOCLAW)
+
+#########################################
+# Peano Settings
+#########################################
+
+set(PEANO_DIMENSIONS 2 CACHE STRING "number of dimensions")
+
+find_package(HDF5 COMPONENTS HL C)
+find_package(VTK)
+
+#include_directories(${HDF5_INCLUDE_DIRS})
+
+#add_definitions(-DDim${PEANO_DIMENSIONS} -DParallel -DSharedTBB -DSharedMemoryParallelisation -DAsserts -DDebug -DTrace)
+add_definitions(-DDim${PEANO_DIMENSIONS})
+
+option(PEANO_PARALLEL "shall we build a MPI enabled Peano")
+if (PEANO_PARALLEL)
+    find_package(MPI)
+    set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
+    set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+    add_definitions(-DParallel)
+endif (PEANO_PARALLEL)
+
+option(PEANO_TBB "shall we build a TBB enabled Peano")
+if (PEANO_TBB)
+    set(TBB_ROOT "/work/wittmanr/mytools/tbb41_20121003oss")
+    set(TBB_INCLUDE_DIRS "${TBB_ROOT}/include")
+    set(TBB_LIBRARY_DIRS "${TBB_ROOT}/build/linux_intel64_gcc_cc4.6_libc2.15_kernel3.7.1_release")
+    set(TBB_LINK_FLAGS "-ltbb")
+
+    include_directories(${TBB_INCLUDE_DIRS})
+    link_directories(${TBB_LIBRARY_DIRS})
+    add_definitions(-DSharedTBB)
+endif (PEANO_TBB)
+
+option(PEANO_OMP "shall we build an OMP enabled Peano")
+if (PEANO_OMP)
+    add_definitions(-DSharedOMP)
+endif (PEANO_OMP)
+
+option(PEANO_ASSERTS "shall we build with Assertions enabled")
+if (PEANO_ASSERTS)
+    add_definitions(-DAsserts)
+endif (PEANO_ASSERTS)
+
+option(PEANO_TRACE "shall we build with trace enabled")
+if (PEANO_TRACE)
+     add_definitions(-DTrace)
+endif (PEANO_TRACE)
+
+option(PEANO_DEBUG "shall we build with Debug enabled")
+if (PEANO_DEBUG)
+    add_definitions(-DDebug)
+endif (PEANO_DEBUG)
+
+option(PEANO_NORECURSIONUNROLLING "disable recursion unrolling")
+if (PEANO_NORECURSIONUNROLLING)
+    add_definitions(-DnoUseRecursionUnrollingOnRegularPatches)
+endif (PEANO_NORECURSIONUNROLLING)
+
+option(PEANO_NOCACHEACTIONSETS "do not cache action sets")
+if (PEANO_NOCACHEACTIONSETS)
+    add_definitions(-DnoCacheActionSets)
+endif (PEANO_NOCACHEACTIONSETS)
+
+option(PEANO_NODISTINGUISHSUBTREES "do not distinguish stationary and instationary subtrees")
+if (PEANO_NODISTINGUISHSUBTREES)
+    add_definitions(-DnoDistinguishStationaryAndInstationarySubtrees)
+endif (PEANO_NODISTINGUISHSUBTREES)
+
+option (SCALASCA "instrument with scalasca?")
+if (SCALASCA)
+    set(CMAKE_C_COMPILER skin_mpicc)
+    set(CMAKE_CXX_COMPILER skin_mpicxx)
+    add_definitions(-DParallel)
+endif (SCALASCA)
+
+if (HDF5_FOUND)
+    add_definitions(-DWITH_HDF5)
+endif(HDF5_FOUND)
+
+#########################################
+
+include_directories(peanokernel)
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(peanokernel)
+
+#########################################
+
 find_package(PythonLibs)
 
 option (PEANOCLAW_PYCLAW "enable PyClaw support")
@@ -49,6 +141,8 @@ set(PEANOCLAW_SOURCES
     src/peanoclaw/adapters/SolveTimestepAndPlot.cpp
     src/peanoclaw/adapters/SolveTimestepAndPlotAndValidateGrid.cpp
     src/peanoclaw/configurations/PeanoClawConfigurationForSpacetreeGrid.cpp
+
+    src/peanoclaw/grid/TimeIntervals.cpp
 
     src/peanoclaw/mappings/Cleanup.cpp
     src/peanoclaw/mappings/GatherCurrentSolution.cpp
