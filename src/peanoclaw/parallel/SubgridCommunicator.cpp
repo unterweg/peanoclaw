@@ -95,7 +95,7 @@ int peanoclaw::parallel::SubgridCommunicator::receiveDataArray() {
 }
 
 void peanoclaw::parallel::SubgridCommunicator::deleteArraysFromSubgrid(Patch& subgrid) {
-  logTraceInWith1Argument("deleteArraysFromSubgrid", cellDescriptionIndex);
+  logTraceIn("deleteArraysFromSubgrid");
   if(subgrid.getUNewIndex() != -1) {
     DataHeap::getInstance().deleteData(subgrid.getUNewIndex());
   }

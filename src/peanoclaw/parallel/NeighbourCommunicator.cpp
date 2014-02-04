@@ -18,7 +18,7 @@ tarch::logging::Log peanoclaw::parallel::NeighbourCommunicator::_log("peanoclaw:
 void peanoclaw::parallel::NeighbourCommunicator::sendPatch(
   const Patch& transferedSubgrid
 ) {
-  logTraceInWith3Arguments("sendPatch", cellDescriptionIndex, _position, _level);
+  logTraceInWith2Arguments("sendPatch", _position, _level);
   #ifdef Parallel
 
   #ifdef Asserts
@@ -68,11 +68,11 @@ void peanoclaw::parallel::NeighbourCommunicator::sendPaddingPatch(
 
 void peanoclaw::parallel::NeighbourCommunicator::receivePatch(Patch& localSubgrid) {
   #ifdef Parallel
-  logTraceInWith3Arguments("receivePatch", localCellDescriptionIndex, _position, _level);
+  logTraceInWith2Arguments("receivePatch", _position, _level);
 
   std::vector<CellDescription> remoteCellDescriptionVector = CellDescriptionHeap::getInstance().receiveData(_remoteRank, _position, _level, peano::heap::NeighbourCommunication);
 
-  logDebug("", "Receiving patch from " << _remoteRank << " at " << localCellDescription.getPosition() << " on level " << localCellDescription.getLevel());
+  logDebug("", "Receiving patch from " << _remoteRank << " at " << localSubgrid.getPosition() << " on level " << localSubgrid.getLevel());
 
   if(!_onlySendSubgridsAfterChange || remoteCellDescriptionVector.size() > 0) {
     assertionEquals4(remoteCellDescriptionVector.size(), 1, _position, _level, _remoteRank, localSubgrid);

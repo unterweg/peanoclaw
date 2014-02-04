@@ -101,9 +101,10 @@ class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenari
             double demandedMeshWidth = patch.getSubcellSize()(0);
             if (max_gradient > 0.1) {
                 //demandedMeshWidth = 1.0/243;
-                demandedMeshWidth = 10.0/130/27;
+                demandedMeshWidth = 10.0/9/27;
             } else if (max_gradient < 0.5) {
-                demandedMeshWidth = 10.0/130/27;
+                //demandedMeshWidth = 10.0/130/27;
+                demandedMeshWidth = 10.0/9/27;
             } else {
               demandedMeshWidth = patch.getSubcellSize()(0);
             }
@@ -175,8 +176,10 @@ int main(int argc, char **argv) {
   //Construct parameters
   tarch::la::Vector<DIMENSIONS, double> domainOffset(0);
   tarch::la::Vector<DIMENSIONS, double> domainSize(10.0);
-  tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(10.0/130/27);
-  tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(130);
+  //tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(10.0/130/27);
+  //tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(130);
+  tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(10.0/9/27);
+  tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(9);
   int ghostlayerWidth = 1;
   int unknownsPerSubcell = 3;
   int auxiliarFieldsPerSubcell = 0;
@@ -217,7 +220,7 @@ int main(int argc, char **argv) {
  
   // run experiment
   double timestep = 0.001;
-  double endtime = 0.002; //1.0; //2.0;
+  double endtime = 0.1; //1.0; //2.0;
 #if defined(Parallel)
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 #endif

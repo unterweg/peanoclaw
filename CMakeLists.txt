@@ -14,6 +14,7 @@ find_package(VTK)
 
 #add_definitions(-DDim${PEANO_DIMENSIONS} -DParallel -DSharedTBB -DSharedMemoryParallelisation -DAsserts -DDebug -DTrace)
 add_definitions(-DDim${PEANO_DIMENSIONS})
+add_definitions(-std=c++11)
 
 option(PEANO_PARALLEL "shall we build a MPI enabled Peano")
 if (PEANO_PARALLEL)
@@ -88,8 +89,12 @@ include_directories(peanokernel)
 
 add_subdirectory(peanokernel)
 
+include_directories(peanotoolboxes/ControlLoopLoadBalancer)
+add_subdirectory(peanotoolboxes/ControlLoopLoadBalancer)
+
 #########################################
 
+set(Python_ADDITIONAL_VERSIONS "2.7")
 find_package(PythonLibs)
 
 option (PEANOCLAW_PYCLAW "enable PyClaw support")
@@ -202,7 +207,6 @@ include_directories(
 )
 
 add_definitions(-DSWE -DWAVE_PROPAGATION_SOLVER=1) # TODO: 4 was slow, why?
-#add_definitions(-std=c++0x)
 
 if (PEANOCLAW_PYCLAW)
     set (PEANOCLAW_SOURCES ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
@@ -217,14 +221,18 @@ if (PEANO_TBB)
     set (PEANO_LIBRARIES ${PEANOCLAW_LIBRARIES} ${TBB_LINK_FLAGS} -lrt)
 endif (PEANO_TBB)
 
+set (TOOLBOXES_LIBRARIES
+    peano_controllooploadbalancer_shared
+    )
+
 add_library (peanoclaw SHARED ${PEANOCLAW_SOURCES})
 add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES})
 add_library (peanoclaw_static_norle STATIC ${PEANOCLAW_SOURCES})
 SET_TARGET_PROPERTIES(peanoclaw_static_norle PROPERTIES COMPILE_FLAGS "-DnoPackedEmptyHeapMessages" )
 
-target_link_libraries (peanoclaw peano_shared peano_tarch_shared peano_toolboxes_shared ${PEANOCLAW_LIBRARIES} ${PEANO_LIBRARIES})
-target_link_libraries (peanoclaw_static peano_static peano_tarch_static peano_toolboxes_static ${PEANOCLAW_LIBRARIES} ${PEANO_LIBRARIES})
-target_link_libraries (peanoclaw_static_norle peano_static peano_tarch_static peano_toolboxes_static ${PEANOCLAW_LIBRARIES} ${PEANO_LIBRARIES})
+target_link_libraries (peanoclaw peano_shared peano_tarch_shared ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
+target_link_libraries (peanoclaw_static peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
+target_link_libraries (peanoclaw_static_norle peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
 
 
 if (PEANO_OMP)

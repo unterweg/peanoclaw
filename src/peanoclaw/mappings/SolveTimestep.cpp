@@ -698,7 +698,7 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
       }
       #endif
 
-      logTraceOutWith2Arguments( "enterCell(...)", cellDescription.getTimeIntervals().getTimestepSize(), cellDescription.getTime() + cellDescription.getTimeIntervals().getTimestepSize() );
+      logTraceOutWith2Arguments( "enterCell(...)", patch.getTimeIntervals().getTimestepSize(), cellDescription.getTime() + patch.getTimeIntervals().getTimestepSize() );
     } else {
       logTraceOut( "enterCell(...)" );
     }
