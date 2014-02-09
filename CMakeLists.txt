@@ -71,6 +71,11 @@ if (PEANO_NODISTINGUISHSUBTREES)
     add_definitions(-DnoDistinguishStationaryAndInstationarySubtrees)
 endif (PEANO_NODISTINGUISHSUBTREES)
 
+option(PEANO_LOGOFF "disable noise")
+if (PEANO_LOGOFF)
+    add_definitions(-DLogOff)
+endif (PEANO_LOGOFF)
+
 option (SCALASCA "instrument with scalasca?")
 if (SCALASCA)
     set(CMAKE_C_COMPILER skin_mpicc)
