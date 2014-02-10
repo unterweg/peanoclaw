@@ -382,8 +382,6 @@ void peanoclaw::parallel::SubgridCommunicator::receiveOverlappedCells(
 
     //assertion1(numberOfCellDescriptions > 0, "no cell descriptions, huh? we always send one");
  
-    std::cout << " --- got overlapping cells: " << numberOfDataElements << std::endl;
-
     remoteData.resize(numberOfDataElements);
 
     int block_position = 0;
