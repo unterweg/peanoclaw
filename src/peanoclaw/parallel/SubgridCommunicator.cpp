@@ -75,11 +75,11 @@ void peanoclaw::parallel::SubgridCommunicator::sendSubgrid(Patch& subgrid) {
       sendCellDescription(subgrid.getCellDescriptionIndex());
   }
 
-  if(subgrid.getUNewIndex() != -1) {
+  if(subgrid.getUIndex() != -1) {
     if(_onlySendOverlappedCells) {
       sendOverlappedCells(subgrid);
     } else {
-      sendDataArray(subgrid.getUNewIndex());
+      sendDataArray(subgrid.getUIndex());
     }
   } else if(_messageType == peano::heap::NeighbourCommunication) {
     sendPaddingDataArray();
@@ -223,7 +223,14 @@ void peanoclaw::parallel::SubgridCommunicator::sendOverlappedCells(
     _remoteRank,
     areas
   );
- 
+
+  //TODO unterweg debug
+//  std::cout << "Sending " << numberOfAreas << " areas from " << tarch::parallel::Node::getInstance().getRank() << " to " << _remoteRank
+//      << " for subgrid " << subgrid << std::endl;
+//  for(int i = 0; i < numberOfAreas; i++) {
+//    std::cout << "\t" << areas[i]._offset << ", " << areas[i]._size << std::endl;
+//  }
+
   int numberOfCells = 0;
   for(int i = 0; i < numberOfAreas; i++) {
     numberOfCells += tarch::la::volume(areas[i]._size);
@@ -267,8 +274,6 @@ void peanoclaw::parallel::SubgridCommunicator::sendOverlappedCells(
 
 void peanoclaw::parallel::SubgridCommunicator::sendPaddingDataArray() {
   logTraceInWith2Arguments("sendPaddingDataArray", _position, _level);
-
-
   int index = DataHeap::getInstance().createData();
   sendDataArray(index);
   DataHeap::getInstance().deleteData(index);
@@ -343,10 +348,19 @@ void peanoclaw::parallel::SubgridCommunicator::receiveOverlappedCells(
   int numberOfAreas = Area::getAreasOverlappedByRemoteGhostlayers(
     remoteCellDescription.getAdjacentRanks(),
     remoteCellDescription.getOverlapByRemoteGhostlayer(),
-    subgrid.getSubdivisionFactor(),
+    remoteCellDescription.getSubdivisionFactor(),
     tarch::parallel::Node::getInstance().getRank(),
     areas
   );
+
+  //TODO unterweg debug
+//  std::cout << "Receiving " << numberOfAreas << " areas from " << _remoteRank << " on " << tarch::parallel::Node::getInstance().getRank()
+//      << " for subgrid " << subgrid.getPosition() << ", " << subgrid.getSize()
+//      << ", adj:" << remoteCellDescription.getAdjacentRanks() << ", overlap:" << remoteCellDescription.getOverlapByRemoteGhostlayer() << ": " << std::endl;
+//  for(int i = 0; i < numberOfAreas; i++) {
+//    std::cout << "\t" << areas[i]._offset << ", " << areas[i]._size << std::endl;
+//  }
+
 
   #ifdef Asserts
   int numberOfCells = 0;
@@ -399,19 +413,29 @@ void peanoclaw::parallel::SubgridCommunicator::receiveOverlappedCells(
     //U new
     dfor(subcellIndex, area._size) {
       int linearIndex = subgrid.getLinearIndexUNew(area._offset + subcellIndex);
-      for(int unknown = 0; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
-        subgrid.setValueUNew(linearIndex, unknown, remoteData[entry++].getU());
+      for(int unknown = 0; unknown < remoteCellDescription.getUnknownsPerSubcell(); unknown++) {
+        subgrid.setValueUNewAndResize(linearIndex, unknown, remoteData[entry++].getU());
       }
+
+      //TODO unterweg debug
+//      std::cout << "Setting cell " << (area._offset + subcellIndex) << std::endl;
+
+      assertion3(tarch::la::greater(subgrid.getValueUNew(linearIndex, 0), 0.0), subgrid, subcellIndex, subgrid.getValueUNew(linearIndex, 0));
     }
 
     //U old
     dfor(subcellIndex, area._size) {
       int linearIndex = subgrid.getLinearIndexUOld(area._offset + subcellIndex);
-      for(int unknown = 0; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
-        subgrid.setValueUOld(linearIndex, unknown, remoteData[entry++].getU());
+      for(int unknown = 0; unknown < remoteCellDescription.getUnknownsPerSubcell(); unknown++) {
+        subgrid.setValueUOldAndResize(linearIndex, unknown, remoteData[entry++].getU());
       }
+
+      assertion3(tarch::la::greater(subgrid.getValueUOld(linearIndex, 0), 0.0), subgrid, subcellIndex, subgrid.getValueUOld(linearIndex, 0));
     }
   }
+
+//  assertion4(subgrid.getUSize() >= entry, entry, subgrid.getUSize(), subgrid, remoteCellDescription.getSubdivisionFactor());
+//  assertion2(DataHeap::getInstance().getData(subgrid.getUIndex()).size() >= entry, DataHeap::getInstance().getData(subgrid.getUIndex()).size(), entry);
 
   logTraceOut("receiveOverlappedCells");
 }
@@ -420,8 +444,8 @@ void peanoclaw::parallel::SubgridCommunicator::deleteArraysFromSubgrid(
   Patch& subgrid
 ) {
   logTraceInWith1Argument("deleteArraysFromSubgrid", cellDescriptionIndex);
-  if(subgrid.getUNewIndex() != -1) {
-    DataHeap::getInstance().deleteData(subgrid.getUNewIndex());
+  if(subgrid.getUIndex() != -1) {
+    DataHeap::getInstance().deleteData(subgrid.getUIndex());
   }
   logTraceOut("deleteArraysFromSubgrid");
 }
