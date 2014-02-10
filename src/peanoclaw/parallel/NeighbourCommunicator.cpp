@@ -145,7 +145,17 @@ void peanoclaw::parallel::NeighbourCommunicator::receivePatch(Patch& localSubgri
     #endif
   } else {
     //Padding patch received -> receive padding data
-    DataHeap::getInstance().receiveData(_remoteRank, _position, _level, peano::heap::NeighbourCommunication);
+
+    // TODO: move into SubgridCommunicator?
+    if (_packCommunication) {
+        Serialization::ReceiveBuffer& recvbuffer = peano::parallel::SerializationMap::getInstance().getReceiveBuffer(_remoteRank)[1];
+        assertion1(recvbuffer.isBlockAvailable(), "cannot read heap data from Serialization Buffer - not enough blocks");
+
+        Serialization::Block block = recvbuffer.nextBlock();
+
+    } else {
+        DataHeap::getInstance().receiveData(_remoteRank, _position, _level, peano::heap::NeighbourCommunication);
+    }
   }
 
   logTraceOut("receivePatch");
@@ -207,7 +217,7 @@ peanoclaw::parallel::NeighbourCommunicator::NeighbourCommunicator(
     _avoidMultipleTransferOfSubgridsIfPossible(true),
     _onlySendSubgridsAfterChange(true),
     _onlySendOverlappedCells(true),
-    _packCommunication(false),
+    _packCommunication(true),
     _subgridCommunicator(remoteRank, position, level, peano::heap::NeighbourCommunication, _onlySendOverlappedCells, _packCommunication) {
   logTraceInWith3Arguments("NeighbourCommunicator", remoteRank, position, level);
 
