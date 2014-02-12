@@ -244,6 +244,7 @@ elif compiler == 'icc':
      cxx = 'mpiCC'
    ccflags.append('-fstrict-aliasing')
    ccflags.append('-qpack_semantic=gnu')
+   ccflags.append('-std=c++11')
    if build == 'debug':
       ccflags.append('-O0')
    elif build == 'asserts':
