@@ -72,8 +72,8 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
   );
 
   // have to be the same for all ranks
-  peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(64);
-  peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(64);
+  peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize(1024);
+  peano::parallel::JoinDataBufferPool::getInstance().setBufferSize(1024);
   #endif
 
   //Shared Memory
@@ -155,7 +155,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
   _totalRuntime(0.0),
   _numerics(numerics),
-  _validateGrid(false),
+  _validateGrid(true),
   _initializationWatch("Total initialization", "", false),
   _simulationWatch("Total simulation", "", false)
 {
@@ -278,10 +278,13 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
   DataHeap::getInstance().plotStatistics();
 
   _simulationWatch.stopTimer();
+
+  #ifdef Parallel
   if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
     logInfo("~PeanoClawLibraryRunner", "Time for initialization: " << _initializationWatch.getCalendarTime());
     logInfo("~PeanoClawLibraryRunner", "Time for simulation: " << _simulationWatch.getCalendarTime());
   }
+  #endif
 
   #ifdef Parallel
   if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
@@ -350,7 +353,7 @@ int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
   while ( newMasterNode != tarch::parallel::NodePool::JobRequestMessageAnswerValues::Terminate ) {
     if ( newMasterNode >= tarch::parallel::NodePool::JobRequestMessageAnswerValues::NewMaster ) {
       peano::parallel::messages::ForkMessage forkMessage;
-      forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true);
+      forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true, ReceiveIterationControlMessagesBlocking);
       _repository->restart(
         forkMessage.getH(),
         forkMessage.getDomainOffset(),
@@ -362,7 +365,16 @@ int peanoclaw::runners::PeanoClawLibraryRunner::runWorker() {
 
       bool continueToIterate = true;
       while (continueToIterate) {
-        switch (_repository->continueToIterate()) {
+
+        tarch::timing::Watch masterWorkerSpacetreeWatch("", "", false);
+        peanoclaw::repositories::Repository::ContinueCommand continueCommand = _repository->continueToIterate();
+        masterWorkerSpacetreeWatch.stopTimer();
+//        logInfo("", "Waiting time for vertical spacetree communication: "
+//              << masterWorkerSpacetreeWatch.getCalendarTime() << " (total), "
+//              << masterWorkerSpacetreeWatch.getCalendarTime() << " (average) "
+//              << 1 << " samples");
+
+        switch (continueCommand) {
           case peanoclaw::repositories::Repository::Continue:
             updateOracle();
             _repository->iterate();

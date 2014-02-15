@@ -228,7 +228,7 @@ void peanoclaw::tests::PatchTest::testCoarsePatchTimeInterval() {
 }
 
 void peanoclaw::tests::PatchTest::testCountingOfAdjacentParallelSubgrids() {
-  #ifdef Parallel
+  #if defined(Parallel) && defined(Dim2)
   Vertex vertices[TWO_POWER_D];
   TestVertexEnumerator enumerator(1.0);
 
@@ -283,7 +283,7 @@ void peanoclaw::tests::PatchTest::testCountingOfAdjacentParallelSubgrids() {
 }
 
 void peanoclaw::tests::PatchTest::testCountingOfAdjacentParallelSubgridsFourNeighboringRanks() {
-  #ifdef Parallel
+  #if defined(Parallel) && defined(Dim2)
   Vertex vertices[TWO_POWER_D];
   TestVertexEnumerator enumerator(1.0);
 
@@ -333,7 +333,7 @@ void peanoclaw::tests::PatchTest::testCountingOfAdjacentParallelSubgridsFourNeig
 }
 
 void peanoclaw::tests::PatchTest::testSettingOverlapOfRemoteGhostlayer() {
-  #ifdef Dim2
+  #if defined(Dim2) && defined(Parallel)
   peanoclaw::Vertex fineGridVertex;
   fineGridVertex.setAdjacentRank(0, 1);
   fineGridVertex.setAdjacentRank(1, 2);
@@ -406,8 +406,9 @@ void peanoclaw::tests::PatchTest::testSettingOverlapOfRemoteGhostlayer() {
 }
 
 void peanoclaw::tests::PatchTest::testManifolds() {
+  #ifdef Parallel
   tarch::la::Vector<DIMENSIONS, int> manifoldPosition;
-  #ifdef Dim2
+  #if defined(Dim2)
   validateEquals(Area::getNumberOfManifolds(0), 4);
   validateEquals(Area::getNumberOfManifolds(1), 4);
 
@@ -550,6 +551,7 @@ void peanoclaw::tests::PatchTest::testNumberOfAdjacentManifolds() {
 
   assignList(manifoldPosition) = -1, -1, 0;
   validateEquals(Area::getNumberOfAdjacentManifolds(manifoldPosition, 1, 0), 2);
+  #endif
   #endif
 }
 
@@ -751,17 +753,12 @@ void peanoclaw::tests::PatchTest::testOverlapOfRemoteGhostlayers() {
     areas
   );
 
-  //TODO unterweg debug
-  for(int i = 0; i < numberOfAreas; i++) {
-    std::cout << areas[i] << std::endl;
-  }
-
   validateEquals(numberOfAreas, 5);
   #endif
 }
 
 void peanoclaw::tests::PatchTest::testOverlapOfRemoteGhostlayers2() {
-  #ifdef Dim2
+  #if defined(Parallel) && defined(Dim2)
   tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int> adjacentRanks;
   assignList(adjacentRanks)              = 1,1,2,1,2,0,0,0;
   tarch::la::Vector<THREE_POWER_D_MINUS_ONE, int> overlapOfRemoteGhostlayers;

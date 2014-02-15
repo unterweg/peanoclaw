@@ -106,8 +106,7 @@ void peanoclaw::tests::GhostLayerCompositorTest::testTimesteppingVeto2D() {
           numerics,
           false
           );
-    ghostLayerCompositor.fillGhostLayers(-1);
-    ghostLayerCompositor.updateNeighborTimes();
+    ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(-1);
 
     for(int cellIndex = 0; cellIndex < 4; cellIndex++) {
       if(cellIndex == vetoIndex) {
@@ -199,7 +198,7 @@ void peanoclaw::tests::GhostLayerCompositorTest::testInterpolationFromCoarseToFi
     numerics,
     false
   );
-  ghostLayerCompositor.fillGhostLayers(-1);
+  ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(-1);
 
   assignList(subcellIndex) = -2, 0;
   validateNumericalEquals(patches[0].getValueUOld(subcellIndex, 0), 65.0/9.0);
@@ -288,7 +287,7 @@ void peanoclaw::tests::GhostLayerCompositorTest::testInterpolationFromCoarseToFi
     numerics,
     false
   );
-  ghostLayerCompositor.fillGhostLayers(-1);
+  ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(-1);
 
   assignList(subcellIndex) = 2, 0;
   validateNumericalEquals(patches[3].getValueUOld(subcellIndex, 0), 29.0/9.0);
@@ -601,7 +600,7 @@ void peanoclaw::tests::GhostLayerCompositorTest::testInterpolationInTime() {
         true
       );
   //TODO Add a test for filling only one adjacent patch? (i.e. parameter != -1)
-  ghostLayerCompositor.fillGhostLayers(-1);
+  ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(-1);
 
   assignList(subcellIndex) = -1, 0;
   validateNumericalEquals(destinationPatch.getValueUOld(subcellIndex, 0), 320.0/3.0);
