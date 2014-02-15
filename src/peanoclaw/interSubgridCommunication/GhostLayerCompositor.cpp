@@ -7,6 +7,7 @@
 
 #include "peanoclaw/interSubgridCommunication/GhostLayerCompositor.h"
 
+#include "peanoclaw/interSubgridCommunication/Extrapolation.h"
 #include "peanoclaw/interSubgridCommunication/GhostlayerCompositorFunctors.h"
 #include "peanoclaw/interSubgridCommunication/aspects/FaceAdjacentPatchTraversal.h"
 #include "peanoclaw/interSubgridCommunication/aspects/EdgeAdjacentPatchTraversal.h"
@@ -98,6 +99,87 @@ bool peanoclaw::interSubgridCommunication::GhostLayerCompositor::shouldTransferG
             || (source.isLeaf() && !destination.getTimeIntervals().isBlockedByNeighbors()));
 }
 
+void peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillGhostlayerManifoldsAndUpdateNeighborTime(
+  int destinationSubgridIndex,
+  int dimensionality
+) {
+  UpdateNeighborTimeFunctor functor(
+    *this
+  );
+
+  if(dimensionality == DIMENSIONS - 1) {
+    //Faces
+    FillGhostlayerFaceFunctor faceFunctor(
+      *this,
+      destinationSubgridIndex
+    );
+    peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
+        _patches,
+        functor
+    );
+    peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<FillGhostlayerFaceFunctor>(
+        _patches,
+        faceFunctor
+    );
+  } else if(dimensionality == DIMENSIONS - 2) {
+    //Edges
+    FillGhostlayerEdgeFunctor edgeFunctor(
+      *this,
+      destinationSubgridIndex
+    );
+    peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
+        _patches,
+        functor
+    );
+    peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<FillGhostlayerEdgeFunctor>(
+        _patches,
+        edgeFunctor
+    );
+  } else if(dimensionality == DIMENSIONS - 3) {
+    #ifdef Dim3
+    //Corners
+    FillGhostlayerCornerFunctor cornerFunctor(
+      *this,
+      destinationSubgridIndex
+    );
+    peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
+        _patches,
+        functor
+    );
+    peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<FillGhostlayerCornerFunctor>(
+        _patches,
+        cornerFunctor
+    );
+    #else
+    assertionFail("Only valid for 3D!");
+    #endif
+  }
+}
+
+void peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillOrExtrapolateGhostlayersAndUpdateNeighborTime(
+  int destinationSubgridIndex
+) {
+  int extrapolationUpToDimension = DIMENSIONS-2;
+  int fillingUpToDimension = DIMENSIONS-1;
+  Extrapolation extrapolation(_patches[destinationSubgridIndex]);
+
+  double maximalGradient = 0;
+  do {
+
+    for(int dimensionality = extrapolationUpToDimension + 1; dimensionality <= fillingUpToDimension; dimensionality++) {
+      fillGhostlayerManifoldsAndUpdateNeighborTime(destinationSubgridIndex, dimensionality);
+    }
+    fillingUpToDimension = extrapolationUpToDimension;
+
+    for(int dimensionality = 0; dimensionality <= extrapolationUpToDimension; dimensionality++) {
+      double maximalGradientForDimensionality = extrapolation.extrapolateManifolds(dimensionality);
+      maximalGradient = std::max(maximalGradient, maximalGradientForDimensionality);
+    }
+
+    extrapolationUpToDimension--;
+  } while(maximalGradient > 1.0/(extrapolationUpToDimension+2) && extrapolationUpToDimension > -1);
+}
+
 peanoclaw::interSubgridCommunication::GhostLayerCompositor::GhostLayerCompositor(
   peanoclaw::Patch patches[TWO_POWER_D],
   int level,
@@ -107,7 +189,7 @@ peanoclaw::interSubgridCommunication::GhostLayerCompositor::GhostLayerCompositor
   _patches(patches),
   _level(level),
   _numerics(numerics),
-  _useDimensionalSplittingOptimization(/*useDimensionalSplittingOptimization*/false) //TODO unterweg debug
+  _useDimensionalSplittingOptimization(useDimensionalSplittingOptimization)
 {
 }
 
@@ -212,92 +294,59 @@ void peanoclaw::interSubgridCommunication::GhostLayerCompositor::updateNeighborT
 }
 
 void peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillGhostLayersAndUpdateNeighborTimes(
-  int destinationPatchIndex
+  int destinationSubgridIndex
 ) {
   logTraceIn("fillGhostLayersAndUpdateNeighborTimes(int)");
 
-  UpdateNeighborTimeFunctor functor(
-    *this
-  );
-
-  //Faces
-  FillGhostlayerFaceFunctor faceFunctor(
-    *this,
-    destinationPatchIndex
-  );
-  peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
-    _patches,
-    functor
-  );
-  peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<FillGhostlayerFaceFunctor>(
-    _patches,
-    faceFunctor
-  );
-
-  if(!_useDimensionalSplittingOptimization) {
-    //Edges
-    FillGhostlayerEdgeFunctor edgeFunctor(
-      *this,
-      destinationPatchIndex
-    );
-    peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
-      _patches,
-      functor
-    );
-    peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<FillGhostlayerEdgeFunctor>(
-      _patches,
-      edgeFunctor
-    );
-
-    //Corners
-    #ifdef Dim3
-    FillGhostlayerCornerFunctor cornerFunctor(
-      *this,
-      destinationPatchIndex
-    );
-    peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
-      _patches,
-      functor
-    );
-    peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<FillGhostlayerCornerFunctor>(
-      _patches,
-      cornerFunctor
-    );
-    #endif
+  if(_useDimensionalSplittingOptimization) {
+    if(destinationSubgridIndex == -1) {
+      for(int i = 0; i < TWO_POWER_D; i++) {
+        if(_patches[i].isValid() && _patches[i].isLeaf()) {
+          fillOrExtrapolateGhostlayersAndUpdateNeighborTime(i);
+        }
+      }
+    } else {
+      if(_patches[destinationSubgridIndex].isValid()
+          && (_patches[destinationSubgridIndex].isLeaf() || _patches[destinationSubgridIndex].isVirtual())) {
+        fillOrExtrapolateGhostlayersAndUpdateNeighborTime(destinationSubgridIndex);
+      }
+    }
   } else {
-
+    for(int dimensionality = 0; dimensionality < DIMENSIONS; dimensionality++) {
+      fillGhostlayerManifoldsAndUpdateNeighborTime(destinationSubgridIndex, dimensionality);
+    }
   }
   logTraceOut("fillGhostLayersAndUpdateNeighborTimes(int)");
 }
 
-void peanoclaw::interSubgridCommunication::GhostLayerCompositor::updateNeighborTimes() {
-
-  UpdateNeighborTimeFunctor functor(
-    *this
-  );
-
-  //Faces
-  peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
-    _patches,
-    functor
-  );
-
-  if(!_useDimensionalSplittingOptimization) {
-    //Edges
-    peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
-      _patches,
-      functor
-    );
-
-    //Corners
-    #ifdef Dim3
-    peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
-      _patches,
-      functor
-    );
-    #endif
-  }
-}
+//void peanoclaw::interSubgridCommunication::GhostLayerCompositor::updateNeighborTimes() {
+//
+//  UpdateNeighborTimeFunctor functor(
+//    *this
+//  );
+//
+//  //Faces
+//  peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
+//    _patches,
+//    functor
+//  );
+//
+//  if(!_useDimensionalSplittingOptimization) {
+//    //Edges
+//    peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
+//      _patches,
+//      functor
+//    );
+//
+//    //Corners
+//    #ifdef Dim3
+//    peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<UpdateNeighborTimeFunctor>(
+//      _patches,
+//      functor
+//    );
+//    #endif
+//  }
+//}
 
 void peanoclaw::interSubgridCommunication::GhostLayerCompositor::updateGhostlayerBounds() {
   //Faces
@@ -307,23 +356,21 @@ void peanoclaw::interSubgridCommunication::GhostLayerCompositor::updateGhostlaye
     faceFunctor
   );
 
-  if(!_useDimensionalSplittingOptimization) {
-    //Edges
-    UpdateGhostlayerBoundsEdgeFunctor edgeFunctor(*this);
-    peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<UpdateGhostlayerBoundsEdgeFunctor>(
-      _patches,
-      edgeFunctor
-    );
+  //Edges
+  UpdateGhostlayerBoundsEdgeFunctor edgeFunctor(*this);
+  peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<UpdateGhostlayerBoundsEdgeFunctor>(
+    _patches,
+    edgeFunctor
+  );
 
-    //Corners
-    #ifdef Dim3
-    UpdateGhostlayerBoundsCornerFunctor cornerFunctor(*this);
-    peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<UpdateGhostlayerBoundsCornerFunctor>(
-      _patches,
-      cornerFunctor
-    );
-    #endif
-  }
+  //Corners
+  #ifdef Dim3
+  UpdateGhostlayerBoundsCornerFunctor cornerFunctor(*this);
+  peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<UpdateGhostlayerBoundsCornerFunctor>(
+    _patches,
+    cornerFunctor
+  );
+  #endif
 }
 
 void peanoclaw::interSubgridCommunication::GhostLayerCompositor::applyFluxCorrection() {

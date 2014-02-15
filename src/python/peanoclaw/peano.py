@@ -25,7 +25,6 @@ class Peano(object):
   def __init__(self, 
                solution,
                initial_minimal_mesh_width, 
-               use_dimensional_splitting_optimization, 
                ghostlayer_width, 
                dt_initial,
                initialization_callback, 
@@ -74,7 +73,7 @@ class Peano(object):
     else:
       domain_position_x2 = dimensions[2].lower
       domain_size_x2 = dimensions[2].upper - dimensions[2].lower
-   
+      
     self.crank = c_int()
     self.libpeano.pyclaw_peano_new.argtypes = [ c_double, #Initial mesh width
                                                 c_double, #Domain position X0
@@ -117,7 +116,7 @@ class Peano(object):
                                                 ghostlayer_width,
                                                 dt_initial,
                                                 c_char_p(configuration_file),
-                                                False, #use_dimensional_splitting_optimization,
+                                                self.internal_settings.use_dimensional_splitting_optimization,
                                                 self.internal_settings.reduce_reductions,
                                                 initialization_callback.get_initialization_callback(),
                                                 boundary_condition_callback.get_boundary_condition_callback(),
