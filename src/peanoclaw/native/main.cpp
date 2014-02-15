@@ -224,10 +224,14 @@ int main(int argc, char **argv) {
 #if defined(Parallel)
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 #endif
-      for (double time=0.0; time < endtime; time+=timestep) {
+      /*for (double time=0.0; time < endtime; time+=timestep) {
         runner->evolveToTime(time);
         //runner->gatherCurrentSolution();
         std::cout << "time " << time << " done " << std::endl;
+      }*/
+ 
+      for (int i=0; i < 5; ++i) {
+          runner->runNextPossibleTimestep();
       }
 
 #if defined(Parallel)
