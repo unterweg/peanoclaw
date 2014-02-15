@@ -207,6 +207,7 @@ if compiler == 'gcc':
    # if multicore == 'no' or multicore == 'multicore_no':
       # ccflags.append('-Wconversion')
    ccflags.append('-Wno-non-virtual-dtor')
+   ccflags.append('-std=c++11')
    if build == 'debug':
       ccflags.append('-g3')
       ccflags.append('-O0')
@@ -291,6 +292,9 @@ elif solver == 'swe':
   cpppath.append(swePath)
   cppdefines.append('SWE')
   cppdefines.append('NDEBUG')
+  
+  cppdefines.append('WAVE_PROPAGATION_SOLVER=4')
+  cppdefines.append('VECTORIZE')
 else:
   raise Exception("ERROR: solver must be 'pyclaw' or 'swe'")
 
