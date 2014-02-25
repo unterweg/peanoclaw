@@ -116,6 +116,14 @@ if (PEANOCLAW_PYCLAW)
     )
 endif (PEANOCLAW_PYCLAW)
 
+set(PEANOCLAW_SWE
+    src/peanoclaw/native/SWEKernel.cpp   
+    src/peanoclaw/native/SWE_WavePropagationBlock_patch.cpp
+
+    # swe part
+    src/peanoclaw/native/SWE/src/blocks/SWE_Block.cpp
+    src/peanoclaw/native/SWE/src/blocks/SWE_WavePropagationBlock.cpp
+)
 
 set(PEANOCLAW_SOURCES
     src/peanoclaw/Area.cpp
@@ -194,15 +202,9 @@ set(PEANOCLAW_SOURCES
     src/peanoclaw/parallel/PeanoClawControlLoopLoadBalancer.cpp
 
     src/peanoclaw/native/NativeKernel.cpp   
-    src/peanoclaw/native/SWEKernel.cpp   
-    src/peanoclaw/native/SWE_WavePropagationBlock_patch.cpp
-
-    # swe part
-    src/peanoclaw/native/SWE/src/blocks/SWE_Block.cpp
-    src/peanoclaw/native/SWE/src/blocks/SWE_WavePropagationBlock.cpp
 )
 
-execute_process ( COMMAND python -c "from numpy import get_include; print get_include()" OUTPUT_VARIABLE NUMPY_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process ( COMMAND python2 -c "from numpy import get_include; print get_include()" OUTPUT_VARIABLE NUMPY_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -211,11 +213,15 @@ include_directories(
         ${NUMPY_INCLUDE_DIR}
 )
 
-add_definitions(-DSWE -DWAVE_PROPAGATION_SOLVER=1) # TODO: 4 was slow, why?
 
 if (PEANOCLAW_PYCLAW)
     set (PEANOCLAW_SOURCES ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
     set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES} ${PYTHON_LIBRARIES})
+
+else (PEANOCLAW_PYCLAW)
+    add_definitions(-DSWE -DWAVE_PROPAGATION_SOLVER=1) # TODO: 4 was slow, why?
+    set (PEANOCLAW_SOURCES ${PEANOCLAW_SOURCES} ${PEANOCLAW_SWE_SOURCES})
+    set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES})
 endif (PEANOCLAW_PYCLAW) 
 
 if (HDF5_FOUND)
@@ -245,8 +251,15 @@ if (PEANO_OMP)
 endif (PEANO_OMP)
 SET_TARGET_PROPERTIES(peanoclaw PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
 
-add_executable (peanoclaw_run src/peanoclaw/native/main.cpp)
-add_executable (peanoclaw_run_norle src/peanoclaw/native/main.cpp)
+if (PEANOCLAW_PYCLAW)
+    
+    # Placeholder
 
-target_link_libraries (peanoclaw_run peanoclaw_static)
-target_link_libraries (peanoclaw_run_norle peanoclaw_static_norle)
+else (PEANOCLAW_PYCLAW)
+    add_executable (peanoclaw_run src/peanoclaw/native/main.cpp)
+    add_executable (peanoclaw_run_norle src/peanoclaw/native/main.cpp)
+
+    target_link_libraries (peanoclaw_run peanoclaw_static)
+    target_link_libraries (peanoclaw_run_norle peanoclaw_static_norle)
+endif (PEANOCLAW_PYCLAW)
+
