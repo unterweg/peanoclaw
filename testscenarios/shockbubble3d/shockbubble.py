@@ -185,7 +185,7 @@ def shockbubble(use_petsc=False, iplot=False, htmlplot=False, outdir='./_output'
     solver.user_bc_lower = shockbc
     
     claw = pyclaw.Controller()
-    claw.tfinal = 0.1 #1
+    claw.tfinal = 0.001 # 0.1 #1
     claw.num_output_times = 1 #50
     claw.outdir = outdir
     
@@ -209,5 +209,5 @@ def shockbubble(use_petsc=False, iplot=False, htmlplot=False, outdir='./_output'
 if __name__ == "__main__":
     from clawpack.pyclaw.util import run_app_from_main
     output = run_app_from_main(shockbubble)
-    
+    output.solver.teardown() # pyclaw does not call teardown anymore, but we need it to gracefully stop peano!
     
