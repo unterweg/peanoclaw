@@ -155,12 +155,14 @@ class Peano(object):
     import os
     import platform
     import peanoclaw as peanoclaw
-    if platform.system() == 'Linux':
+    # CNK: compute node kernel (BG/P)
+    if platform.system() == 'Linux' or platform.system() == 'CNK':
         shared_library_extension = 'so'
     elif platform.system() == 'Darwin':
         shared_library_extension = 'dylib'
     else:
-        raise("Unsupported operating system. Only Linux and MacOS supported currently.")
+	print("Unsupported operating system. Only Linux based OS and MacOS supported currently: "+platform.system())
+        raise
       
     libraryFileName = os.path.join(os.path.dirname(peanoclaw.__file__), 'libpeano-claw-'+ str(dim)+ 'd' + self.internal_settings.getFilenameSuffix() + '.' + shared_library_extension)
     logging.getLogger('peanoclaw').info(libraryFileName)
