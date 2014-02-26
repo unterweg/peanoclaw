@@ -246,7 +246,7 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
   }
 
   #ifdef Parallel
-  coarseGridCell.setCellIsAForkCandidate(!tarch::la::oneGreater(coarseGridVerticesEnumerator.getCellSize(), _initialMaximalSubgridSize * 3.0)
+  fineGridCell.setCellIsAForkCandidate(!tarch::la::allGreater(fineGridVerticesEnumerator.getCellSize(), _initialMaximalSubgridSize * 3.0)
      || _refinementCriterionEnabled);
   #endif
 

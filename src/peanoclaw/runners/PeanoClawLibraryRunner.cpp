@@ -231,6 +231,10 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
         repeat |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
         iterateInitialiseGrid(); //TODO unterweg: Raus?
         repeat |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+        iterateInitialiseGrid(); //TODO unterweg: Raus?
+        repeat |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+        iterateInitialiseGrid(); //TODO unterweg: Raus?
+        repeat |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
 //        logInfo("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
       } while(repeat);
