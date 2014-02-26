@@ -245,6 +245,11 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
     }
   }
 
+  #ifdef Parallel
+  coarseGridCell.setCellIsAForkCandidate(!tarch::la::oneGreater(coarseGridVerticesEnumerator.getCellSize(), _initialMaximalSubgridSize * 3.0)
+     || _refinementCriterionEnabled);
+  #endif
+
   logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }
 
@@ -502,11 +507,6 @@ void peanoclaw::mappings::InitialiseGrid::enterCell(
     adjacentVertices.refineIfNecessary(patch, patch.getDemandedMeshWidth());
   }
   
-  #ifdef Parallel
-  fineGridCell.setCellIsAForkCandidate(!tarch::la::allGreater(fineGridVerticesEnumerator.getCellSize(), _initialMaximalSubgridSize * 3.0)
-     || _refinementCriterionEnabled);
-  #endif
-
   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 
