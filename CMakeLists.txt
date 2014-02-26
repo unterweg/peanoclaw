@@ -116,7 +116,7 @@ if (PEANOCLAW_PYCLAW)
     )
 endif (PEANOCLAW_PYCLAW)
 
-set(PEANOCLAW_SWE
+set(PEANOCLAW_SWE_SOURCES
     src/peanoclaw/native/SWEKernel.cpp   
     src/peanoclaw/native/SWE_WavePropagationBlock_patch.cpp
 
@@ -236,20 +236,20 @@ set (TOOLBOXES_LIBRARIES
     peano_controllooploadbalancer_shared
     )
 
-add_library (peanoclaw SHARED ${PEANOCLAW_SOURCES})
+add_library (peano-claw-${PEANO_DIMENSIONS}d SHARED ${PEANOCLAW_SOURCES})
 add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES})
 add_library (peanoclaw_static_norle STATIC ${PEANOCLAW_SOURCES})
 SET_TARGET_PROPERTIES(peanoclaw_static_norle PROPERTIES COMPILE_FLAGS "-DnoPackedEmptyHeapMessages" )
 
-target_link_libraries (peanoclaw peano_shared peano_tarch_shared ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
+target_link_libraries (peano-claw-${PEANO_DIMENSIONS}d peano_shared peano_tarch_shared ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
 target_link_libraries (peanoclaw_static peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
 target_link_libraries (peanoclaw_static_norle peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
 
 
 if (PEANO_OMP)
-    SET_TARGET_PROPERTIES(peanoclaw PROPERTIES COMPILE_FLAGS "-fopenmp")
+    SET_TARGET_PROPERTIES(peano-claw-${PEANO_DIMENSIONS}d PROPERTIES COMPILE_FLAGS "-fopenmp")
 endif (PEANO_OMP)
-SET_TARGET_PROPERTIES(peanoclaw PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+SET_TARGET_PROPERTIES(peano-claw-${PEANO_DIMENSIONS}d PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
 
 if (PEANOCLAW_PYCLAW)
     
