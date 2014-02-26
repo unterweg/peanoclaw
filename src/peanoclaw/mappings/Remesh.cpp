@@ -946,7 +946,7 @@ void peanoclaw::mappings::Remesh::enterCell(
 
   #ifdef Parallel
   if(!_isInitializing) {
-    fineGridCell.setCellIsAForkCandidate(true);
+    fineGridCell.setCellIsAForkCandidate(false);
   }
 
   assertionEquals4(patch.getLevel(),

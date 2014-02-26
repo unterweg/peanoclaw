@@ -211,7 +211,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
     state.enableRefinementCriterion(false);
     tarch::la::Vector<DIMENSIONS, double> currentMinimalSubgridSize;
-    int maximumLevel = 2;
+    int maximumLevel = 1;
     do {
 
       logDebug("PeanoClawLibraryRunner", "Iterating with maximumLevel=" << maximumLevel);
@@ -223,13 +223,17 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
       _repository->getState().setInitialMaximalSubgridSize(currentMinimalSubgridSize);
 
       logInfo("PeanoClawLibraryRunner", "Creating grid up to level " << maximumLevel << "...");
+      bool repeat = false;
       do {
+        repeat = false;
         logInfo("PeanoClawLibraryRunner", "Initialize iteration...");
         iterateInitialiseGrid();
+        repeat |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
         iterateInitialiseGrid(); //TODO unterweg: Raus?
+        repeat |= (!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
 
 //        logInfo("PeanoClawLibraryRunner", "stationary: " << _repository->getState().isGridStationary() << ", balanced: " << _repository->getState().isGridBalanced());
-      } while(!_repository->getState().isGridStationary() || !_repository->getState().isGridBalanced());
+      } while(repeat);
 
       maximumLevel += forkLevelIncrement;
     } while(tarch::la::oneGreater(currentMinimalSubgridSize, initialMaximalSubgridSize));
