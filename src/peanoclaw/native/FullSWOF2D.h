@@ -178,7 +178,7 @@ public:
 
 class peanoclaw::native::FullSWOF2D_Parameters : public Parameters {
     public:
-        FullSWOF2D_Parameters(Patch& patch);
+        FullSWOF2D_Parameters(Patch& patch, double maximumTimestepSize);
         virtual ~FullSWOF2D_Parameters();
 };
 
