@@ -10,6 +10,10 @@ set(PEANO_DIMENSIONS 2 CACHE STRING "number of dimensions")
 find_package(HDF5 COMPONENTS HL C)
 find_package(VTK)
 
+# for mekka scenario
+find_package(PkgConfig)
+pkg_search_module(NETCDF netcdf>=4)
+
 #include_directories(${HDF5_INCLUDE_DIRS})
 
 #add_definitions(-DDim${PEANO_DIMENSIONS} -DParallel -DSharedTBB -DSharedMemoryParallelisation -DAsserts -DDebug -DTrace)
@@ -103,6 +107,9 @@ set(Python_ADDITIONAL_VERSIONS "2.7")
 find_package(PythonLibs)
 
 option (PEANOCLAW_PYCLAW "enable PyClaw support")
+option (PEANOCLAW_SWE "enable SWE support")
+option (PEANOCLAW_FULLSWOF2D "enable FullSWOF2D support")
+
 if (PEANOCLAW_PYCLAW)
     add_definitions(-DPEANOCLAW_PYCLAW)
 
@@ -116,14 +123,106 @@ if (PEANOCLAW_PYCLAW)
     )
 endif (PEANOCLAW_PYCLAW)
 
-set(PEANOCLAW_SWE_SOURCES
-    src/peanoclaw/native/SWEKernel.cpp   
-    src/peanoclaw/native/SWE_WavePropagationBlock_patch.cpp
+if (PEANOCLAW_SWE)
+    add_definitions(-DPEANOCLAW_SWE)
 
-    # swe part
-    src/peanoclaw/native/SWE/src/blocks/SWE_Block.cpp
-    src/peanoclaw/native/SWE/src/blocks/SWE_WavePropagationBlock.cpp
-)
+    set(PEANOCLAW_SWE_SOURCES
+        src/peanoclaw/native/SWEKernel.cpp   
+        src/peanoclaw/native/SWE_WavePropagationBlock_patch.cpp
+
+        # scenarios
+        src/peanoclaw/native/BreakingDam.cpp
+        src/peanoclaw/native/MekkaFlood.cpp
+        src/peanoclaw/native/BathymetryHelper.cpp
+
+        # swe part
+        src/peanoclaw/native/SWE/src/blocks/SWE_Block.cpp
+        src/peanoclaw/native/SWE/src/blocks/SWE_WavePropagationBlock.cpp
+    )
+endif(PEANOCLAW_SWE)
+
+if (PEANOCLAW_FULLSWOF2D)
+    add_definitions(-DPEANOCLAW_FULLSWOF2D)
+
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libboundaryconditions)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libflux)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libfrictions)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libinitializations)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/liblimitations)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libparameters)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libparser)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/librain_infiltration)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libreconstructions)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libsave)
+    include_directories(src/peanoclaw/native/FullSWOF_2D/Headers/libschemes)
+
+    set(PEANOCLAW_FULLSWOF2D_SOURCES
+        src/peanoclaw/native/FullSWOF_2D/Sources/libboundaryconditions/bc_imp_discharge.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libboundaryconditions/bc_imp_height.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libboundaryconditions/bc_neumann.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libboundaryconditions/bc_periodic.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libboundaryconditions/bc_wall.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libboundaryconditions/boundary_condition.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libboundaryconditions/choice_condition.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libflux/choice_flux.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libflux/f_hll2.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libflux/f_hll.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libflux/flux.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libflux/f_rusanov.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libfrictions/choice_friction.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libfrictions/fr_darcy_weisbach.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libfrictions/friction.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libfrictions/fr_manning.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libfrictions/no_friction.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/choice_init_huv.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/choice_init_topo.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/huv_generated.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/huv_generated_radial_dam_dry.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/huv_generated_radial_dam_wet.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/huv_generated_thacker.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/huv_read.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/initialization_huv.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/initialization_topo.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/topo_generated_flat.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/topo_generated_thacker.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libinitializations/topo_read.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/liblimitations/choice_limiter.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/liblimitations/limiter.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/liblimitations/minmod.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/liblimitations/vanalbada.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/liblimitations/vanleer.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libparameters/parameters.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libparser/parser.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/choice_infiltration.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/choice_rain.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/greenampt.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/infiltration.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/no_infiltration.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/no_rain.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/rain.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/rain_generated.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/rain_read.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libreconstructions/choice_reconstruction.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libreconstructions/eno.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libreconstructions/eno_mod.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libreconstructions/hydrostatic.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libreconstructions/muscl.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libreconstructions/reconstruction.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libsave/choice_output.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libsave/gnuplot.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libsave/no_evolution_file.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libsave/output.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libsave/vtk_out.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libschemes/choice_scheme.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libschemes/order1.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libschemes/order2.cpp
+        src/peanoclaw/native/FullSWOF_2D/Sources/libschemes/scheme.cpp
+
+        src/peanoclaw/native/FullSWOF2D.cpp
+
+        src/peanoclaw/native/dem.cpp
+    )
+endif(PEANOCLAW_FULLSWOF2D)
 
 set(PEANOCLAW_SOURCES
     src/peanoclaw/Area.cpp
@@ -217,12 +316,18 @@ include_directories(
 if (PEANOCLAW_PYCLAW)
     set (PEANOCLAW_SOURCES ${PEANOCLAW_SOURCES} ${PEANOCLAW_PYCLAW_SOURCES})
     set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES} ${PYTHON_LIBRARIES})
+endif (PEANOCLAW_PYCLAW)
 
-else (PEANOCLAW_PYCLAW)
+if (PEANOCLAW_SWE)
     add_definitions(-DSWE -DWAVE_PROPAGATION_SOLVER=1) # TODO: 4 was slow, why?
     set (PEANOCLAW_SOURCES ${PEANOCLAW_SOURCES} ${PEANOCLAW_SWE_SOURCES})
     set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES})
-endif (PEANOCLAW_PYCLAW) 
+endif (PEANOCLAW_SWE) 
+
+if (PEANOCLAW_FULLSWOF2D)
+    set (PEANOCLAW_SOURCES ${PEANOCLAW_SOURCES} ${PEANOCLAW_FULLSWOF2D_SOURCES})
+    set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES})
+endif (PEANOCLAW_FULLSWOF2D) 
 
 if (HDF5_FOUND)
     set (PEANOCLAW_LIBRARIES ${PEANOCLAW_LIBRARIES} -lhdf5)
@@ -234,17 +339,16 @@ endif (PEANO_TBB)
 
 set (TOOLBOXES_LIBRARIES
     peano_controllooploadbalancer_shared
-    )
+)
 
 add_library (peano-claw-${PEANO_DIMENSIONS}d SHARED ${PEANOCLAW_SOURCES})
 add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES})
 add_library (peanoclaw_static_norle STATIC ${PEANOCLAW_SOURCES})
 SET_TARGET_PROPERTIES(peanoclaw_static_norle PROPERTIES COMPILE_FLAGS "-DnoPackedEmptyHeapMessages" )
 
-target_link_libraries (peano-claw-${PEANO_DIMENSIONS}d peano_shared peano_tarch_shared ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
+target_link_libraries (peano-claw-${PEANO_DIMENSIONS}d peano_shared  peano_tarch_shared ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES}  ${PEANO_LIBRARIES} ${NETCDF_LIBRARIES})
 target_link_libraries (peanoclaw_static peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
 target_link_libraries (peanoclaw_static_norle peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
-
 
 if (PEANO_OMP)
     SET_TARGET_PROPERTIES(peano-claw-${PEANO_DIMENSIONS}d PROPERTIES COMPILE_FLAGS "-fopenmp")
@@ -252,14 +356,15 @@ endif (PEANO_OMP)
 SET_TARGET_PROPERTIES(peano-claw-${PEANO_DIMENSIONS}d PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
 
 if (PEANOCLAW_PYCLAW)
-    
-    # Placeholder
+ 
+    # placeholder
 
-else (PEANOCLAW_PYCLAW)
+endif (PEANOCLAW_PYCLAW)
+
+if (PEANOCLAW_SWE OR PEANOCLAW_FULLSWOF2D)
     add_executable (peanoclaw_run src/peanoclaw/native/main.cpp)
     add_executable (peanoclaw_run_norle src/peanoclaw/native/main.cpp)
 
-    target_link_libraries (peanoclaw_run peanoclaw_static)
-    target_link_libraries (peanoclaw_run_norle peanoclaw_static_norle)
-endif (PEANOCLAW_PYCLAW)
-
+    target_link_libraries (peanoclaw_run peanoclaw_static ${NETCDF_LIBRARIES})
+    target_link_libraries (peanoclaw_run_norle peanoclaw_static_norle ${NETCDF_LIBRARIES})
+endif (PEANOCLAW_SWE OR PEANOCLAW_FULLSWOF2D)
