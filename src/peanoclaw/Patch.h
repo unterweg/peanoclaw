@@ -492,6 +492,7 @@ public:
   void setValueUOldAndResize(int linearIndex, int unknown, double value);
 
   double getValueAux(tarch::la::Vector<DIMENSIONS, int> subcellIndex, int auxField) const;
+  void setValueAux(tarch::la::Vector<DIMENSIONS, int> subcellIndex, int auxField, double value);
 
   /**
    * Returns whether the subcell is actually stored in the subgrid. I.e. this

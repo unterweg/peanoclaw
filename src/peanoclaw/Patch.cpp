@@ -568,6 +568,15 @@ double peanoclaw::Patch::getValueAux(
   return _uNew->at(_auxArrayIndex + index).getU();
 }
 
+void peanoclaw::Patch::setValueAux(tarch::la::Vector<DIMENSIONS, int> subcellIndex, int auxField, double value) {
+  assertion(isLeaf() || isVirtual());
+  int index = linearize(auxField, subcellIndex);
+  assertion4(index >= 0, index, subcellIndex, auxField, toString());
+  assertion6(_auxArrayIndex+index < static_cast<int>(_uNew->size()), _auxArrayIndex, index, subcellIndex,
+        auxField, static_cast<int>(_uNew->size()), toString());
+  _uNew->at(_auxArrayIndex + index).setU(value);
+}
+
 tarch::la::Vector<DIMENSIONS, double> peanoclaw::Patch::getSubcellCenter(
     tarch::la::Vector<DIMENSIONS, int> subcellIndex) const {
   tarch::la::Vector<DIMENSIONS, double> subcellSize = getSubcellSize();
