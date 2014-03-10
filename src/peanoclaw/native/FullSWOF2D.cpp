@@ -206,8 +206,11 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
   }
 
   double dt = min(scheme->getTimestep(), maximumTimestepSize);
-  double estimatedNextTimestepSize = scheme->getTimestep();
- 
+  double estimatedNextTimestepSize = dt; //scheme->getTimestep();
+
+  // BENCHMARK
+  //dt = 0.00001;
+  //estimatedNextTimestepSize = 0.00001;
 
   //std::cout << "\nComputation finished!" << endl;
   delete wrapper_scheme;
@@ -255,46 +258,45 @@ void peanoclaw::native::FullSWOF2D::fillBoundaryLayer(Patch& patch, int dimensio
     tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
     tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
 
-    if (dimension == 0) {
-        for (int yi = -1; yi < patch.getSubdivisionFactor()(1)+1; yi++) {
-            int xi = setUpper ? patch.getSubdivisionFactor()(0) : -1;
-            src_subcellIndex(0) = xi;
-            src_subcellIndex(1) = yi;
-            src_subcellIndex(dimension) += setUpper ? -1 : +1; 
-
+    if (dimension == 0) { // left and right boundary
+        for (int yi = -2; yi < patch.getSubdivisionFactor()(1)+2; yi++) {
+            int xi = setUpper ? patch.getSubdivisionFactor()(0)-1 : 0;
             dest_subcellIndex(0) = xi;
             dest_subcellIndex(1) = yi;
-     
-            for (int unknown=0; unknown < patch.getUnknownsPerSubcell(); unknown++) {
-                double q = patch.getValueUOld(src_subcellIndex, unknown);
+            patch.setValueUOld(dest_subcellIndex, 3, 1000.0);
 
-                if (unknown == dimension + 1) {
-                    patch.setValueUOld(dest_subcellIndex, unknown, -q);
-                } else {
-                    patch.setValueUOld(dest_subcellIndex, unknown, q);
-                }
-            }
+            // only mirror orthogonal velocities
+            patch.setValueUOld(dest_subcellIndex, 1, -patch.getValueUOld(dest_subcellIndex, 2));
+            patch.setValueUOld(dest_subcellIndex, 4, -patch.getValueUOld(dest_subcellIndex, 5));
+
+            xi = setUpper ? patch.getSubdivisionFactor()(0)-2 : 1;
+            dest_subcellIndex(0) = xi;
+            dest_subcellIndex(1) = yi;
+            patch.setValueUOld(dest_subcellIndex, 3, 1000.0);
+ 
+            // only mirror orthogonal velocities
+            patch.setValueUOld(dest_subcellIndex, 1, -patch.getValueUOld(dest_subcellIndex, 2));
+            patch.setValueUOld(dest_subcellIndex, 4, -patch.getValueUOld(dest_subcellIndex, 5));
         }
-
-    } else {
-        for (int xi = -1; xi < patch.getSubdivisionFactor()(0)+1; xi++) {
-            int yi = setUpper ? patch.getSubdivisionFactor()(1) : -1;
-            src_subcellIndex(0) = xi;
-            src_subcellIndex(1) = yi;
-            src_subcellIndex(dimension) += setUpper ? -1 : +1; 
-
+    } else { // top and bottom boundary
+        for (int xi = -2; xi < patch.getSubdivisionFactor()(0)+2; xi++) {
+            int yi = setUpper ? patch.getSubdivisionFactor()(1)-1 : 0;
             dest_subcellIndex(0) = xi;
             dest_subcellIndex(1) = yi;
-     
-            for (int unknown=0; unknown < patch.getUnknownsPerSubcell(); unknown++) {
-                double q = patch.getValueUOld(src_subcellIndex, unknown);
+            patch.setValueUOld(dest_subcellIndex, 3, 1000.0);
+            
+            // only mirror orthogonal velocities
+            patch.setValueUOld(dest_subcellIndex, 2, -patch.getValueUOld(dest_subcellIndex, 2));
+            patch.setValueUOld(dest_subcellIndex, 5, -patch.getValueUOld(dest_subcellIndex, 5));
 
-                if (unknown == dimension + 1) {
-                    patch.setValueUOld(dest_subcellIndex, unknown, -q);
-                } else {
-                    patch.setValueUOld(dest_subcellIndex, unknown, q);
-                }
-            }
+            yi = setUpper ? patch.getSubdivisionFactor()(1)-2 : 1;
+            dest_subcellIndex(0) = xi;
+            dest_subcellIndex(1) = yi;
+            patch.setValueUOld(dest_subcellIndex, 3, 1000.0);
+ 
+            // only mirror orthogonal velocities
+            patch.setValueUOld(dest_subcellIndex, 2, -patch.getValueUOld(dest_subcellIndex, 2));
+            patch.setValueUOld(dest_subcellIndex, 5, -patch.getValueUOld(dest_subcellIndex, 5));
         }
     }
 #else
@@ -393,9 +395,9 @@ peanoclaw::native::FullSWOF2D_Parameters::FullSWOF2D_Parameters(Patch& patch, do
 	
    flux = 2; // 1 = rusanov 2 = HLL 3 = HLL2
    rec = 1;
-   fric = 0;
+   fric = 2; // Friction law (0=NoFriction 1=Manning 2=Darcy-Weisbach)  <fric>:: 0
    lim = 1;
-   inf = 0;
+   inf = 1; // Infiltration model (0=No Infiltration 1=Green-Ampt)
    topo = 2; // flat topogrophy, just prevent it from loading data as we will fill the data in later on
    huv_init = 2; // initialize h,v and u to 0
    rain = 2; // 2: rain is generated, basically its just an auxillary array which is filled with time dependent data (we can couple this evolveToTime)
