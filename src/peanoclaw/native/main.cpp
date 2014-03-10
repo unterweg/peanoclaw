@@ -27,91 +27,12 @@
 #endif
 
 #if defined(SWE)
-class BreakingDam_SWEKernelScenario : public peanoclaw::native::SWEKernelScenario {
-    public:
-        BreakingDam_SWEKernelScenario() {}
-        ~BreakingDam_SWEKernelScenario() {}
+#include "peanoclaw/native/BreakingDam.h"
+#endif
 
-        virtual void initializePatch(peanoclaw::Patch& patch) {
-            // dam coordinates
-            double x0=10/3.0;
-            double y0=10/3.0;
-            
-            // Riemann states of the dam break problem
-            double radDam = 1;
-            double hl = 2.;
-            double ul = 0.;
-            double vl = 0.;
-            double hr = 1.;
-            double ur = 0.;
-            double vr = 0.;
-            
-            // compute from mesh data
-            const tarch::la::Vector<DIMENSIONS, double> patchSize = patch.getSize();
-            const tarch::la::Vector<DIMENSIONS, double> patchPosition = patch.getPosition();
-            const tarch::la::Vector<DIMENSIONS, double> meshWidth = patch.getSubcellSize();
-
-            tarch::la::Vector<DIMENSIONS, int> subcellIndex;
-            for (int yi = 0; yi < patch.getSubdivisionFactor()(1); yi++) {
-                for (int xi = 0; xi < patch.getSubdivisionFactor()(0); xi++) {
-                    subcellIndex(0) = xi;
-                    subcellIndex(1) = yi;
-         
-                    double X = patchPosition(0) + xi*meshWidth(0);
-                    double Y = patchPosition(1) + yi*meshWidth(1);
-         
-                    double r = sqrt((X-x0)*(X-x0) + (Y-y0)*(Y-y0));
-                    double q0 = hl*(r<=radDam) + hr*(r>radDam);
-                    double q1 = hl*ul*(r<=radDam) + hr*ur*(r>radDam);
-                    double q2 = hl*vl*(r<=radDam) + hr*vr*(r>radDam);
-          
-                    patch.setValueUNew(subcellIndex, 0, q0);
-                    patch.setValueUNew(subcellIndex, 1, q1);
-                    patch.setValueUNew(subcellIndex, 2, q2);
-                }
-            }
-        }
-
-        virtual double computeDemandedMeshWidth(peanoclaw::Patch& patch) {
-            double max_gradient = 0.0;
-            const tarch::la::Vector<DIMENSIONS, double> meshWidth = patch.getSubcellSize();
-            
-            tarch::la::Vector<DIMENSIONS, int> this_subcellIndex;
-            tarch::la::Vector<DIMENSIONS, int> next_subcellIndex_x;
-            tarch::la::Vector<DIMENSIONS, int> next_subcellIndex_y;
-            for (int yi = 0; yi < patch.getSubdivisionFactor()(1)-1; yi++) {
-                for (int xi = 0; xi < patch.getSubdivisionFactor()(0)-1; xi++) {
-                    this_subcellIndex(0) = xi;
-                    this_subcellIndex(1) = yi;
-          
-                    next_subcellIndex_x(0) = xi+1;
-                    next_subcellIndex_x(1) = yi;
-          
-                    next_subcellIndex_y(0) = xi;
-                    next_subcellIndex_y(1) = yi+1;
-         
-                    double q0 =  patch.getValueUNew(this_subcellIndex, 0);
-                    double q0_x =  (patch.getValueUNew(next_subcellIndex_x, 0) - q0) / meshWidth(0);
-                    double q0_y =  (patch.getValueUNew(next_subcellIndex_y, 0) - q0) / meshWidth(1);
-
-                    max_gradient = fmax(max_gradient, sqrt(fabs(q0_x)*fabs(q0_x) + fabs(q0_y)*fabs(q0_y)));
-                }
-            }
-          
-            double demandedMeshWidth = patch.getSubcellSize()(0);
-            if (max_gradient > 0.1) {
-                //demandedMeshWidth = 1.0/243;
-                demandedMeshWidth = 10.0/9/27;
-            } else if (max_gradient < 0.5) {
-                //demandedMeshWidth = 10.0/130/27;
-                demandedMeshWidth = 10.0/9/27;
-            } else {
-              demandedMeshWidth = patch.getSubcellSize()(0);
-            }
-
-            return demandedMeshWidth;
-        }
-};
+#if defined(PEANOCLAW_FULLSWOF2D)
+#include "peanoclaw/native/MekkaFlood.h"
+#include "peanoclaw/native/dem.h"
 #endif
 
 static peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid* _configuration;
@@ -137,7 +58,7 @@ int main(int argc, char **argv) {
 
   // Configure the output
   tarch::logging::CommandLineLogger::getInstance().clearFilterList();
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", true ) );
   //tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
 //  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "trace", true ) );
 
@@ -166,25 +87,76 @@ int main(int argc, char **argv) {
   //PyClaw - this object is copied to the runner and is stored there.
   peanoclaw::NumericsFactory numericsFactory;
 
-#if defined(SWE)
-  BreakingDam_SWEKernelScenario scenario;
-  peanoclaw::Numerics* numerics = numericsFactory.createSWENumerics(scenario);
-
+#if defined(SWE) || defined(PEANOCLAW_FULLSWOF2D)
   _configuration = new peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid;
   // assertion1(_configuration->isValid(), _configuration);
 
   //Construct parameters
-  tarch::la::Vector<DIMENSIONS, double> domainOffset(0);
-  tarch::la::Vector<DIMENSIONS, double> domainSize(10.0);
+ 
+#if defined(PEANOCLAW_FULLSWOF2D)
+    DEM dem;
+
+    dem.load("DEM_050cm.bin");
+
+    MekkaFlood_SWEKernelScenario scenario(dem);
+    peanoclaw::Numerics* numerics = numericsFactory.createFullSWOF2DNumerics(scenario);
+ 
+    tarch::la::Vector<DIMENSIONS, double> domainOffset;
+
+    // TODO: aaarg Y U NO PLOT CORRECTLY! -> work around established
+    domainOffset(0) = 0.0; //dem.lower_left(0);
+    domainOffset(1) = 0.0; //dem.lower_left(1);
+
+    tarch::la::Vector<DIMENSIONS, double> domainSize;
+    double upper_right_0 = dem.upper_right(0);
+    double upper_right_1 = dem.upper_right(1);
+ 
+    double lower_left_0 = dem.lower_left(0);
+    double lower_left_1 = dem.lower_left(1);
+ 
+    double x_size = upper_right_0 - lower_left_0;
+    double y_size = upper_right_1 - lower_left_1;
+ 
+    domainSize(0) = x_size;
+    domainSize(1) = y_size;
+
+    // keep aspect ratio of map: 4000 3000: ratio 4:3
+    tarch::la::Vector<DIMENSIONS, int> subdivisionFactor;
+    subdivisionFactor(0) = static_cast<int>(24); //  6 * 4
+    subdivisionFactor(1) = static_cast<int>(18); //  6 * 3
+
+    double min_domainSize = std::min(domainSize(0),domainSize(1));
+    int min_subdivisionFactor = std::min(subdivisionFactor(0),subdivisionFactor(1));
+
+    tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(min_domainSize/min_subdivisionFactor);
+
+    int ghostlayerWidth = 2;
+    int unknownsPerSubcell = 6;
+
+    int initialTimestepSize = 10.0;
+
+
+#else
+    BreakingDam_SWEKernelScenario scenario;
+    peanoclaw::Numerics* numerics = numericsFactory.createSWENumerics(scenario);
+ 
+    tarch::la::Vector<DIMENSIONS, double> domainOffset(0);
+    tarch::la::Vector<DIMENSIONS, double> domainSize(1.0);
+    tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(domainSize(0)/6/27);
+
+    int ghostlayerWidth = 1;
+    int unknownsPerSubcell = 3;
+
+    int initialTimestepSize = 0.1;
+ 
+    tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(6);
+#endif
+  
   //tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(10.0/130/27);
   //tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(130);
-  tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(10.0/9/27);
-  tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(9);
-  int ghostlayerWidth = 1;
-  int unknownsPerSubcell = 3;
-  int auxiliarFieldsPerSubcell = 0;
-  int initialTimestepSize = 0.1;
+  int auxiliarFieldsPerSubcell = 1;
   bool useDimensionalSplittingOptimization = true;
+ 
 
   //Check parameters
   assertion1(tarch::la::greater(domainSize(0), 0.0) && tarch::la::greater(domainSize(1), 0.0), domainSize);
@@ -219,20 +191,20 @@ int main(int argc, char **argv) {
   assertion(runner != 0);
  
   // run experiment
-  double timestep = 0.001;
-  double endtime = 0.1; //1.0; //2.0;
+  double timestep = 10.0;
+  double endtime = 10000.0; //1.0; //2.0;
 #if defined(Parallel)
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 #endif
-      /*for (double time=0.0; time < endtime; time+=timestep) {
+      for (double time=0.0; time < endtime; time+=timestep) {
         runner->evolveToTime(time);
         //runner->gatherCurrentSolution();
         std::cout << "time " << time << " done " << std::endl;
-      }*/
- 
-      for (int i=0; i < 5; ++i) {
-          runner->runNextPossibleTimestep();
       }
+ 
+      /*for (int i=0; i < 20; ++i) {
+          runner->runNextPossibleTimestep();
+      }*/
 
 #if defined(Parallel)
   } else {
