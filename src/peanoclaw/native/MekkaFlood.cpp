@@ -101,7 +101,8 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
     //double mekka_distance = sqrt((mekkaPosition(0)-patchCenter(0))*(mekkaPosition(0)-patchCenter(0)) + (mekkaPosition(1)-patchCenter(1))*(mekkaPosition(1)-patchCenter(1)));
  
     const tarch::la::Vector<DIMENSIONS, double> meshWidth = patch.getSubcellSize();
-   
+    const tarch::la::Vector<DIMENSIONS, int> subdivisionFactor = patch.getSubdivisionFactor();
+  
     // update bathymetry (gets somehow lost)
     double x_size = dem.upper_right(0) - dem.lower_left(0);
     double y_size = dem.upper_right(1) - dem.lower_left(1);
@@ -111,8 +112,8 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
     double radDam = 0.05*std::min(x_size,y_size);
     bool isInsideCircle = false;
     tarch::la::Vector<DIMENSIONS, int> subcellIndex;
-    for (int yi = -1; yi < patch.getSubdivisionFactor()(1)+1; yi++) {
-        for (int xi = -1; xi < patch.getSubdivisionFactor()(0)+1; xi++) {
+    for (int yi = -1; yi < subdivisionFactor(1)+1; yi++) {
+        for (int xi = -1; xi < subdivisionFactor(0)+1; xi++) {
             subcellIndex(0) = xi;
             subcellIndex(1) = yi;
  
@@ -121,14 +122,14 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
   
             tarch::la::Vector<DIMENSIONS, double> coords = mapMeshToCoordinates(X, Y);
             //double bathymetry = bathymetryHelper.getHeight(coords(0),coords(1));
-            double bathymetry = dem(0.0, 0.0);
+            //double bathymetry = dem(0.0, 0.0);
 
             double r = sqrt((X-x0)*(X-x0) + (Y-y0)*(Y-y0));
 
             //bathymetry = 0.0; // BENCHMARK
             
             if (yi >= 0 && xi >= 0 
-                && yi < patch.getSubdivisionFactor()(1) && xi < patch.getSubdivisionFactor()(0)
+                && yi < subdivisionFactor(1) && xi < subdivisionFactor(0)
                ) {
                 //patch.setValueAux(subcellIndex, 0,  bathymetry);
             }
@@ -141,8 +142,8 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
     // try to adapt to bathymetry
     // loop starts at one, due to central finite differences
     double max_curvature = 0.0; // second derivative
-    for (int yi = 1; yi < patch.getSubdivisionFactor()(1)-1; yi++) {
-        for (int xi = 1; xi < patch.getSubdivisionFactor()(0)-1; xi++) {
+    for (int yi = 1; yi < subdivisionFactor(1)-1; yi++) {
+        for (int xi = 1; xi < subdivisionFactor(0)-1; xi++) {
             subcellIndex(0) = xi;
             subcellIndex(1) = yi;
             double bathemetry_11= patch.getValueAux(subcellIndex, 0);
@@ -171,6 +172,60 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
         }
     }
 
+
+      // compute spatial gradient for u and v
+      double dx = patch.getSubcellSize()(0);
+      double dy = patch.getSubcellSize()(1);
+      
+      double max_gradient = 0.0;
+      for (int x = 1; x < subdivisionFactor(0)-1; x++) {
+            for (int y = 1; y < subdivisionFactor(1); y++) {
+              subcellIndex(0) = x-1;
+              subcellIndex(1) = y;
+              double u_01 = patch.getValueUNew(subcellIndex, 0);
+             
+              subcellIndex(0) = x+1;
+              subcellIndex(1) = y;
+              double u_21 = patch.getValueUNew(subcellIndex, 0);
+              
+              subcellIndex(0) = x;
+              subcellIndex(1) = y-1;
+              double v_10 = patch.getValueUNew(subcellIndex, 0);
+             
+              subcellIndex(0) = x;
+              subcellIndex(1) = y+1;
+              double v_12 = patch.getValueUNew(subcellIndex, 0);
+
+              double du = (u_21 - u_01)/(2*dx);
+              double dv = (v_12 - v_10)/(2*dy);
+
+              max_gradient = std::max(max_gradient, std::abs(du));
+              max_gradient = std::max(max_gradient, std::abs(dv));
+            }
+      }
+
+    double min_meshwidth = std::min(meshWidth(0),meshWidth(1));
+    double min_domainsize = std::min(x_size,y_size);
+    int min_subdivisionFactor = std::min(subdivisionFactor(0),subdivisionFactor(1));
+
+    retval = min_meshwidth;
+    /*if (max_gradient > 0.5) {
+        retval = retval / (3.0 * min_subdivisionFactor);
+    } else {
+        retval = retval * (3.0 * min_subdivisionFactor);
+    }*/
+ 
+    // ensure minimum refinement
+    if (retval > min_domainsize / min_subdivisionFactor) {
+        retval = min_domainsize / min_subdivisionFactor;
+    } 
+ 
+    // ensure maximum refinement
+    if (retval < min_domainsize / (1.0 * min_subdivisionFactor)) { 
+        retval = min_domainsize / (1.0 * min_subdivisionFactor);
+    } 
+
+
     /*if (mekka_distance > outerRadius) {
         retval = domainSize/6/243;
     } else {
@@ -191,7 +246,6 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
         retval = meshWidth(0);
     }*/
 
-    retval = std::min(x_size,y_size) / (27.0 * 6.0);
     return retval;
 }
 
