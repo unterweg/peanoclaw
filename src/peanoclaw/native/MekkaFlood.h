@@ -30,6 +30,9 @@ class MekkaFlood_SWEKernelScenario : public peanoclaw::native::SWEKernelScenario
 
         virtual void initializePatch(peanoclaw::Patch& patch);
         virtual double computeDemandedMeshWidth(peanoclaw::Patch& patch);
+        virtual void update(peanoclaw::Patch& patch);
+ 
+        int scale;
 
     private:
         tarch::la::Vector<DIMENSIONS, double> mapCoordinatesToMesh(double longitude, double latitude);
@@ -39,6 +42,8 @@ class MekkaFlood_SWEKernelScenario : public peanoclaw::native::SWEKernelScenario
 
         DEM& dem;
         //BathymetryHelper bathymetryHelper;
+        
+
 };
 #endif
 

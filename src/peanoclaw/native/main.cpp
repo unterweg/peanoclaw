@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
   // Configure the output
   tarch::logging::CommandLineLogger::getInstance().clearFilterList();
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", true ) );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
   //tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
 //  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "trace", true ) );
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 #if defined(PEANOCLAW_FULLSWOF2D)
     DEM dem;
 
-    dem.load("DEM_050cm.bin");
+    dem.load("DEM_400cm.bin");
 
     MekkaFlood_SWEKernelScenario scenario(dem);
     peanoclaw::Numerics* numerics = numericsFactory.createFullSWOF2DNumerics(scenario);
@@ -104,8 +104,10 @@ int main(int argc, char **argv) {
     tarch::la::Vector<DIMENSIONS, double> domainOffset;
 
     // TODO: aaarg Y U NO PLOT CORRECTLY! -> work around established
-    domainOffset(0) = 0.0; //dem.lower_left(0);
-    domainOffset(1) = 0.0; //dem.lower_left(1);
+    //domainOffset(0) = dem.lower_left(0);
+    //domainOffset(1) = dem.lower_left(1);
+    domainOffset(0) = 0.0;
+    domainOffset(1) = 0.0;
 
     tarch::la::Vector<DIMENSIONS, double> domainSize;
     double upper_right_0 = dem.upper_right(0);
@@ -114,26 +116,33 @@ int main(int argc, char **argv) {
     double lower_left_0 = dem.lower_left(0);
     double lower_left_1 = dem.lower_left(1);
  
-    double x_size = upper_right_0 - lower_left_0;
-    double y_size = upper_right_1 - lower_left_1;
+    double x_size = (upper_right_0 - lower_left_0)/scenario.scale;
+    double y_size = (upper_right_1 - lower_left_1)/scenario.scale;
  
+    // TODO: make central scale parameter in MekkaFlood class
+    // currently we have to change here, meshToCoordinates and initializePatch and computeMeshWidth
     domainSize(0) = x_size;
     domainSize(1) = y_size;
+ 
+    std::cout << "domainSize " << domainSize(0) << " " << domainSize(1) << std::endl;
 
     // keep aspect ratio of map: 4000 3000: ratio 4:3
     tarch::la::Vector<DIMENSIONS, int> subdivisionFactor;
-    subdivisionFactor(0) = static_cast<int>(24); //  6 * 4
-    subdivisionFactor(1) = static_cast<int>(18); //  6 * 3
+    subdivisionFactor(0) = static_cast<int>(96); //  6 * 4, optimum in non optimized version
+    subdivisionFactor(1) = static_cast<int>(54); //  6 * 3, optimum in non optimized version
 
     double min_domainSize = std::min(domainSize(0),domainSize(1));
-    int min_subdivisionFactor = std::min(subdivisionFactor(0),subdivisionFactor(1));
+    double max_domainSize = std::max(domainSize(0),domainSize(1));
 
-    tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(min_domainSize/min_subdivisionFactor);
+    int min_subdivisionFactor = std::min(subdivisionFactor(0),subdivisionFactor(1));
+    int max_subdivisionFactor = std::max(subdivisionFactor(0),subdivisionFactor(1));
+
+    tarch::la::Vector<DIMENSIONS, double> initialMinimalMeshWidth(min_domainSize/(3.0 * max_subdivisionFactor));
 
     int ghostlayerWidth = 2;
     int unknownsPerSubcell = 6;
 
-    int initialTimestepSize = 10.0;
+    double initialTimestepSize = 5.0;
 
 
 #else
@@ -147,7 +156,7 @@ int main(int argc, char **argv) {
     int ghostlayerWidth = 1;
     int unknownsPerSubcell = 3;
 
-    int initialTimestepSize = 0.1;
+    int initialTimestepSize = 0.5;
  
     tarch::la::Vector<DIMENSIONS, int> subdivisionFactor(6);
 #endif
@@ -191,19 +200,23 @@ int main(int argc, char **argv) {
   assertion(runner != 0);
  
   // run experiment
-  double timestep = 10.0;
-  double endtime = 10000.0; //1.0; //2.0;
+  double timestep = initialTimestepSize;
+  double endtime = 100.0;
 #if defined(Parallel)
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 #endif
-      for (double time=0.0; time < endtime; time+=timestep) {
+      for (double time=timestep; time <= endtime; time+=timestep) {
+          peanoclaw::State& state = runner->getState();
         runner->evolveToTime(time);
         //runner->gatherCurrentSolution();
-        std::cout << "time " << time << " done " << std::endl;
+        std::cout << "time " << time << " numberOfCells " << state.getNumberOfInnerCells() << std::endl;
       }
- 
-      /*for (int i=0; i < 20; ++i) {
+  
+      /*for (int i=0; i < 100; ++i) {
           runner->runNextPossibleTimestep();
+ 
+          peanoclaw::State& state = runner->getState();
+          std::cout << "numberOfCells " << state.getNumberOfInnerCells() << std::endl;
       }*/
 
 #if defined(Parallel)

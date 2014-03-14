@@ -176,6 +176,7 @@ class peanoclaw::native::SWEKernelScenario {
         virtual ~SWEKernelScenario() {}
         virtual void initializePatch(Patch& patch) = 0;
         virtual double computeDemandedMeshWidth(Patch& patch) = 0;
+        virtual void update(Patch& patch) = 0;
     protected:
         SWEKernelScenario() {}
 };

@@ -116,3 +116,106 @@ bool DEM::load(FILE* stream) {
 	}
 	return true;
 }
+
+bool DEM::exportOBJ(const std::string& name) const {
+	FILE* fptr = NULL;
+#ifdef _MSC_VER
+	if (fopen_s(&fptr,name.c_str(),"wt")) return false;
+#else
+	fptr = fopen(name.c_str(),"wt");
+	if (fptr==NULL) return false;
+#endif
+	bool bRes = exportOBJ(fptr);
+	fclose(fptr);
+	return bRes;
+}
+
+bool DEM::exportOBJ(FILE* fptr) const {
+	if (fptr==NULL) return false;
+	if (!isValid()) return false;
+	for (int j=0; j<m_dimension[1]; j++) {
+		for (int i=0; i<m_dimension[0]; i++) {
+			double x,y;
+			pixelspace_to_worldspace(x,y,i,j);			
+			fprintf(fptr,"v %g %g %g\n",x,y,m_data[i+j*m_dimension[0]]);
+		}
+	}
+	for (int j=0; j<m_dimension[1]-1; j++) {
+		for (int i=0; i<m_dimension[0]-1; i++) {
+			int idA = i+  j  *m_dimension[0],	idB = idA+1;
+			int idC = i+(j+1)*m_dimension[0],	idD = idC+1;
+			float AD = std::abs(m_data[idA]-m_data[idD]);
+			float BC = std::abs(m_data[idB]-m_data[idC]);
+			if (AD<BC) {
+				// triangles abd, adc
+				fprintf(fptr,"f %i %i %i\n",idA+1,idB+1,idD+1);
+				fprintf(fptr,"f %i %i %i\n",idA+1,idD+1,idC+1);
+			} else {
+				// triangles abc, bdc
+				fprintf(fptr,"f %i %i %i\n",idA+1,idB+1,idC+1);
+				fprintf(fptr,"f %i %i %i\n",idB+1,idD+1,idC+1);
+			}
+		}
+	}
+	return false;
+}
+
+bool DEM::exportCSV(const std::string& name) const {
+	FILE* fptr = NULL;
+#ifdef _MSC_VER
+	if (fopen_s(&fptr,name.c_str(),"wt")) return false;
+#else
+	fptr = fopen(name.c_str(),"wt");
+	if (fptr==NULL) return false;
+#endif
+	bool bRes = exportCSV(fptr);
+	fclose(fptr);
+	return bRes;
+}
+
+bool DEM::exportCSV(FILE* fptr) const {
+	if (fptr==NULL) return false;
+	if (!isValid()) return false;
+	fprintf(fptr,"DEM east-major\n");
+	fprintf(fptr,"width,%i,height,%i\n",m_dimension[0],m_dimension[1]);	
+	fprintf(fptr,"minEast,%g,maxEast,%g\n",m_LowerLeft[0],m_LowerLeft[1]);
+	fprintf(fptr,"minNorth,%g,maxNorth,%g\n",m_UpperRight[0],m_UpperRight[1]);
+	fprintf(fptr,"scaleEast,%g,scaleNorth,%g\n\n\n\n\n",scale(0),scale(1));
+	for (int j=0; j<m_dimension[1]; j++) {
+		for (int i=0; i<m_dimension[0]; i++) {
+			fprintf(fptr,"%g%s",m_data[i+j*m_dimension[0]], i+1==m_dimension[0] ? "\n" : ",");
+		}
+	}
+	return true;
+}
+
+bool DEM::exportESRI(const std::string& name) const {
+	FILE* fptr = NULL;
+#ifdef _MSC_VER
+	if (fopen_s(&fptr,name.c_str(),"wt")) return false;
+#else
+	fptr = fopen(name.c_str(),"wt");
+	if (fptr==NULL) return false;
+#endif
+	bool bRes = exportESRI(fptr);
+	fclose(fptr);
+	return bRes;
+}
+
+bool DEM::exportESRI(FILE* stream) const {
+	if (stream==NULL) return false;
+	printf("SCALE: %g,%g\n",scale(0),scale(1));
+	// TODO: resample data for uniform scale
+	fprintf(stream,"ncols     %i\n",m_dimension[0]);
+	fprintf(stream,"nrows     %i\n",m_dimension[1]);
+	fprintf(stream,"xllcorner %g\n",lower_left(0));
+	fprintf(stream,"yllcorner %g\n",lower_left(1));
+	fprintf(stream,"cellsize  %g\n",scale(0));
+	fprintf(stream,"NODATA_value -9999\n");
+	for (int j=m_dimension[1]-1; j>=0; j--) {
+		for (int i=0; i<m_dimension[0]; i++) {
+			fprintf(stream,"%f%s",m_data[i+j*m_dimension[0]],i+1==m_dimension[0] ? "\n" : " ");
+		}
+	}
+	return true;
+}

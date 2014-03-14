@@ -127,58 +127,12 @@ public:
    */
   void fillBoundaryLayer(Patch& patch, int dimension, bool setUpper);
 
-//#ifdef Dim2
-//  /**
-//   * Fills in the left boundary layer.
-//   * This method assumes that patch.uOld already holds
-//   * the current solution. I.e. uNew was already copied
-//   * to uOld.
-//   *
-//   * TODO unterweg: Es ist nicht schoen, dass vorausgesetzt wird, dass das Umkopieren von uNew auf uOld
-//   * schon durchgefuehrt wurde. Das kann man auch auf PyClawseite erledigen, indem dort die Daten aus
-//   * q statt qbc geholt werden.
-//   */
-//  void fillLeftBoundaryLayer(Patch& patch);
-//
-//  /**
-//   * Fills in the upper boundary layer.
-//   * This method assumes that patch.uOld already holds
-//   * the current solution. I.e. uNew was already copied
-//   * to uOld.
-//   */
-//  void fillUpperBoundaryLayer(Patch& patch);
-//
-//  /**
-//   * Fills in the right boundary layer.
-//   * This method assumes that patch.uOld already holds
-//   * the current solution. I.e. uNew was already copied
-//   * to uOld.
-//   */
-//  void fillRightBoundaryLayer(Patch& patch);
-//
-//  /**
-//   * Fills in the lower boundary layer.
-//   * This method assumes that patch.uOld already holds
-//   * the current solution. I.e. uNew was already copied
-//   * to uOld.
-//   */
-//  void fillLowerBoundaryLayer(Patch& patch);
-//
-//#endif
-//#ifdef Dim3
-//  void fillLeftBoundaryLayer(Patch& patch);
-//  void fillBehindBoundaryLayer(Patch& patch);
-//  void fillRightBoundaryLayer(Patch& patch);
-//  void fillFrontBoundaryLayer(Patch& patch);
-//  void fillUpperBoundaryLayer(Patch& patch) ;
-//  void fillLowerBoundaryLayer(Patch& patch);
-//#endif
-
+  void update(Patch& finePatch);
 };
 
 class peanoclaw::native::FullSWOF2D_Parameters : public Parameters {
     public:
-        FullSWOF2D_Parameters(Patch& patch, double maximumTimestepSize);
+        FullSWOF2D_Parameters(int ghostlayerWidth, int nx, int ny, double meshwidth_x, double meshwidth_y, int select_order=2);
         virtual ~FullSWOF2D_Parameters();
 };
 

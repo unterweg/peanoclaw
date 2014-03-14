@@ -41,7 +41,7 @@ double peanoclaw::native::FullSWOF2D::initializePatch(
 
   _scenario.initializePatch(patch);
   double demandedMeshWidth = _scenario.computeDemandedMeshWidth(patch);
-
+ 
   logTraceOutWith1Argument( "initializePatch(...)", demandedMeshWidth);
   return demandedMeshWidth;
 }
@@ -54,23 +54,25 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
   tarch::timing::Watch pyclawWatch("", "", false);
   pyclawWatch.startTimer();
   double dtAndEstimatedNextDt[2];
+  tarch::la::Vector<DIMENSIONS,double> meshwidth = patch.getSubcellSize();
+  tarch::la::Vector<DIMENSIONS,int> subdivisionFactor = patch.getSubdivisionFactor();
+  int ghostlayerWidth = patch.getGhostlayerWidth();
 
   // kick off the computation here -----
-
-  FullSWOF2D_Parameters par(patch, maximumTimestepSize);
-  //std::cout << "parameters read" << std::endl;
+ 
+  FullSWOF2D_Parameters par(ghostlayerWidth, subdivisionFactor(0), subdivisionFactor(1), meshwidth(0), meshwidth(1));
+  //std::cout << "parameters read (meshwidth): " << par.get_dx() << " vs " << meshwidth(0) << " and " << par.get_dy() << " vs " << meshwidth(1) << std::endl;
+  //std::cout << "parameters read (cells): " << par.get_Nxcell() << " vs " << subdivisionFactor(0) << " and " << par.get_Nycell() << " vs " << subdivisionFactor(1) << std::endl;
 
   Choice_scheme *wrapper_scheme = new Choice_scheme(par);
   Scheme *scheme = wrapper_scheme->getInternalScheme();
 
   // overwrite internal values
-  tarch::la::Vector<DIMENSIONS,int> subdivisionFactor = patch.getSubdivisionFactor();
   tarch::la::Vector<DIMENSIONS,int> subcellIndex;
 
   // FullSWOF2D has a mixture of 0->nxcell+1 and 1->nxcell
 
-  int ghostlayerWidth = patch.getGhostlayerWidth();
-  int fullswofGhostlayerWidth = ghostlayerWidth - 1;
+  int fullswofGhostlayerWidth = ghostlayerWidth;
 
   /** Water height.*/
   TAB& h = scheme->getH();
@@ -112,32 +114,50 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
         }
   }
 
-
+#if 1 // TODO: works quite well even without
   /** compute Discharge. (1->nxcell) */
   TAB& q1 = scheme->getQ1();
-  for (int x = -(ghostlayerWidth-1); x < subdivisionFactor(0)+(ghostlayerWidth-1); x++) {
-    for (int y = -(ghostlayerWidth-1); y < subdivisionFactor(1)+(ghostlayerWidth-1); y++) {
+  for (int x = 0; x < subdivisionFactor(0); x++) {
+    for (int y = 0; y < subdivisionFactor(1); y++) {
         subcellIndex(0) = x;
         subcellIndex(1) = y;
-        q1[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 4);
+        double q = patch.getValueUOld(subcellIndex, 0) * patch.getValueUOld(subcellIndex, 1);
+        //q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = patch.getValueUOld(subcellIndex, 4);
+        q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = patch.getValueUOld(subcellIndex, q);
+
     }
   }
 
   /** compute Discharge. (1->nycell)*/
   TAB& q2 = scheme->getQ2();
-  for (int x = -(ghostlayerWidth-1); x < subdivisionFactor(0)+(ghostlayerWidth-1); x++) {
-    for (int y = -(ghostlayerWidth-1); y < subdivisionFactor(1)+(ghostlayerWidth-1); y++) {
+  for (int x = 0; x < subdivisionFactor(0); x++) {
+    for (int y = 0; y < subdivisionFactor(1); y++) {
         subcellIndex(0) = x;
         subcellIndex(1) = y;
-        q2[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 5);
+        double q = patch.getValueUOld(subcellIndex, 0) * patch.getValueUOld(subcellIndex, 2);
+        //q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = patch.getValueUOld(subcellIndex, 4);
+        q2[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = patch.getValueUOld(subcellIndex, q);
     }
   }
+#endif
 
   // kick off computation!
   scheme->setTimestep(maximumTimestepSize);
   do {
+    scheme->resetTimings();
     scheme->resetN();
-    scheme->calcul();
+
+    struct timeval start;
+    gettimeofday(&start, NULL);
+
+    wrapper_scheme->calcul();
+
+    struct timeval stop;
+    gettimeofday(&stop, NULL);
+
+    double time = (stop.tv_sec - start.tv_sec) + (stop.tv_usec - start.tv_usec) / 1000000.0;
+    //std::cout << "calculation took " << time << std::endl;
+
     if (scheme->getVerif() == 0) {
         std::cout << "scheme retry activated!" << std::endl;
     }
@@ -151,7 +171,7 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
         for (int y = 0; y < subdivisionFactor(1); y++) {
             subcellIndex(0) = x;
             subcellIndex(1) = y;
-            patch.setValueUNew(subcellIndex, 0, hs[x+ghostlayerWidth][y+ghostlayerWidth]);
+            patch.setValueUNew(subcellIndex, 0, h[x+ghostlayerWidth][y+ghostlayerWidth]);
         }
   }
  
@@ -161,7 +181,7 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
         for (int y = 0; y < subdivisionFactor(1); y++) {
             subcellIndex(0) = x;
             subcellIndex(1) = y;
-            patch.setValueUNew(subcellIndex, 1, us[x+ghostlayerWidth][y+ghostlayerWidth]);
+            patch.setValueUNew(subcellIndex, 1, u[x+ghostlayerWidth][y+ghostlayerWidth]);
         }
   }
 
@@ -171,7 +191,7 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
         for (int y = 0; y < subdivisionFactor(1); y++) {
             subcellIndex(0) = x;
             subcellIndex(1) = y;
-            patch.setValueUNew(subcellIndex, 2, vs[x+ghostlayerWidth][y+ghostlayerWidth]);
+            patch.setValueUNew(subcellIndex, 2, v[x+ghostlayerWidth][y+ghostlayerWidth]);
         }
   }
 
@@ -185,13 +205,14 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
         }
   }
  
+#if 1 // TODO: works quite well even without
   /** compute Discharge. (1->nxcell) */
   TAB& qs1 = scheme->getQs1();
   for (int x = 0; x < subdivisionFactor(0); x++) {
     for (int y = 0; y < subdivisionFactor(1); y++) {
         subcellIndex(0) = x;
         subcellIndex(1) = y;
-        patch.setValueUNew(subcellIndex, 4, qs1[x+ghostlayerWidth][y+ghostlayerWidth]);
+        patch.setValueUNew(subcellIndex, 4, q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth]);
     }
   }
 
@@ -201,12 +222,22 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
     for (int y = 0; y < subdivisionFactor(1); y++) {
         subcellIndex(0) = x;
         subcellIndex(1) = y;
-        patch.setValueUNew(subcellIndex, 5, qs2[x+ghostlayerWidth][y+ghostlayerWidth]);
+        patch.setValueUNew(subcellIndex, 5, q2[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth]);
     }
   }
+#endif
 
-  double dt = min(scheme->getTimestep(), maximumTimestepSize);
-  double estimatedNextTimestepSize = dt; //scheme->getTimestep();
+  // working scheme
+  //double dt = std::min(scheme->getTimestep(), maximumTimestepSize);
+  //double estimatedNextTimestepSize = dt; // scheme->getTimestep();
+ 
+  // strange scheme almost reasonable
+  //double dt = std::min(scheme->getMaxTimestep(), maximumTimestepSize);
+  //double estimatedNextTimestepSize = scheme->getTimestep();
+ 
+  // looks VERY good
+  double dt = std::min(scheme->getTimestep(), maximumTimestepSize);
+  double estimatedNextTimestepSize = scheme->getMaxTimestep();
 
   // BENCHMARK
   //dt = 0.00001;
@@ -252,55 +283,41 @@ void peanoclaw::native::FullSWOF2D::fillBoundaryLayer(Patch& patch, int dimensio
    //std::cout << "++++++" << std::endl;
    //std::cout << patch.toStringUOldWithGhostLayer() << std::endl;
    //std::cout << "||||||" << std::endl;
+ 
+  int ghostlayerWidth = patch.getGhostlayerWidth();
+  int fullswofGhostlayerWidth = ghostlayerWidth-1;
 
-#if 1
+#if 0
    // implement a wall boundary
     tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
     tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
 
     if (dimension == 0) { // left and right boundary
-        for (int yi = -2; yi < patch.getSubdivisionFactor()(1)+2; yi++) {
-            int xi = setUpper ? patch.getSubdivisionFactor()(0)-1 : 0;
+        for (int yi = -fullswofGhostlayerWidth; yi < patch.getSubdivisionFactor()(1)+fullswofGhostlayerWidth; yi++) {
+            int xi = setUpper ? patch.getSubdivisionFactor()(0)+fullswofGhostlayerWidth-1 : -fullswofGhostlayerWidth;
             dest_subcellIndex(0) = xi;
             dest_subcellIndex(1) = yi;
             patch.setValueUOld(dest_subcellIndex, 3, 1000.0);
 
             // only mirror orthogonal velocities
-            patch.setValueUOld(dest_subcellIndex, 1, -patch.getValueUOld(dest_subcellIndex, 2));
-            patch.setValueUOld(dest_subcellIndex, 4, -patch.getValueUOld(dest_subcellIndex, 5));
-
-            xi = setUpper ? patch.getSubdivisionFactor()(0)-2 : 1;
-            dest_subcellIndex(0) = xi;
-            dest_subcellIndex(1) = yi;
-            patch.setValueUOld(dest_subcellIndex, 3, 1000.0);
- 
-            // only mirror orthogonal velocities
-            patch.setValueUOld(dest_subcellIndex, 1, -patch.getValueUOld(dest_subcellIndex, 2));
-            patch.setValueUOld(dest_subcellIndex, 4, -patch.getValueUOld(dest_subcellIndex, 5));
+            patch.setValueUOld(dest_subcellIndex, 1, -patch.getValueUOld(dest_subcellIndex, 1));
+            //patch.setValueUOld(dest_subcellIndex, 4, -patch.getValueUOld(dest_subcellIndex, 5));
         }
     } else { // top and bottom boundary
-        for (int xi = -2; xi < patch.getSubdivisionFactor()(0)+2; xi++) {
-            int yi = setUpper ? patch.getSubdivisionFactor()(1)-1 : 0;
+        for (int xi = -fullswofGhostlayerWidth; xi < patch.getSubdivisionFactor()(0)+fullswofGhostlayerWidth; xi++) {
+            int yi = setUpper ? patch.getSubdivisionFactor()(1)+fullswofGhostlayerWidth-1 : -fullswofGhostlayerWidth;
             dest_subcellIndex(0) = xi;
             dest_subcellIndex(1) = yi;
             patch.setValueUOld(dest_subcellIndex, 3, 1000.0);
             
             // only mirror orthogonal velocities
             patch.setValueUOld(dest_subcellIndex, 2, -patch.getValueUOld(dest_subcellIndex, 2));
-            patch.setValueUOld(dest_subcellIndex, 5, -patch.getValueUOld(dest_subcellIndex, 5));
-
-            yi = setUpper ? patch.getSubdivisionFactor()(1)-2 : 1;
-            dest_subcellIndex(0) = xi;
-            dest_subcellIndex(1) = yi;
-            patch.setValueUOld(dest_subcellIndex, 3, 1000.0);
- 
-            // only mirror orthogonal velocities
-            patch.setValueUOld(dest_subcellIndex, 2, -patch.getValueUOld(dest_subcellIndex, 2));
-            patch.setValueUOld(dest_subcellIndex, 5, -patch.getValueUOld(dest_subcellIndex, 5));
+            //patch.setValueUOld(dest_subcellIndex, 5, -patch.getValueUOld(dest_subcellIndex, 5));
         }
     }
 #else
 
+#if 0
     // implement an open boundary
     tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
     tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
@@ -347,6 +364,7 @@ void peanoclaw::native::FullSWOF2D::fillBoundaryLayer(Patch& patch, int dimensio
             }
         }
     }
+#endif
 
 #endif
 
@@ -357,47 +375,59 @@ void peanoclaw::native::FullSWOF2D::fillBoundaryLayer(Patch& patch, int dimensio
       logTraceOut("fillBoundaryLayerInPyClaw");
 }
 
-peanoclaw::native::FullSWOF2D_Parameters::FullSWOF2D_Parameters(Patch& patch, double maximumTimestepSize) {
+void peanoclaw::native::FullSWOF2D::update(Patch& finePatch) {
+    _scenario.update(finePatch);
+}
+
+peanoclaw::native::FullSWOF2D_Parameters::FullSWOF2D_Parameters(int ghostlayerWidth, int nx, int ny, double meshwidth_x, double meshwidth_y, int select_order) {
     // seed parameters based on Input file
     //setparameters("./fullswof2d_parameters.txt");
  
-    int ghostlayerWidth = patch.getGhostlayerWidth();
+    int fullswofGhostlayerWidth = ghostlayerWidth-1;
+    dx = meshwidth_x;
+    dy = meshwidth_y;
 
     // now override the peanoclaw specific ones
-    Nxcell = patch.getSubdivisionFactor()(0)+2*(ghostlayerWidth-1); // FullSWOF2D is not aware of a ghostlayer, so we cheat now!
-    Nycell = patch.getSubdivisionFactor()(1)+2*(ghostlayerWidth-1); // FullSWOF2D is not aware of a ghostlayer, so we cheat now!
+    Nxcell = nx+2*(ghostlayerWidth-1); // FullSWOF2D already provides a boundary layer of width 1
+    Nycell = ny+2*(ghostlayerWidth-1); // FullSWOF2D already provides a boundary layer of width 1
+
+    //std::cout << "nxcell " << Nxcell << " nycell " << Nycell << std::endl;
 
     scheme_type = 1; // 1= fixed cfl => we get timestamp and maximum timestep
                      // 2=fixed dt
 
-    // TODO: we probably have to provide dx / dy values directly
+    // we probably have to provide dx / dy values directly and we do it see below!
     // FullSOWF2D uses L and l just to compute dx and dy
-    L = patch.getSubcellSize()(0)*Nxcell; // length of domain in x direction (TODO: i multiply be Nxcell because the code will divide later on...)
-    l = patch.getSubcellSize()(1)*Nycell; // length of domain in y direction (TODO: i multiply be Nycell because the code will divide later on...)
+    L = meshwidth_x*(Nxcell); // length of domain in x direction (TODO: i multiply be Nxcell because the code will divide later on...)
+    l = meshwidth_y*(Nycell); // length of domain in y direction (TODO: i multiply be Nycell because the code will divide later on...)
 
     //T = maximumTimestepSize; this is a bad idea: the algorithm internally works similar to peanoclaw: either dt caused by cfl or the remaining part in the time interval
     //(see line 198 of order2.cpp)
     T = 1000; // that should be enough as we only do one timestep anyway
  
-    order = 2; // order 1 or order 2
+    order = select_order; // order 1 or order 2
 
    cfl_fix = 0.5; // TODO: what is this actually good for? (working setting 0.5 with order 1, 0.8 got stuck with order 1 and 2)
    dt_fix = 0.05; // TODO: what is this actually good for
    nbtimes = 1;
-   dx = patch.getSubcellSize()(0);
-   dy = patch.getSubcellSize()(1);
 
-   // TODO: actually deacticated by macro
-   Lbound = 3;
-   Rbound = 3;
-   Bbound = 3;
-   Tbound = 3;
+
+   // we need some sort of continuous boundary
+   // TODO: what is the proper boundary in our case?
+   // can we shrink the ghostlayer with this boundary setting?
+   Lbound = 2;
+   Rbound = 2;
+   Bbound = 2;
+   Tbound = 2;
 	
    flux = 2; // 1 = rusanov 2 = HLL 3 = HLL2
    rec = 1;
-   fric = 2; // Friction law (0=NoFriction 1=Manning 2=Darcy-Weisbach)  <fric>:: 0
+
+   // really interesting effects if enabled, makes the breaking dam collapse!
+   fric = 0; // Friction law (0=NoFriction 1=Manning 2=Darcy-Weisbach)  <fric>:: 0
+   inf = 0; // Infiltration model (0=No Infiltration 1=Green-Ampt)
+
    lim = 1;
-   inf = 1; // Infiltration model (0=No Infiltration 1=Green-Ampt)
    topo = 2; // flat topogrophy, just prevent it from loading data as we will fill the data in later on
    huv_init = 2; // initialize h,v and u to 0
    rain = 2; // 2: rain is generated, basically its just an auxillary array which is filled with time dependent data (we can couple this evolveToTime)
@@ -442,3 +472,6 @@ peanoclaw::native::FullSWOF2D_Parameters::FullSWOF2D_Parameters(Patch& patch, do
 peanoclaw::native::FullSWOF2D_Parameters::~FullSWOF2D_Parameters() {
 
 }
+
+
+
