@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <png.h>
+
 #include "peanoclaw/native/MekkaFlood.h"
 
 //#define BREAKINGDAMTEST
@@ -15,10 +17,54 @@
 
 MekkaFlood_SWEKernelScenario::MekkaFlood_SWEKernelScenario(DEM& dem) : dem(dem)
 {
+ 
     scale = 2.0;
+
+    // open png with mekka_map
+    memset(&mekka_map, 0, (sizeof mekka_map));
+    mekka_map.version = PNG_IMAGE_VERSION;
+ 
+    /* The first argument is the file to read: */
+    if (png_image_begin_read_from_file(&mekka_map, "tex2d_cropped.png")) {
+         /* Set the format in which to read the PNG file; this code chooses a
+          * simple sRGB format with a non-associated alpha channel, adequate to
+          * store most images.
+          */
+         //mekka_map.format = PNG_FORMAT_RGBA;
+         mekka_map.format = PNG_FORMAT_GRAY; // we only need gray scale
+
+         /* Now allocate enough memory to hold the image in this format; the
+          * PNG_IMAGE_SIZE macro uses the information about the image (width,
+          * height and format) stored in 'image'.
+          */
+         std::cout << "image buffer size: " << PNG_IMAGE_SIZE(mekka_map) << std::endl;
+         mekka_map_data = static_cast<uint8_t*>(malloc(PNG_IMAGE_SIZE(mekka_map)));
+
+         if (mekka_map_data != NULL &&
+            png_image_finish_read(&mekka_map, NULL/*background*/, mekka_map_data,
+               0/*row_stride*/, NULL/*colormap*/)) {
+         
+              std::cout << "got png image data: width=" << mekka_map.width << ", height=" << mekka_map.height << std::endl;
+         }
+
+    } else {
+
+        /* Something went wrong reading or writing the image.  libpng stores a
+         * textual message in the 'png_image' structure:
+         */
+         std::cerr << "pngtopng: error: " << mekka_map.message << std::endl;
+    }
+    
 }
 
-MekkaFlood_SWEKernelScenario::~MekkaFlood_SWEKernelScenario() {}
+MekkaFlood_SWEKernelScenario::~MekkaFlood_SWEKernelScenario() {
+    // cleanup png data
+    if (mekka_map_data == NULL)
+       png_image_free(&mekka_map);
+
+    else
+       free(mekka_map_data);
+}
 
 static double bilinear_interpolate(double x00, double y00,
                                    double x11, double y11,
@@ -285,6 +331,8 @@ void MekkaFlood_SWEKernelScenario::initializePatch(peanoclaw::Patch& patch) {
 
             //double bathymetry = bathymetryHelper.getHeight(coords(0),coords(1));
             double bathymetry = dem(coords(0), coords(1));
+            double mapvalue = mapMeshToMap(meshPos);
+
 
             //std::cout << "x " << X << " y " << Y << " c0 " << coords(0) << " c1 " << coords(1) << " b " << bathymetry << std::endl; 
 
@@ -303,7 +351,7 @@ void MekkaFlood_SWEKernelScenario::initializePatch(peanoclaw::Patch& patch) {
             patch.setValueUNew(subcellIndex, 1, u);
             patch.setValueUNew(subcellIndex, 2, v);
             patch.setValueUNew(subcellIndex, 3, bathymetry);
-            patch.setValueAux(subcellIndex, 0, bathymetry);
+            patch.setValueAux(subcellIndex, 0, mapvalue);
  
             patch.setValueUNew(subcellIndex, 4, h * u);
             patch.setValueUNew(subcellIndex, 5, h * v);
@@ -636,9 +684,10 @@ void MekkaFlood_SWEKernelScenario::update(peanoclaw::Patch& patch) {
             meshPos = patch.getSubcellPosition(subcellIndex);
             tarch::la::Vector<DIMENSIONS, double> coords = mapMeshToCoordinates(meshPos(0), meshPos(1));
             double bathymetry = dem(coords(0), coords(1));
+            double mapvalue = mapMeshToMap(meshPos);
 
             patch.setValueUNew(subcellIndex, 3, bathymetry);
-            patch.setValueAux(subcellIndex, 0, bathymetry);
+            patch.setValueAux(subcellIndex, 0, mapvalue);
         }
     }
 }
@@ -710,6 +759,29 @@ tarch::la::Vector<DIMENSIONS, double> MekkaFlood_SWEKernelScenario::mapMeshToCoo
     coords(0) = ps_0;
     coords(1) = ps_1;
     return coords;
+}
+
+double MekkaFlood_SWEKernelScenario::mapMeshToMap(tarch::la::Vector<DIMENSIONS, double>& coords) {
+    // relate pixel in png file to bathymetry data
+    int width_map = mekka_map.width;
+    int height_map = mekka_map.height;
+    double width_domain = (dem.upper_right(0) - dem.lower_left(0));
+    double height_domain = (dem.upper_right(1) - dem.lower_left(1));
+
+    // relate desired coords to data in map
+    double map_pos_x = coords(0)*scale * (width_map / width_domain);
+    double map_pos_y = height_map - (coords(1)*scale * (height_map / height_domain)); // picture is upside down otherwise :D
+
+    // now map position to index in png file
+    int map_index_x = std::floor(map_pos_x);
+    int map_index_y = std::floor(map_pos_y);
+
+    // buffer is organized as grayscale one byte per pixel
+    int bufferpos = map_index_y * width_map * 1 + map_index_x * 1;
+
+    // convert gray scale to a double precision value
+    double gray_value = mekka_map_data[bufferpos] / 255.0;
+    return gray_value;
 }
 
 #endif

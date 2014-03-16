@@ -3,6 +3,9 @@
 
 #if defined(SWE) || defined(PEANOCLAW_FULLSWOF2D)
 
+#include <cstdio>
+#include <png.h>
+
 #include "tarch/la/Vector.h"
 
 #include "peanoclaw/Patch.h"
@@ -37,6 +40,7 @@ class MekkaFlood_SWEKernelScenario : public peanoclaw::native::SWEKernelScenario
     private:
         tarch::la::Vector<DIMENSIONS, double> mapCoordinatesToMesh(double longitude, double latitude);
         tarch::la::Vector<DIMENSIONS, double> mapMeshToCoordinates(double x, double y);
+        double mapMeshToMap(tarch::la::Vector<DIMENSIONS, double>& coords);
 
         //double domainSize;
 
@@ -44,6 +48,8 @@ class MekkaFlood_SWEKernelScenario : public peanoclaw::native::SWEKernelScenario
         //BathymetryHelper bathymetryHelper;
         
 
+        png_image mekka_map; /* The control structure used by libpng */
+        uint8_t* mekka_map_data;
 };
 #endif
 
