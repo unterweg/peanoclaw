@@ -132,7 +132,7 @@ public:
 
 class peanoclaw::native::FullSWOF2D_Parameters : public Parameters {
     public:
-        FullSWOF2D_Parameters(int ghostlayerWidth, int nx, int ny, double meshwidth_x, double meshwidth_y, int select_order=2);
+        FullSWOF2D_Parameters(int ghostlayerWidth, int nx, int ny, double meshwidth_x, double meshwidth_y, int select_order=2, int select_reconstruction=1);
         virtual ~FullSWOF2D_Parameters();
 };
 

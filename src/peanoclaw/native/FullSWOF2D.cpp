@@ -143,6 +143,8 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
 
   // kick off computation!
   scheme->setTimestep(maximumTimestepSize);
+  scheme->setMaxTimestep(maximumTimestepSize);
+
   do {
     scheme->resetTimings();
     scheme->resetN();
@@ -235,7 +237,7 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
   //double dt = std::min(scheme->getMaxTimestep(), maximumTimestepSize);
   //double estimatedNextTimestepSize = scheme->getTimestep();
  
-  // looks VERY good
+  // looks VERY good (was used for the nice pictures)
   double dt = std::min(scheme->getTimestep(), maximumTimestepSize);
   double estimatedNextTimestepSize = scheme->getMaxTimestep();
 
@@ -379,7 +381,7 @@ void peanoclaw::native::FullSWOF2D::update(Patch& finePatch) {
     _scenario.update(finePatch);
 }
 
-peanoclaw::native::FullSWOF2D_Parameters::FullSWOF2D_Parameters(int ghostlayerWidth, int nx, int ny, double meshwidth_x, double meshwidth_y, int select_order) {
+peanoclaw::native::FullSWOF2D_Parameters::FullSWOF2D_Parameters(int ghostlayerWidth, int nx, int ny, double meshwidth_x, double meshwidth_y, int select_order, int select_rec) {
     // seed parameters based on Input file
     //setparameters("./fullswof2d_parameters.txt");
  
@@ -421,7 +423,7 @@ peanoclaw::native::FullSWOF2D_Parameters::FullSWOF2D_Parameters(int ghostlayerWi
    Tbound = 2;
 	
    flux = 2; // 1 = rusanov 2 = HLL 3 = HLL2
-   rec = 1;
+   rec = select_rec; // 1 = MUSCL, 2 = ENO, 3 = ENO_mod
 
    // really interesting effects if enabled, makes the breaking dam collapse!
    fric = 0; // Friction law (0=NoFriction 1=Manning 2=Darcy-Weisbach)  <fric>:: 0
