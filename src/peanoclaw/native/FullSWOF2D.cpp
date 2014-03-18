@@ -68,79 +68,8 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
   Scheme *scheme = wrapper_scheme->getInternalScheme();
 
   // overwrite internal values
-  tarch::la::Vector<DIMENSIONS,int> subcellIndex;
-
-  // FullSWOF2D has a mixture of 0->nxcell+1 and 1->nxcell
-
-  int fullswofGhostlayerWidth = ghostlayerWidth;
-
-  /** Water height.*/
-  TAB& h = scheme->getH();
-  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
-        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
-            subcellIndex(0) = x;
-            subcellIndex(1) = y;
-            h[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 0);
-        }
-  }
- 
-  /** X Velocity.*/
-  TAB& u = scheme->getU();
-  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
-        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
-            subcellIndex(0) = x;
-            subcellIndex(1) = y;
-            u[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 1);
-        }
-  }
-
-  /** Y Velocity.*/
-  TAB& v = scheme->getV();
-  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
-        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
-            subcellIndex(0) = x;
-            subcellIndex(1) = y;
-            v[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 2);
-        }
-  }
- 
-  /** Topography.*/
-  TAB& z = scheme->getZ();
-  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
-        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
-            subcellIndex(0) = x;
-            subcellIndex(1) = y;
-            z[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 3);
-        }
-  }
-
-#if 1 // TODO: works quite well even without
-  /** compute Discharge. (1->nxcell) */
-  TAB& q1 = scheme->getQ1();
-  for (int x = 0; x < subdivisionFactor(0); x++) {
-    for (int y = 0; y < subdivisionFactor(1); y++) {
-        subcellIndex(0) = x;
-        subcellIndex(1) = y;
-        double q = patch.getValueUOld(subcellIndex, 0) * patch.getValueUOld(subcellIndex, 1);
-        //q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = patch.getValueUOld(subcellIndex, 4);
-        q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = patch.getValueUOld(subcellIndex, q);
-
-    }
-  }
-
-  /** compute Discharge. (1->nycell)*/
-  TAB& q2 = scheme->getQ2();
-  for (int x = 0; x < subdivisionFactor(0); x++) {
-    for (int y = 0; y < subdivisionFactor(1); y++) {
-        subcellIndex(0) = x;
-        subcellIndex(1) = y;
-        double q = patch.getValueUOld(subcellIndex, 0) * patch.getValueUOld(subcellIndex, 2);
-        //q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = patch.getValueUOld(subcellIndex, 4);
-        q2[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = patch.getValueUOld(subcellIndex, q);
-    }
-  }
-#endif
-
+  copyPatchToScheme(patch, scheme);
+  
   // kick off computation!
   scheme->setTimestep(maximumTimestepSize);
   scheme->setMaxTimestep(maximumTimestepSize);
@@ -166,72 +95,11 @@ double peanoclaw::native::FullSWOF2D::solveTimestep(Patch& patch, double maximum
   } while (scheme->getVerif() == 0); // internal error detection of FullSWOF2D
 
   // copy back internal values but skip ghostlayer
-  
-  /** Water height after one step of the scheme.*/
-  TAB& hs = scheme->getHs();
-  for (int x = 0; x < subdivisionFactor(0); x++) {
-        for (int y = 0; y < subdivisionFactor(1); y++) {
-            subcellIndex(0) = x;
-            subcellIndex(1) = y;
-            patch.setValueUNew(subcellIndex, 0, h[x+ghostlayerWidth][y+ghostlayerWidth]);
-        }
-  }
- 
-  /** X Velocity after one step of the scheme.*/
-  TAB& us = scheme->getUs();
-  for (int x = 0; x < subdivisionFactor(0); x++) {
-        for (int y = 0; y < subdivisionFactor(1); y++) {
-            subcellIndex(0) = x;
-            subcellIndex(1) = y;
-            patch.setValueUNew(subcellIndex, 1, u[x+ghostlayerWidth][y+ghostlayerWidth]);
-        }
-  }
-
-  /** Y Velocity after one step of the scheme.*/
-  TAB& vs = scheme->getVs();
-  for (int x = 0; x < subdivisionFactor(0); x++) {
-        for (int y = 0; y < subdivisionFactor(1); y++) {
-            subcellIndex(0) = x;
-            subcellIndex(1) = y;
-            patch.setValueUNew(subcellIndex, 2, v[x+ghostlayerWidth][y+ghostlayerWidth]);
-        }
-  }
-
-  /** Topography.*/
-  TAB& znew = scheme->getZ();
-  for (int x = 0; x < subdivisionFactor(0); x++) {
-        for (int y = 0; y < subdivisionFactor(1); y++) {
-            subcellIndex(0) = x;
-            subcellIndex(1) = y;
-            patch.setValueUNew(subcellIndex, 3, znew[x+ghostlayerWidth][y+ghostlayerWidth]);
-        }
-  }
- 
-#if 1 // TODO: works quite well even without
-  /** compute Discharge. (1->nxcell) */
-  TAB& qs1 = scheme->getQs1();
-  for (int x = 0; x < subdivisionFactor(0); x++) {
-    for (int y = 0; y < subdivisionFactor(1); y++) {
-        subcellIndex(0) = x;
-        subcellIndex(1) = y;
-        patch.setValueUNew(subcellIndex, 4, q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth]);
-    }
-  }
-
-  /** compute Discharge. (1->nycell)*/
-  TAB& qs2 = scheme->getQs2();
-  for (int x = 0; x < subdivisionFactor(0); x++) {
-    for (int y = 0; y < subdivisionFactor(1); y++) {
-        subcellIndex(0) = x;
-        subcellIndex(1) = y;
-        patch.setValueUNew(subcellIndex, 5, q2[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth]);
-    }
-  }
-#endif
+  copySchemeToPatch(scheme, patch);
 
   // working scheme
   //double dt = std::min(scheme->getTimestep(), maximumTimestepSize);
-  //double estimatedNextTimestepSize = dt; // scheme->getTimestep();
+  //double estimatedNextTimestepSize = scheme->getTimestep(); // dt;
  
   // strange scheme almost reasonable
   //double dt = std::min(scheme->getMaxTimestep(), maximumTimestepSize);
@@ -317,57 +185,6 @@ void peanoclaw::native::FullSWOF2D::fillBoundaryLayer(Patch& patch, int dimensio
             //patch.setValueUOld(dest_subcellIndex, 5, -patch.getValueUOld(dest_subcellIndex, 5));
         }
     }
-#else
-
-#if 0
-    // implement an open boundary
-    tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
-    tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
-
-    if (dimension == 0) {
-        for (int yi = -1; yi < patch.getSubdivisionFactor()(1)+1; yi++) {
-            int xi = setUpper ? patch.getSubdivisionFactor()(0) : -1;
-            src_subcellIndex(0) = xi;
-            src_subcellIndex(1) = yi;
-            src_subcellIndex(dimension) += setUpper ? -1 : +1; 
-
-            dest_subcellIndex(0) = xi;
-            dest_subcellIndex(1) = yi;
-     
-            for (int unknown=0; unknown < patch.getUnknownsPerSubcell(); unknown++) {
-                double q = patch.getValueUOld(src_subcellIndex, unknown);
-
-                if (unknown == dimension + 1) {
-                    patch.setValueUOld(dest_subcellIndex, unknown, 0.0);
-                } else {
-                    patch.setValueUOld(dest_subcellIndex, unknown, 0.0);
-                }
-            }
-        }
-
-    } else {
-        for (int xi = -1; xi < patch.getSubdivisionFactor()(0)+1; xi++) {
-            int yi = setUpper ? patch.getSubdivisionFactor()(1) : -1;
-            src_subcellIndex(0) = xi;
-            src_subcellIndex(1) = yi;
-            src_subcellIndex(dimension) += setUpper ? -1 : +1; 
-
-            dest_subcellIndex(0) = xi;
-            dest_subcellIndex(1) = yi;
-     
-            for (int unknown=0; unknown < patch.getUnknownsPerSubcell(); unknown++) {
-                double q = patch.getValueUOld(src_subcellIndex, unknown);
-
-                if (unknown == dimension + 1) {
-                    patch.setValueUOld(dest_subcellIndex, unknown, 0.0);
-                } else {
-                    patch.setValueUOld(dest_subcellIndex, unknown, 0.0);
-                }
-            }
-        }
-    }
-#endif
-
 #endif
 
    //std::cout << "++++++" << std::endl;
@@ -380,6 +197,155 @@ void peanoclaw::native::FullSWOF2D::fillBoundaryLayer(Patch& patch, int dimensio
 void peanoclaw::native::FullSWOF2D::update(Patch& finePatch) {
     _scenario.update(finePatch);
 }
+
+void peanoclaw::native::FullSWOF2D::copyPatchToScheme(Patch& patch, Scheme* scheme) {
+  tarch::la::Vector<DIMENSIONS,int> subdivisionFactor = patch.getSubdivisionFactor();
+  tarch::la::Vector<DIMENSIONS,int> subcellIndex;
+
+  // FullSWOF2D has a mixture of 0->nxcell+1 and 1->nxcell
+  int ghostlayerWidth = patch.getGhostlayerWidth();
+  int fullswofGhostlayerWidth = ghostlayerWidth;
+
+  /** Water height.*/
+  TAB& h = scheme->getH();
+  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
+        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
+            subcellIndex(0) = x;
+            subcellIndex(1) = y;
+            h[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 0);
+        }
+  }
+ 
+  /** X Velocity.*/
+  TAB& u = scheme->getU();
+  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
+        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
+            subcellIndex(0) = x;
+            subcellIndex(1) = y;
+            u[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 1);
+        }
+  }
+
+  /** Y Velocity.*/
+  TAB& v = scheme->getV();
+  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
+        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
+            subcellIndex(0) = x;
+            subcellIndex(1) = y;
+            v[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 2);
+        }
+  }
+ 
+  /** Topography.*/
+  TAB& z = scheme->getZ();
+  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
+        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
+            subcellIndex(0) = x;
+            subcellIndex(1) = y;
+            z[x+ghostlayerWidth][y+ghostlayerWidth] = patch.getValueUOld(subcellIndex, 3);
+        }
+  }
+
+#if 1 // TODO: we probably need this
+  /** compute Discharge. (1->nxcell) */
+  TAB& q1 = scheme->getQ1();
+  for (int x = -1; x < subdivisionFactor(0)+1; x++) {
+    for (int y = -1; y < subdivisionFactor(1)+1; y++) {
+        subcellIndex(0) = x;
+        subcellIndex(1) = y;
+        // we have to initialize this because the FullSWOF2D does not compute the momentum on the ghostlayer
+        double q = patch.getValueUOld(subcellIndex, 0) * patch.getValueUOld(subcellIndex, 1);
+        q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = q;
+
+    }
+  }
+
+  /** compute Discharge. (1->nycell)*/
+  TAB& q2 = scheme->getQ2();
+  for (int x = -1; x < subdivisionFactor(0)+1; x++) {
+    for (int y = -1; y < subdivisionFactor(1)+1; y++) {
+        subcellIndex(0) = x;
+        subcellIndex(1) = y;
+        double q = patch.getValueUOld(subcellIndex, 0) * patch.getValueUOld(subcellIndex, 2);
+        // we have to initialize this because the FullSWOF2D does not compute the momentum on the ghostlayer
+        q2[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth] = q;
+    }
+  }
+#endif
+
+}
+
+void peanoclaw::native::FullSWOF2D::copySchemeToPatch(Scheme* scheme, Patch& patch) {
+  tarch::la::Vector<DIMENSIONS,int> subdivisionFactor = patch.getSubdivisionFactor();
+  tarch::la::Vector<DIMENSIONS,int> subcellIndex;
+
+  int ghostlayerWidth = patch.getGhostlayerWidth();
+  int fullswofGhostlayerWidth = ghostlayerWidth;
+
+  /** Water height after one step of the scheme.*/
+  TAB& h = scheme->getH();
+  for (int x = 0; x < subdivisionFactor(0); x++) {
+        for (int y = 0; y < subdivisionFactor(1); y++) {
+            subcellIndex(0) = x;
+            subcellIndex(1) = y;
+            patch.setValueUNew(subcellIndex, 0, h[x+ghostlayerWidth][y+ghostlayerWidth]);
+        }
+  }
+ 
+  /** X Velocity after one step of the scheme.*/
+  TAB& u = scheme->getU();
+  for (int x = 0; x < subdivisionFactor(0); x++) {
+        for (int y = 0; y < subdivisionFactor(1); y++) {
+            subcellIndex(0) = x;
+            subcellIndex(1) = y;
+            patch.setValueUNew(subcellIndex, 1, u[x+ghostlayerWidth][y+ghostlayerWidth]);
+        }
+  }
+
+  /** Y Velocity after one step of the scheme.*/
+  TAB& v = scheme->getV();
+  for (int x = 0; x < subdivisionFactor(0); x++) {
+        for (int y = 0; y < subdivisionFactor(1); y++) {
+            subcellIndex(0) = x;
+            subcellIndex(1) = y;
+            patch.setValueUNew(subcellIndex, 2, v[x+ghostlayerWidth][y+ghostlayerWidth]);
+        }
+  }
+
+  /** Topography.*/
+  TAB& znew = scheme->getZ();
+  for (int x = 0; x < subdivisionFactor(0); x++) {
+        for (int y = 0; y < subdivisionFactor(1); y++) {
+            subcellIndex(0) = x;
+            subcellIndex(1) = y;
+            patch.setValueUNew(subcellIndex, 3, znew[x+ghostlayerWidth][y+ghostlayerWidth]);
+        }
+  }
+ 
+#if 1 // TODO: we probably needs this
+  /** compute Discharge. (1->nxcell) */
+  TAB& q1 = scheme->getQ1();
+  for (int x = 0; x < subdivisionFactor(0); x++) {
+    for (int y = 0; y < subdivisionFactor(1); y++) {
+        subcellIndex(0) = x;
+        subcellIndex(1) = y;
+        patch.setValueUNew(subcellIndex, 4, q1[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth]);
+    }
+  }
+
+  /** compute Discharge. (1->nycell)*/
+  TAB& q2 = scheme->getQ2();
+  for (int x = 0; x < subdivisionFactor(0); x++) {
+    for (int y = 0; y < subdivisionFactor(1); y++) {
+        subcellIndex(0) = x;
+        subcellIndex(1) = y;
+        patch.setValueUNew(subcellIndex, 5, q2[x+fullswofGhostlayerWidth][y+fullswofGhostlayerWidth]);
+    }
+  }
+#endif
+
+}
+
 
 peanoclaw::native::FullSWOF2D_Parameters::FullSWOF2D_Parameters(int ghostlayerWidth, int nx, int ny, double meshwidth_x, double meshwidth_y, int select_order, int select_rec) {
     // seed parameters based on Input file

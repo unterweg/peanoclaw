@@ -26,6 +26,8 @@
 
 #include "peanoclaw/native/FullSWOF_2D/Headers/libparameters/parameters.hpp"
 
+#include "peanoclaw/native/FullSWOF_2D/Headers/libschemes/choice_scheme.hpp"
+
 namespace peanoclaw {
   namespace native {
     class FullSWOF2D;
@@ -128,6 +130,9 @@ public:
   void fillBoundaryLayer(Patch& patch, int dimension, bool setUpper);
 
   void update(Patch& finePatch);
+
+  void copyPatchToScheme(Patch& patch, Scheme* scheme);
+  void copySchemeToPatch(Scheme* scheme, Patch& patch);
 };
 
 class peanoclaw::native::FullSWOF2D_Parameters : public Parameters {
