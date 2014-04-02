@@ -1001,6 +1001,11 @@ int peanoclaw::Patch::getAge() const {
   return _cellDescription->getAgeInGridIterations();
 }
 
+void peanoclaw::Patch::resetAge() const {
+  return _cellDescription->setAgeInGridIterations(0);
+}
+
+
 void peanoclaw::Patch::resetNeighboringGhostlayerBounds() {
   _cellDescription->setRestrictionLowerBounds(
       std::numeric_limits<double>::max());
@@ -1039,5 +1044,5 @@ bool peanoclaw::Patch::isRemote() const {
 #endif
 
 std::ostream& operator<<(std::ostream& out, const peanoclaw::Patch& patch) {
-  return out << patch.toString() << std::endl;
+  return out << patch.toString();
 }

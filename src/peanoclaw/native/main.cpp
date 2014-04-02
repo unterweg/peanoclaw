@@ -63,9 +63,10 @@ int main(int argc, char **argv) {
 //  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "trace", true ) );
 
   //Validation
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::statistics::ParallelGridValidator", true ) );
+  //tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::statistics::ParallelGridValidator", true ) );
 
   //Selective Tracing
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "tarch::mpianalysis::Default::Analyser", false ) );
 //  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", -1, "peanoclaw::mappings::Remesh", false ) );
 //  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", -1, "peanoclaw::mappings::Remesh::destroyVertex", false ) );
 //  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", -1, "peanoclaw::mappings::Remesh::endIteration", false ) );
@@ -128,8 +129,8 @@ int main(int argc, char **argv) {
 
     // keep aspect ratio of map: 4000 3000: ratio 4:3
     tarch::la::Vector<DIMENSIONS, int> subdivisionFactor;
-    subdivisionFactor(0) = static_cast<int>(96); //  6 * 4, optimum in non optimized version
-    subdivisionFactor(1) = static_cast<int>(54); //  6 * 3, optimum in non optimized version
+    subdivisionFactor(0) = static_cast<int>(16); // 96 //  6 * 4, optimum in non optimized version
+    subdivisionFactor(1) = static_cast<int>(9);  // 54 //  6 * 3, optimum in non optimized version
 
     double min_domainSize = std::min(domainSize(0),domainSize(1));
     double max_domainSize = std::max(domainSize(0),domainSize(1));
@@ -142,7 +143,7 @@ int main(int argc, char **argv) {
     int ghostlayerWidth = 2;
     int unknownsPerSubcell = 6;
 
-    double initialTimestepSize = 5.0;
+    double initialTimestepSize = 1.0;
 
 
 #else
@@ -200,8 +201,8 @@ int main(int argc, char **argv) {
   assertion(runner != 0);
  
   // run experiment
-  double timestep = initialTimestepSize;
-  double endtime = 100.0;
+  double timestep = 1.0;
+  double endtime = 3600.0; // 100.0;
 #if defined(Parallel)
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 #endif

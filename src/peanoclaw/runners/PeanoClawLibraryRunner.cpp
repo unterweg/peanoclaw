@@ -78,9 +78,34 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment()
 
   //Shared Memory
   #ifdef SharedMemoryParallelisation
-  tarch::multicore::tbb::Core::getInstance().configure(1);
+  std::cout << "configuring multicore" << std::endl;
+  tarch::multicore::tbb::Core::getInstance().configure(8);
+  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(
+    true, // multithreading
+    false,
+    1, // splitTheThree
+    false, // pipelineDescendProcessing
+    false, // pipelineAscendProcessing
+    tarch::la::aPowI(DIMENSIONS,3*3*3*3/2), // smallestGrainSizeForAscendDescend
+    3, // grainSizeForAsendDescend
+    tarch::la::aPowI(DIMENSIONS,3), // smallestGrainSizeForEnterLeaveCell // (9 / 2) works good, 2 is good as well
+    2, // grainSizeForEnterLevelCell
+    tarch::la::aPowI(DIMENSIONS,3*3*3*3+1), // smallestGrainSizeForTouchFirstLast
+    64, // grainSizeForTouchFirstLast
+    tarch::la::aPowI(DIMENSIONS,3*3*3), // smallestGrainSizeForSplitLoadStore
+    8, // grainSizeForSplitLoadStore
+    -1, // adapterNumber
+   peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling // methodTrace*/
+    )
+  );
   #endif
-  peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
+  //peano::datatraversal::autotuning::Oracle::getInstance().setOracle( new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true) );
+}
+
+void peanoclaw::runners::PeanoClawLibraryRunner::iterateRemesh() {
+  _repository->switchToRemesh();
+  updateOracle();
+  _repository->iterate();
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateInitialiseGrid() {
@@ -155,7 +180,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _iterationTimer("peanoclaw::runners::PeanoClawLibraryRunner", "iteration", false),
   _totalRuntime(0.0),
   _numerics(numerics),
-  _validateGrid(true),
+  _validateGrid(false),
   _initializationWatch("Total initialization", "", false),
   _simulationWatch("Total simulation", "", false)
 {
@@ -211,7 +236,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
 
     state.enableRefinementCriterion(false);
     tarch::la::Vector<DIMENSIONS, double> currentMinimalSubgridSize;
-    int maximumLevel = 1;
+    int maximumLevel = 2;   // THIS HAS TO BE "2". Otherwise peano spawns nt enough levels to fork!
     do {
 
       logDebug("PeanoClawLibraryRunner", "Iterating with maximumLevel=" << maximumLevel);
@@ -329,7 +354,16 @@ void peanoclaw::runners::PeanoClawLibraryRunner::evolveToTime(
   //Iterate over grid until next global timestep...
   do {
       runNextPossibleTimestep();
+      std::cout << "\r[working]"
+                << " currentTime " << _repository->getState().getStartMaximumGlobalTimeInterval()
+                << " minimalTimestep " << _repository->getState().getMinimalTimestep()
+                << " numberOfCells " << _repository->getState().getNumberOfInnerCells() 
+                << "       "
+                ;
+
   } while(!_repository->getState().getAllPatchesEvolvedToGlobalTimestep());
+
+  std::cout << std::endl;
 
   //Plot
   if(_configuration.plotAtOutputTimes() && !plotSubsteps) {

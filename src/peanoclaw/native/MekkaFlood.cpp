@@ -20,6 +20,7 @@ MekkaFlood_SWEKernelScenario::MekkaFlood_SWEKernelScenario(DEM& dem) : dem(dem)
  
     scale = 2.0;
 
+#if 0
     // open png with mekka_map
     memset(&mekka_map, 0, (sizeof mekka_map));
     mekka_map.version = PNG_IMAGE_VERSION;
@@ -54,16 +55,19 @@ MekkaFlood_SWEKernelScenario::MekkaFlood_SWEKernelScenario(DEM& dem) : dem(dem)
          */
          std::cerr << "pngtopng: error: " << mekka_map.message << std::endl;
     }
+#endif
     
 }
 
 MekkaFlood_SWEKernelScenario::~MekkaFlood_SWEKernelScenario() {
     // cleanup png data
+#if 0
     if (mekka_map_data == NULL)
        png_image_free(&mekka_map);
 
     else
        free(mekka_map_data);
+#endif
 }
 
 static double bilinear_interpolate(double x00, double y00,
@@ -176,37 +180,41 @@ static double interpolation_error(peanoclaw::Patch& patch, int unknown) {
     return std::max(max_error,max_error_ghost);
 }
 
-static double interpolation_error_gradient(peanoclaw::Patch& patch, int unknown) {
+
+static double interpolation_error_coarse_fine_gradient(peanoclaw::Patch& patch, int unknown) {
     tarch::la::Vector<DIMENSIONS, int> subcellIndex;
+    tarch::la::Vector<DIMENSIONS, int> coarseSubcellIndex;
+
     const tarch::la::Vector<DIMENSIONS, double> patchSize = patch.getSize();
     const tarch::la::Vector<DIMENSIONS, double> patchPosition = patch.getPosition();
     const tarch::la::Vector<DIMENSIONS, double> meshWidth = patch.getSubcellSize();
     const tarch::la::Vector<DIMENSIONS, int> subdivisionFactor = patch.getSubdivisionFactor();
  
-    // interpolatation error inside patch
     double max_error = 0.0;
-  
-    subcellIndex(0) = 0;
-    subcellIndex(1) = 0;
-    tarch::la::Vector<DIMENSIONS, double> meshPos_00 = patch.getSubcellPosition(subcellIndex);
-    double f00 = patch.getValueUNew(subcellIndex, 0);
- 
-    subcellIndex(0) = subdivisionFactor(0)-1;
-    subcellIndex(1) = 0;
-    double f10 = patch.getValueUNew(subcellIndex, 0);
- 
-    subcellIndex(0) = 0;
-    subcellIndex(1) = subdivisionFactor(1)-1;
-    double f01 = patch.getValueUNew(subcellIndex, 0);
- 
-    subcellIndex(0) = subdivisionFactor(0)-1;
-    subcellIndex(1) = subdivisionFactor(1)-1;
-    tarch::la::Vector<DIMENSIONS, double> meshPos_11 = patch.getSubcellPosition(subcellIndex);
-    double f11 = patch.getValueUNew(subcellIndex, 0);
  
     tarch::la::Vector<DIMENSIONS, double> meshPos;
     for (int yi = 1; yi < subdivisionFactor(1)-1; yi++) {
         for (int xi = 1; xi < subdivisionFactor(0)-1; xi++) {
+            // coarse info ------------------------------
+            coarseSubcellIndex(0) = std::floor(xi / 3.0) * 3;
+            coarseSubcellIndex(1) = std::floor(yi / 3.0) * 3;
+            tarch::la::Vector<DIMENSIONS, double> meshPos_00 = patch.getSubcellPosition(coarseSubcellIndex);
+            double f00 = patch.getValueUNew(coarseSubcellIndex, unknown);
+         
+            coarseSubcellIndex(0) = std::ceil(xi / 3.0) * 3;
+            coarseSubcellIndex(1) = std::floor(yi / 3.0) * 3;
+            double f10 = patch.getValueUNew(coarseSubcellIndex, unknown);
+         
+            coarseSubcellIndex(0) = std::floor(xi / 3.0) * 3;
+            coarseSubcellIndex(1) = std::ceil(yi / 3.0) * 3;
+            double f01 = patch.getValueUNew(coarseSubcellIndex, unknown);
+         
+            coarseSubcellIndex(0) = std::ceil(xi / 3.0) * 3;
+            coarseSubcellIndex(1) = std::ceil(yi / 3.0) * 3;
+            tarch::la::Vector<DIMENSIONS, double> meshPos_11 = patch.getSubcellPosition(coarseSubcellIndex);
+            double f11 = patch.getValueUNew(coarseSubcellIndex, unknown);
+
+            // fine info -------------------------------
             // center
             subcellIndex(0) = xi;
             subcellIndex(1) = yi;
@@ -281,7 +289,113 @@ static double interpolation_error_gradient(peanoclaw::Patch& patch, int unknown)
     return max_error;
 }
 
-void MekkaFlood_SWEKernelScenario::initializePatch(peanoclaw::Patch& patch) {
+
+static double interpolation_error_gradient(peanoclaw::Patch& patch, int unknown) {
+    tarch::la::Vector<DIMENSIONS, int> subcellIndex;
+    const tarch::la::Vector<DIMENSIONS, double> patchSize = patch.getSize();
+    const tarch::la::Vector<DIMENSIONS, double> patchPosition = patch.getPosition();
+    const tarch::la::Vector<DIMENSIONS, double> meshWidth = patch.getSubcellSize();
+    const tarch::la::Vector<DIMENSIONS, int> subdivisionFactor = patch.getSubdivisionFactor();
+ 
+    // interpolatation error inside patch
+    double max_error = 0.0;
+  
+    subcellIndex(0) = 0;
+    subcellIndex(1) = 0;
+    tarch::la::Vector<DIMENSIONS, double> meshPos_00 = patch.getSubcellPosition(subcellIndex);
+    double f00 = patch.getValueUNew(subcellIndex, unknown);
+ 
+    subcellIndex(0) = subdivisionFactor(0)-1;
+    subcellIndex(1) = 0;
+    double f10 = patch.getValueUNew(subcellIndex, unknown);
+ 
+    subcellIndex(0) = 0;
+    subcellIndex(1) = subdivisionFactor(1)-1;
+    double f01 = patch.getValueUNew(subcellIndex, unknown);
+ 
+    subcellIndex(0) = subdivisionFactor(0)-1;
+    subcellIndex(1) = subdivisionFactor(1)-1;
+    tarch::la::Vector<DIMENSIONS, double> meshPos_11 = patch.getSubcellPosition(subcellIndex);
+    double f11 = patch.getValueUNew(subcellIndex, unknown);
+ 
+    tarch::la::Vector<DIMENSIONS, double> meshPos;
+    for (int yi = 1; yi < subdivisionFactor(1)-1; yi++) {
+        for (int xi = 1; xi < subdivisionFactor(0)-1; xi++) {
+            // center
+            subcellIndex(0) = xi;
+            subcellIndex(1) = yi;
+            meshPos = patch.getSubcellPosition(subcellIndex);
+            double value_11 = patch.getValueUNew(subcellIndex, unknown);
+            double interpolated_value_11 = bilinear_interpolate(meshPos_00(0), meshPos_00(1),
+                                                             meshPos_11(0), meshPos_11(1),
+                                                             meshPos(0), meshPos(1),
+                                                             f00, f10, f01, f11);
+            double error_11 = value_11 - interpolated_value_11;
+            
+            // left
+            subcellIndex(0) = xi-1;
+            subcellIndex(1) = yi;
+            meshPos = patch.getSubcellPosition(subcellIndex);
+            double value_01 = patch.getValueUNew(subcellIndex, unknown);
+            double interpolated_value_01 = bilinear_interpolate(meshPos_00(0), meshPos_00(1),
+                                                             meshPos_11(0), meshPos_11(1),
+                                                             meshPos(0), meshPos(1),
+                                                             f00, f10, f01, f11);
+            double error_01 = value_01 - interpolated_value_01;
+
+            // right
+            subcellIndex(0) = xi+1;
+            subcellIndex(1) = yi;
+            meshPos = patch.getSubcellPosition(subcellIndex);
+            double value_21 = patch.getValueUNew(subcellIndex, unknown);
+            double interpolated_value_21 = bilinear_interpolate(meshPos_00(0), meshPos_00(1),
+                                                             meshPos_11(0), meshPos_11(1),
+                                                             meshPos(0), meshPos(1),
+                                                             f00, f10, f01, f11);
+            double error_21 = value_21 - interpolated_value_21;
+
+            // bottom
+            subcellIndex(0) = xi;
+            subcellIndex(1) = yi-1;
+            meshPos = patch.getSubcellPosition(subcellIndex);
+            double value_10 = patch.getValueUNew(subcellIndex, unknown);
+            double interpolated_value_10 = bilinear_interpolate(meshPos_00(0), meshPos_00(1),
+                                                             meshPos_11(0), meshPos_11(1),
+                                                             meshPos(0), meshPos(1),
+                                                             f00, f10, f01, f11);
+            double error_10 = value_10 - interpolated_value_10;
+ 
+            // top
+            subcellIndex(0) = xi;
+            subcellIndex(1) = yi+1;
+            meshPos = patch.getSubcellPosition(subcellIndex);
+            double value_12 = patch.getValueUNew(subcellIndex, 0);
+            double interpolated_value_12 = bilinear_interpolate(meshPos_00(0), meshPos_00(1),
+                                                             meshPos_11(0), meshPos_11(1),
+                                                             meshPos(0), meshPos(1),
+                                                             f00, f10, f01, f11);
+            double error_12 = value_12 - interpolated_value_12;
+
+
+            double left_gradient = std::abs(error_11 - error_01);
+            double right_gradient = std::abs(error_21 - error_11);
+
+            double bottom_gradient = std::abs(error_11 - error_10);
+            double top_gradient = std::abs(error_12 - error_11);
+
+
+            double max_gradient_x = std::max(left_gradient, right_gradient) / meshWidth(0);
+            double max_gradient_y = std::max(left_gradient, right_gradient) / meshWidth(1);
+
+            max_error = std::max(max_error, max_gradient_x);
+            max_error = std::max(max_error, max_gradient_y);
+        }
+    }
+
+    return max_error;
+}
+
+double MekkaFlood_SWEKernelScenario::initializePatch(peanoclaw::Patch& patch) {
     // dam coordinates
     //double x0=domainSize*0.5;
     //double y0=domainSize*0.5;
@@ -357,6 +471,12 @@ void MekkaFlood_SWEKernelScenario::initializePatch(peanoclaw::Patch& patch) {
             patch.setValueUNew(subcellIndex, 5, h * v);
         }
     }
+
+    const tarch::la::Vector<DIMENSIONS, int> subdivisionFactor = patch.getSubdivisionFactor();
+    double min_domainsize = std::min(x_size,y_size);
+    int max_subdivisionFactor = std::max(subdivisionFactor(0),subdivisionFactor(1));
+
+    return min_domainsize / max_subdivisionFactor;
 }
 
 double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& patch) {
@@ -582,6 +702,7 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
     double max_meshwidth = std::max(meshWidth(0),meshWidth(1));
     double min_meshwidth = std::min(meshWidth(0),meshWidth(1));
 
+#if 0
     // plain value based
     double interpolation_error_height = interpolation_error(patch, 0);
     double interpolation_error_u = interpolation_error(patch, 1);
@@ -596,7 +717,9 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
   
     // experiment: scale error with meshwidth ( not to bad )
     max_interpolation_error = max_interpolation_error / min_meshwidth;
- 
+#endif
+
+#if 1
     // gradient based
     double interpolation_error_gradient_height = interpolation_error_gradient(patch, 0);
     double interpolation_error_gradient_u = interpolation_error_gradient(patch, 1);
@@ -608,47 +731,59 @@ double MekkaFlood_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& 
     max_interpolation_error_gradient = std::max(max_interpolation_error_gradient, interpolation_error_gradient_u);
     max_interpolation_error_gradient = std::max(max_interpolation_error_gradient, interpolation_error_gradient_v);
     //max_interpolation_error_gradient = std::max(max_interpolation_error_gradient, interpolation_error_gradient_z);
- 
+#endif
+
+#if 0
+    // gradient based between coarse and fine grid
+    double interpolation_error_gradient_height = interpolation_error_coarse_fine_gradient(patch, 0);
+    double interpolation_error_gradient_u = interpolation_error_coarse_fine_gradient(patch, 1);
+    double interpolation_error_gradient_v = interpolation_error_coarse_fine_gradient(patch, 2);
+    //double interpolation_error_gradient_z = interpolation_error_coarse_fine_gradient(patch, 3);
+
+    double max_interpolation_error_gradient = 0.0;
+    max_interpolation_error_gradient = std::max(max_interpolation_error_gradient, interpolation_error_gradient_height);
+    max_interpolation_error_gradient = std::max(max_interpolation_error_gradient, interpolation_error_gradient_u);
+    max_interpolation_error_gradient = std::max(max_interpolation_error_gradient, interpolation_error_gradient_v);
+    //max_interpolation_error_gradient = std::max(max_interpolation_error_gradient, interpolation_error_gradient_z);
+#endif
+
     double min_domainsize = std::min(x_size,y_size);
     int min_subdivisionFactor = std::min(subdivisionFactor(0),subdivisionFactor(1));
     int max_subdivisionFactor = std::max(subdivisionFactor(0),subdivisionFactor(1));
  
     // AMR requires some time to rest, so lets give the patches a little bit more time
-    if (patch.getAge() >= 2) { // 2 works in sequential mode
+    //if (patch.getAge() >= 2) { // 2 works in sequential mode
         retval = max_meshwidth;
         //std::cout << "interpolation error inside patch: " << max_error << " " << " with ghostlayer " << max_error_ghost << std::endl;
 
         //std::cout << "max interpolation error " << max_interpolation_error << std::endl;
-        //std::cout << "max interpolation error gradient" << max_interpolation_error_gradient << std::endl;
-        if (max_interpolation_error_gradient > 1e-2) {
+        //std::cout << "max interpolation error gradient " << max_interpolation_error_gradient << std::endl;
+        if (max_interpolation_error_gradient > 1.e-1) { // 1.e-2 and basic interpolation gradient used for POSTER
             //std::cout << "interpolation error inside patch: " << max_error << " " << " with ghostlayer " << max_error_ghost << std::endl;
             //std::cout << "refining!" << std::endl;
             retval = retval / (3.0 * max_subdivisionFactor);
         } else {
             retval = retval * (3.0 * max_subdivisionFactor);
         }
-     
-    } else {
-        retval = min_meshwidth;
-    }
+        patch.resetAge();
+//    } else {
+//        retval = max_meshwidth;
+//    }
   
     // ensure minimum refinement
     if (retval > (min_domainsize / (3.0 * max_subdivisionFactor))) {
         //std::cout << "refining  " << retval << " vs " << min_domainsize / (1.0 * max_subdivisionFactor) <<  std::endl;
         retval = min_domainsize / (3.0 * max_subdivisionFactor);
+        patch.resetAge();
     }
  
     // ensure maximum refinement
     if (retval < (min_domainsize / (9.0 * max_subdivisionFactor))) { 
         //std::cout << "too small refinement!!! " << retval << " vs " << (min_domainsize / (81.0 * max_subdivisionFactor)) <<  std::endl;
         retval = min_domainsize / (9.0 * max_subdivisionFactor);
+        patch.resetAge();
     }
 
-    /*if (retval < min_meshwidth) {
-        //std::cout << "ready to do some refining!" << std::endl;
-        patch.resetAge();
-    }*/
- 
     /*if (mekka_distance > outerRadius) {
         retval = domainSize/6/243;
     } else {
@@ -762,6 +897,7 @@ tarch::la::Vector<DIMENSIONS, double> MekkaFlood_SWEKernelScenario::mapMeshToCoo
 }
 
 double MekkaFlood_SWEKernelScenario::mapMeshToMap(tarch::la::Vector<DIMENSIONS, double>& coords) {
+#if 0
     // relate pixel in png file to bathymetry data
     int width_map = mekka_map.width;
     int height_map = mekka_map.height;
@@ -781,6 +917,8 @@ double MekkaFlood_SWEKernelScenario::mapMeshToMap(tarch::la::Vector<DIMENSIONS, 
 
     // convert gray scale to a double precision value
     double gray_value = mekka_map_data[bufferpos] / 255.0;
+#endif
+    double gray_value = 0.0;
     return gray_value;
 }
 

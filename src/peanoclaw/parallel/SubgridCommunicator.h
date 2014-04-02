@@ -16,8 +16,17 @@
 #include "tarch/logging/Log.h"
 
 namespace peanoclaw {
+
+  namespace mappings {
+    class Remesh;
+  }
+
   namespace parallel {
     class SubgridCommunicator;
+
+    //TODO unterweg debug
+    class MasterWorkerAndForkJoinCommunicator;
+    class NeighborCommunicator;
   }
 }
 
@@ -35,17 +44,22 @@ class peanoclaw::parallel::SubgridCommunicator {
     typedef peanoclaw::records::CellDescription CellDescription;
     typedef peanoclaw::records::Data Data;
 
+    //TODO unterweg debug
+    friend class peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator;
+    friend class peanoclaw::parallel::NeighborCommunicator;
+    friend class peanoclaw::mappings::Remesh;
+
     /**
      * Logging device.
      */
     static tarch::logging::Log _log;
 
-    int _remoteRank;
-    const tarch::la::Vector<DIMENSIONS,double>& _position;
-    int                                         _level;
-    peano::heap::MessageType                    _messageType;
-    bool                                        _onlySendOverlappedCells;
-    bool                                        _packCommunication;
+    const int                                   _remoteRank;
+    const tarch::la::Vector<DIMENSIONS,double>  _position;
+    const int                                   _level;
+    const peano::heap::MessageType              _messageType;
+    const bool                                  _onlySendOverlappedCells;
+    const bool                                  _packCommunication;
 
   public:
     /**

@@ -50,13 +50,13 @@ bool peanoclaw::parallel::NeighbourCommunicator::sendSubgrid(
 
       #ifdef Asserts
       assertion3(tarch::la::allGreater(transferedSubgrid.getSubdivisionFactor(), 0), transferedSubgrid.toString(), _position, _level);
-      assertion1(!transferedSubgrid.isRemote(), transferedSubgrid);
+      assertion2(!transferedSubgrid.isRemote(), transferedSubgrid, _remoteRank);
 
       //Check for zeros in transfered patch
       if(transferedSubgrid.isValid() && transferedSubgrid.isLeaf()) {
         dfor(subcellIndex, transferedSubgrid.getSubdivisionFactor()) {
-          assertion3(tarch::la::greater(transferedSubgrid.getValueUNew(subcellIndex, 0), 0.0), subcellIndex, transferedSubgrid, transferedSubgrid.toStringUNew());
-          assertion3(tarch::la::greater(transferedSubgrid.getValueUOld(subcellIndex, 0), 0.0), subcellIndex, transferedSubgrid, transferedSubgrid.toStringUOldWithGhostLayer());
+          /*assertion3(tarch::la::greater(transferedSubgrid.getValueUNew(subcellIndex, 0), 0.0), subcellIndex, transferedSubgrid, transferedSubgrid.toStringUNew());
+          assertion3(tarch::la::greater(transferedSubgrid.getValueUOld(subcellIndex, 0), 0.0), subcellIndex, transferedSubgrid, transferedSubgrid.toStringUOldWithGhostLayer());*/
         }
       }
       #endif
@@ -79,6 +79,10 @@ bool peanoclaw::parallel::NeighbourCommunicator::sendSubgrid(
 void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubgrid) {
   #ifdef Parallel
   logTraceInWith3Arguments("receiveSubgrid(Subgrid)", localCellDescriptionIndex, _position, _level);
+
+  //TODO unterweg debug
+//  std::cout << "Receiving subgrid on " << tarch::parallel::Node::getInstance().getRank() << " from "
+//      << _remoteRank << ": " << localSubgrid << std::endl;
 
   std::vector<CellDescription> remoteCellDescriptionVector = _subgridCommunicator.receiveCellDescription();
   logDebug("", "Receiving patch from " << _remoteRank << " at " << localCellDescription.getPosition() << " on level " << localCellDescription.getLevel());
@@ -212,12 +216,15 @@ peanoclaw::parallel::NeighbourCommunicator::NeighbourCommunicator(
     _remoteSubgridMap(remoteSubgridMap),
     _statistics(statistics),
     //En-/Disable optimizations
-    _avoidMultipleTransferOfSubgridsIfPossible(true),
-    _onlySendSubgridsAfterChange(true),
-    _onlySendOverlappedCells(true),
-    _packCommunication(true),
+    _avoidMultipleTransferOfSubgridsIfPossible(false),
+    _onlySendSubgridsAfterChange(false),
+    _onlySendOverlappedCells(false),
+    _packCommunication(false),
     _subgridCommunicator(remoteRank, position, level, peano::heap::NeighbourCommunication, _onlySendOverlappedCells, _packCommunication) {
   logTraceInWith3Arguments("NeighbourCommunicator", remoteRank, position, level);
+
+  //TODO unterweg debug
+  //assertionNumericalEquals(_position, _subgridCommunicator._position);
 
   logTraceOut("NeighbourCommunicator");
 }

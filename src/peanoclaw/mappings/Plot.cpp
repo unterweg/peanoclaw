@@ -65,7 +65,7 @@ void peanoclaw::mappings::Plot::plotFile(int plotNumber) {
   _vtkWriter.writeToFile( snapshotFileName.str() );
 }
 
-peanoclaw::mappings::Plot::Plot() : _nextPlotNumber(0) {
+peanoclaw::mappings::Plot::Plot() : _nextPlotNumber(0), _vtkWriter(14) {
   logTraceIn( "Plot()" );
   // @todo Insert your code here
   logTraceOut( "Plot()" );
@@ -457,7 +457,11 @@ void peanoclaw::mappings::Plot::beginIteration(
 
   std::set<int> plotQ;
   plotQ.insert(0);
-  plotQ.insert(4);
+  plotQ.insert(1);
+  plotQ.insert(2);
+  plotQ.insert(3);
+  //plotQ.insert(4);
+  //plotQ.insert(5);
   std::set<int> plotAux;
 
   _patchPlotter = new PatchPlotter(

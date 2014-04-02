@@ -4,7 +4,7 @@
 #if defined(SWE) || defined(PEANOCLAW_FULLSWOF2D)
 
 #include <cstdio>
-#include <png.h>
+//#include <png.h>
 
 #include "tarch/la/Vector.h"
 
@@ -31,7 +31,7 @@ class MekkaFlood_SWEKernelScenario : public peanoclaw::native::SWEKernelScenario
 
         ~MekkaFlood_SWEKernelScenario();
 
-        virtual void initializePatch(peanoclaw::Patch& patch);
+        virtual double initializePatch(peanoclaw::Patch& patch);
         virtual double computeDemandedMeshWidth(peanoclaw::Patch& patch);
         virtual void update(peanoclaw::Patch& patch);
  
@@ -47,9 +47,10 @@ class MekkaFlood_SWEKernelScenario : public peanoclaw::native::SWEKernelScenario
         DEM& dem;
         //BathymetryHelper bathymetryHelper;
         
-
+#if 0
         png_image mekka_map; /* The control structure used by libpng */
         uint8_t* mekka_map_data;
+#endif
 };
 #endif
 

@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 
 #include "peanoclaw/native/MekkaFlood_solver.h"
 
@@ -17,7 +19,7 @@
 
 const int VECTOR_LENGTH = 4;
 
-static const float FZERO = 0.f;
+static const double FZERO = 0;
 
 MekkaFlood_solver::MekkaFlood_solver()
 {
@@ -34,93 +36,93 @@ void MekkaFlood_solver::initializeStrideinfo(const Constants& constants, int dim
     int ny_ghost = constants.NYCELL + 2;
 
     strideinfo[0] = 1;
-    strideinfo[1] = static_cast<int>(std::ceil(static_cast<double>(ny_ghost) / static_cast<double>(VECTOR_LENGTH)) * VECTOR_LENGTH); // align in to a multiple of 4 (float) elements
+    strideinfo[1] = static_cast<int>(std::ceil(static_cast<double>(ny_ghost) / static_cast<double>(VECTOR_LENGTH)) * VECTOR_LENGTH); // align in to a multiple of 4 (double) elements
     strideinfo[2] = strideinfo[1] * nx_ghost;
 
     //std::cout << "strideinfo " << strideinfo[0] << " " << strideinfo[1] << " " << strideinfo[2] << " nx " << nx_ghost << " ny " << ny_ghost << std::endl;
 }
 
 void MekkaFlood_solver::allocateInput(int nr_patches, int dim, unsigned int* strideinfo, InputArrays& input) {
-    unsigned int patchsize = strideinfo[2] * sizeof(float);
+    unsigned int patchsize = strideinfo[2] * sizeof(double);
     unsigned int totalsize = patchsize * nr_patches;
 
-    posix_memalign(reinterpret_cast<void**>(&(input.h)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(input.u)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(input.v)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(input.z)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(input.h)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(input.u)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(input.v)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(input.z)), VECTOR_LENGTH*sizeof(double), totalsize);
 }
 
 void MekkaFlood_solver::allocateTemp(int nr_patches, int dim, unsigned int* strideinfo, TempArrays& temp) {
-    unsigned int patchsize = strideinfo[2] * sizeof(float);
+    unsigned int patchsize = strideinfo[2] * sizeof(double);
     unsigned int totalsize = patchsize * nr_patches;
 
-    posix_memalign(reinterpret_cast<void**>(&(temp.h1r)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.h1l)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.h1r)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.h1l)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.u1r)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.u1l)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.u1r)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.u1l)), VECTOR_LENGTH*sizeof(double), totalsize);
 
-    posix_memalign(reinterpret_cast<void**>(&(temp.v1r)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.v1l)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.v1r)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.v1l)), VECTOR_LENGTH*sizeof(double), totalsize);
 
-    posix_memalign(reinterpret_cast<void**>(&(temp.z1r)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.z1l)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.z1r)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.z1l)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.delta_z1)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.delzc1)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.delz1)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.delta_z1)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.delzc1)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.delz1)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.h2r)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.h2l)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.h2r)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.h2l)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.u2r)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.u2l)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.u2r)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.u2l)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.v2r)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.v2l)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.v2r)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.v2l)), VECTOR_LENGTH*sizeof(double), totalsize);
   
-    posix_memalign(reinterpret_cast<void**>(&(temp.z2r)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.z2l)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.z2r)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.z2l)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.delta_z2)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.delzc2)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.delz2)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.delta_z2)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.delzc2)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.delz2)), VECTOR_LENGTH*sizeof(double), totalsize);
 
-    posix_memalign(reinterpret_cast<void**>(&(temp.f1)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.f2)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.f3)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.f1)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.f2)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.f3)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.g1)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.g2)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.g3)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.g1)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.g2)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.g3)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.q1)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.q2)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.q1)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.q2)), VECTOR_LENGTH*sizeof(double), totalsize);
 
-    posix_memalign(reinterpret_cast<void**>(&(temp.hs)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.us)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.vs)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.qs1)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.qs2)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.hs)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.us)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.vs)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.qs1)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.qs2)), VECTOR_LENGTH*sizeof(double), totalsize);
   
-    posix_memalign(reinterpret_cast<void**>(&(temp.hsa)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.usa)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.vsa)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.qsa1)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.qsa2)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.hsa)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.usa)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.vsa)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.qsa1)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.qsa2)), VECTOR_LENGTH*sizeof(double), totalsize);
 
-    posix_memalign(reinterpret_cast<void**>(&(temp.Vin1)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.Vin2)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.Vin_tot)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.Vin1)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.Vin2)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.Vin_tot)), VECTOR_LENGTH*sizeof(double), totalsize);
 
-    posix_memalign(reinterpret_cast<void**>(&(temp.Fric_tab)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.Fric_tab)), VECTOR_LENGTH*sizeof(double), totalsize);
  
-    posix_memalign(reinterpret_cast<void**>(&(temp.h1right)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.h1left)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.h2right)), VECTOR_LENGTH*sizeof(float), totalsize);
-    posix_memalign(reinterpret_cast<void**>(&(temp.h2left)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.h1right)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.h1left)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.h2right)), VECTOR_LENGTH*sizeof(double), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.h2left)), VECTOR_LENGTH*sizeof(double), totalsize);
 
-    posix_memalign(reinterpret_cast<void**>(&(temp.Tab_rain)), VECTOR_LENGTH*sizeof(float), totalsize);
+    posix_memalign(reinterpret_cast<void**>(&(temp.Tab_rain)), VECTOR_LENGTH*sizeof(double), totalsize);
 }
 
 void MekkaFlood_solver::freeInput(InputArrays& input) {
@@ -205,7 +207,7 @@ void MekkaFlood_solver::freeTemp(TempArrays& temp) {
 }
 
 
-float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* strideinfo, InputArrays& input, TempArrays& temp, const Constants& constants, float dt_max) {
+double MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* strideinfo, InputArrays& input, TempArrays& temp, const Constants& constants, double dt_max) {
 	/**
 	 * @details Performs the second order numerical scheme.
 	 * @note In DEBUG mode, the programme will save another file with boundary fluxes.
@@ -218,6 +220,7 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
 
   //initialization
 
+#if 0
   for (int i=1 ; i<=NXCELL ; i++){
     for (int j=1 ; j<=NYCELL ; j++){
         index[0] = j;
@@ -230,7 +233,7 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
       temp.q2[centerIndex] = input.v[centerIndex]*input.h[centerIndex];
     } //end for j
   } //end for i
-
+#endif
 
   for (int i=0 ; i<=NXCELL+1 ; i++){
     for (int j=0 ; j<=NYCELL+1 ; j++){
@@ -243,6 +246,7 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
     } //end for j
   }//end for i
 
+#if 0
   for (int i=1 ; i<=NXCELL ; i++){
     for (int j=1 ; j<=NYCELL ; j++){
         index[0] = j;
@@ -253,22 +257,27 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
         temp.Vin_tot[centerIndex] = FZERO;
     } //end for j
   } //end for i
+#endif
+ 
 
-  float dt2;  
-  
   rec_muscl_init(patchid, dim, strideinfo, input, temp, constants);
 
-  int verif = 1; // TODO: this might actually go to zero, however i have never seen this case, maybe its impossible due to the adaptive time stepping of PeanoClaw
+  double dt2 = 0.0;
+  
+
+  int verif = 1; // TODO: this might actually go to zero
   
 
   //time's iteration beginning 
   //while (T > tps  && n < MAX_ITER){  // we only need one iteration so no need for a loop
  
-  float dt1;
+  double dt1;
+  double tps = FZERO; // TODO: current simulation time. however, we do not have time changing boundaries
 
-  do {
+  int n = 0;
 
-  float tps = FZERO; // TODO: current simulation time. however, we do not have time changing boundaries
+  while (n < 1) {
+
  
     SchemeArrays sinput1;
     sinput1.h = input.h;
@@ -277,6 +286,15 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
     sinput1.z = input.z;
     sinput1.q1 = temp.q1;
     sinput1.q2 = temp.q2;
+ 
+    SchemeArrays sinput2;
+    sinput2.h = temp.hs;
+    sinput2.u = temp.us;
+    sinput2.v = temp.vs;
+    sinput2.z = input.z;
+    sinput2.q1 = temp.qs1;
+    sinput2.q2 = temp.qs2;
+
 
     if (1 == verif){
       dt1=dt_max;
@@ -331,31 +349,17 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
     dt1=min(T-tps,dt1);
 #endif
     
-    float tx=dt1/constants.DX;
-    float ty=dt1/constants.DY;
+    double tx=dt1/constants.DX;
+    double ty=dt1/constants.DY;
   
-    SchemeArrays soutput;
-    soutput.h = temp.hs;
-    soutput.u = temp.us;
-    soutput.v = temp.vs;
-    soutput.z = input.z;
-    soutput.q1 = temp.qs1;
-    soutput.q2 = temp.qs2;
-
-    maincalcscheme(patchid, dim, strideinfo, sinput1, soutput, temp, constants, tps, dt1, verif); // careful, this generate new data which will be used as input in the second step
+    maincalcscheme(patchid, dim, strideinfo, sinput1, sinput2, temp, constants, tps, dt1, verif); // careful, this generate new data which will be used as input in the second step
     //    dt2=dt_max;
     dt2=dt1;    
-   
+  
+  
     // set input to previously generated output for upcoming actions
-    sinput1.h = temp.hs;
-    sinput1.u = temp.us;
-    sinput1.v = temp.vs;
-    sinput1.z = input.z;
-    sinput1.q1 = temp.qs1;
-    sinput1.q2 = temp.qs2;
-
     //boundary conditions
-    boundary(patchid, dim, strideinfo, sinput1, temp, constants, tps+dt1);
+    boundary(patchid, dim, strideinfo, sinput2, temp, constants, tps+dt1);
 
     for (int i=1 ; i<NXCELL+1 ; i++){
       for (int j=1 ; j<NYCELL+1 ; j++){
@@ -383,23 +387,25 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
     } //end for i
   
     //Reconstruction for order 2 
-    rec_muscl(patchid, dim, strideinfo, sinput1, temp, constants);
+    rec_muscl(patchid, dim, strideinfo, sinput2, temp, constants);
    
     //commun bloc
     maincalcflux(patchid, dim, strideinfo, temp, constants, constants.CFL_FIX, dt_max, dt2);
+  
+    std::cout << "check before verif is zero: dt2 " << dt2 << " dt 1 " << dt1 << std::endl;
 
-    // TODO: this can now be solved by blending / select alone!
+    // TODO: this can not be solved by blending / select alone!
     if (dt2<dt1){ // this case actually happens in our case, when the timestep gets too large!
       dt1=dt2;
       tx=dt1/constants.DX;
       ty=dt1/constants.DY;
       verif=0;
-
     }else{
-      
+  
       //Added to do calculus at the beginning 
       verif=1;
-     
+      
+    SchemeArrays soutput;
     soutput.h = temp.hsa;
     soutput.u = temp.usa;
     soutput.v = temp.vsa;
@@ -407,12 +413,12 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
     soutput.q1 = temp.qsa1;
     soutput.q2 = temp.qsa2;
       
-    maincalcscheme(patchid, dim, strideinfo, sinput1, soutput, temp, constants, tps, dt1, verif); // takes new input arguments  and generate and third set of input arguments
+    maincalcscheme(patchid, dim, strideinfo, sinput2, soutput, temp, constants, tps, dt1, verif); // takes new input arguments  and generate and third set of input arguments
      
       /*the values of height_Vinf_tot and height_of_tot put to zero
 	to compute infiltrated and overland flow volume*/
-      float height_Vinf_tot=FZERO;  
-      float height_of_tot=FZERO;  
+      double height_Vinf_tot=FZERO;  
+      double height_of_tot=FZERO;  
       //Heun method (order 2 in time)
       for (int i=1 ; i<NXCELL+1 ; i++){
         for (int j=1 ; j<NYCELL+1 ; j++){
@@ -433,7 +439,7 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
               temp.vsa[centerIndex]=FZERO;
           }
 
-          float tmp = 0.5*(input.h[centerIndex]+temp.hsa[centerIndex]); // combine first and last generated input argument
+          double tmp = 0.5*(input.h[centerIndex]+temp.hsa[centerIndex]); // combine first and last generated input argument
           if (tmp>=constants.HE_CA){ // blend select with a trick: do the computation anyway and then multiply the result with either 0. or 0.5
             temp.q1[centerIndex] = 0.5*(input.h[centerIndex]*input.u[centerIndex]+temp.hsa[centerIndex]*temp.usa[centerIndex]);
             temp.q2[centerIndex] = 0.5*(input.h[centerIndex]*input.v[centerIndex]+temp.hsa[centerIndex]*temp.vsa[centerIndex]);
@@ -464,25 +470,25 @@ float MekkaFlood_solver::calcul(const int patchid, int dim, unsigned int* stride
 
 #if 0
       /*Computation of the cumulated infiltrated volume*/
-      float Vol_inf_tot_cumul=height_Vinf_tot*DX*DY;
+      double Vol_inf_tot_cumul=height_Vinf_tot*DX*DY;
 
       /*Computation of the overland flow volume*/
-      float Vol_of_tot=height_of_tot*DX*DY;
+      double Vol_of_tot=height_of_tot*DX*DY;
 
-      n=n+1;
 #endif
 
       tps=tps+dt1;
+      n=n+1;
 
     }//end for else dt2<dt1
 
-  } while (verif == 0);
+    }; // while loop
  
     return dt1; // this is the timestep which was used for this iteration
 }
 
 
-void MekkaFlood_solver::boundary(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, TempArrays& temp, const Constants& constants, float time_tmp){
+void MekkaFlood_solver::boundary(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, TempArrays& temp, const Constants& constants, double time_tmp){
 
 #if 0
     const int NODEX = NXCELL;
@@ -517,8 +523,8 @@ void MekkaFlood_solver::boundary(const int patchid, int dim, unsigned int* strid
 }
 
 
-float MekkaFlood_solver::lim_minmod(float a, float b) {
-    float rec;
+double MekkaFlood_solver::lim_minmod(double a, double b) {
+    double rec;
 	if (a>=FZERO && b>=FZERO){
 		rec=std::min(a,b);
 	}else if (a<=FZERO && b<=FZERO){
@@ -620,26 +626,26 @@ void MekkaFlood_solver::rec_muscl(const int patchid, int dim, unsigned int* stri
         index[0] = j; // >= 1
         index[1] = 0; // i
         index[2] = patchid;
-        bottomIndex = linearizeIndex(3, index, strideinfo);
+        leftIndex = linearizeIndex(3, index, strideinfo);
 	
         index[0] = j;
         index[1] = 1; // i
         index[2] = patchid;
         centerIndex = linearizeIndex(3, index, strideinfo);
 	
-		temp.h1r[bottomIndex] = input.h[bottomIndex];
-		temp.u1r[bottomIndex] = input.u[bottomIndex];
-		temp.v1r[bottomIndex] = input.v[bottomIndex];
+		temp.h1r[leftIndex] = input.h[leftIndex];
+		temp.u1r[leftIndex] = input.u[leftIndex];
+		temp.v1r[leftIndex] = input.v[leftIndex];
 
-		float delta_h1 = input.h[centerIndex] - input.h[bottomIndex]; //delta_h1 = h[1][j]-h[0][j];
-		float delta_u1 = input.u[centerIndex] - input.u[bottomIndex]; //delta_u1 = u[1][j]-u[0][j];
-		float delta_v1 = input.v[centerIndex] - input.v[bottomIndex]; //delta_v1 = v[1][j]-v[0][j];
+		double delta_h1 = input.h[centerIndex] - input.h[leftIndex]; //delta_h1 = h[1][j]-h[0][j];
+		double delta_u1 = input.u[centerIndex] - input.u[leftIndex]; //delta_u1 = u[1][j]-u[0][j];
+		double delta_v1 = input.v[centerIndex] - input.v[leftIndex]; //delta_v1 = v[1][j]-v[0][j];
 
 		for(int i=1 ; i<NXCELL+1 ; i++){
             index[0] = j;
             index[1] = i+1;
             index[2] = patchid;
-            topIndex = linearizeIndex(3, index, strideinfo);
+            rightIndex = linearizeIndex(3, index, strideinfo);
   
             index[0] = j;
             index[1] = i-1;
@@ -651,16 +657,16 @@ void MekkaFlood_solver::rec_muscl(const int patchid, int dim, unsigned int* stri
             index[2] = patchid;
             centerIndex = linearizeIndex(3, index, strideinfo);
 
-			float delta_h2 = input.h[topIndex]-input.h[centerIndex]; // delta_h2 = h[i+1][j]-h[i][j];
-			float delta_u2 = input.u[topIndex]-input.u[centerIndex]; // delta_u2 = u[i+1][j]-u[i][j];
-            float delta_v2 = input.v[topIndex]-input.v[centerIndex]; // delta_v2 = v[i+1][j]-v[i][j];
+			double delta_h2 = input.h[rightIndex]-input.h[centerIndex]; // delta_h2 = h[i+1][j]-h[i][j];
+			double delta_u2 = input.u[rightIndex]-input.u[centerIndex]; // delta_u2 = u[i+1][j]-u[i][j];
+            double delta_v2 = input.v[rightIndex]-input.v[centerIndex]; // delta_v2 = v[i+1][j]-v[i][j];
 
             // TODO: calls to method, let us see how much this actually hurts
             // maybe we have to provide the return value by reference?
-			float dh = lim_minmod(delta_h1,delta_h2);
-			float dz_h = lim_minmod(delta_h1+temp.delta_z1[leftIndex],delta_h2+temp.delta_z1[centerIndex]);
-			float du = lim_minmod(delta_u1,delta_u2);
-			float dv = lim_minmod(delta_v1,delta_v2);
+			double dh = lim_minmod(delta_h1,delta_h2);
+			double dz_h = lim_minmod(delta_h1+temp.delta_z1[leftIndex],delta_h2+temp.delta_z1[centerIndex]);
+			double du = lim_minmod(delta_u1,delta_u2);
+			double dv = lim_minmod(delta_v1,delta_v2);
 
 			temp.h1r[centerIndex]=input.h[centerIndex]+dh*0.5;
 			temp.h1l[centerIndex]=input.h[centerIndex]-dh*0.5;
@@ -670,24 +676,17 @@ void MekkaFlood_solver::rec_muscl(const int patchid, int dim, unsigned int* stri
 			temp.delzc1[centerIndex] = temp.z1r[centerIndex]-temp.z1l[centerIndex];
 			temp.delz1[leftIndex] = temp.z1l[centerIndex]-temp.z1r[leftIndex];
 
-            float scalar = 0.0;
-			if (input.h[centerIndex]>0.){ // blend / select operation here
-                scalar = temp.h1l[centerIndex] / input.h[centerIndex];
+			if (input.h[centerIndex]>0.){
+				temp.u1r[centerIndex]=input.u[centerIndex]+temp.h1l[centerIndex]*du*0.5/input.h[centerIndex];
+				temp.u1l[centerIndex]=input.u[centerIndex]-temp.h1r[centerIndex]*du*0.5/input.h[centerIndex];
+				temp.v1r[centerIndex]=input.v[centerIndex]+temp.h1l[centerIndex]*dv*0.5/input.h[centerIndex];
+				temp.v1l[centerIndex]=input.v[centerIndex]-temp.h1r[centerIndex]*dv*0.5/input.h[centerIndex];
 			}else{
-                scalar = 1.0;
+				temp.u1r[centerIndex]=input.u[centerIndex]+du*0.5;
+				temp.u1l[centerIndex]=input.u[centerIndex]-du*0.5;
+				temp.v1r[centerIndex]=input.v[centerIndex]+dv*0.5;
+				temp.v1l[centerIndex]=input.v[centerIndex]-dv*0.5;
 			} //end if
-    	
-            temp.u1r[centerIndex]=input.u[centerIndex]+scalar*du*0.5;
-		    temp.v1r[centerIndex]=input.v[centerIndex]+scalar*dv*0.5;
-		
-            if (input.h[centerIndex]>0.){ // blend / select operation here
-                scalar = temp.h1r[centerIndex] / input.h[centerIndex];
-			}else{
-                scalar = 1.0;
-			} //end if
- 
-            temp.u1l[centerIndex]=input.u[centerIndex]-scalar*du*0.5;
-		    temp.v1l[centerIndex]=input.v[centerIndex]-scalar*dv*0.5;
 
             //rajout de l'iteration des delta
             delta_h1 = delta_h2;
@@ -698,18 +697,18 @@ void MekkaFlood_solver::rec_muscl(const int patchid, int dim, unsigned int* stri
         index[0] = j;
         index[1] = NXCELL+1; // i
         index[2] = patchid;
-        topIndex = linearizeIndex(3, index, strideinfo);
+        rightIndex = linearizeIndex(3, index, strideinfo);
  
         index[0] = j;
         index[1] = NXCELL; // i
         index[2] = patchid;
         centerIndex = linearizeIndex(3, index, strideinfo);
 
-		temp.h1l[topIndex] = input.h[topIndex];
-		temp.u1l[topIndex] = input.u[topIndex];
-		temp.v1l[topIndex] = input.v[topIndex];
+		temp.h1l[rightIndex] = input.h[rightIndex];
+		temp.u1l[rightIndex] = input.u[rightIndex];
+		temp.v1l[rightIndex] = input.v[rightIndex];
 
-		temp.delz1[centerIndex] = temp.z1l[topIndex]-temp.z1r[centerIndex]; 
+		temp.delz1[centerIndex] = temp.z1l[rightIndex]-temp.z1r[centerIndex]; 
 	} //end for j
 	
     for (int i=1 ; i<NXCELL+1 ; i++){
@@ -721,15 +720,15 @@ void MekkaFlood_solver::rec_muscl(const int patchid, int dim, unsigned int* stri
         index[0] = 0;
         index[1] = i;
         index[2] = patchid;
-        leftIndex = linearizeIndex(3, index, strideinfo);
+        bottomIndex = linearizeIndex(3, index, strideinfo);
 	
-        temp.h2r[leftIndex] = input.h[leftIndex];
-		temp.u2r[leftIndex] = input.u[leftIndex];
-		temp.v2r[leftIndex] = input.v[leftIndex];
+        temp.h2r[bottomIndex] = input.h[bottomIndex];
+		temp.u2r[bottomIndex] = input.u[bottomIndex];
+		temp.v2r[bottomIndex] = input.v[bottomIndex];
 
-		float delta_h1 = input.h[centerIndex]-input.h[leftIndex];
-		float delta_u1 = input.u[centerIndex]-input.u[leftIndex];
-		float delta_v1 = input.v[centerIndex]-input.v[leftIndex];
+		double delta_h1 = input.h[centerIndex]-input.h[bottomIndex];
+		double delta_u1 = input.u[centerIndex]-input.u[bottomIndex];
+		double delta_v1 = input.v[centerIndex]-input.v[bottomIndex];
 		
         for (int j=1 ; j<NYCELL+1 ; j++){
 
@@ -741,21 +740,21 @@ void MekkaFlood_solver::rec_muscl(const int patchid, int dim, unsigned int* stri
             index[0] = j+1;
             index[1] = i;
             index[2] = patchid;
-            rightIndex = linearizeIndex(3, index, strideinfo);
+            topIndex = linearizeIndex(3, index, strideinfo);
   
-            index[0] = i+1;
+            index[0] = j-1;
             index[1] = i;
             index[2] = patchid;
-            leftIndex = linearizeIndex(3, index, strideinfo);
+            bottomIndex = linearizeIndex(3, index, strideinfo);
       
-			float delta_h2 = input.h[rightIndex]-input.h[centerIndex];
-			float delta_u2 = input.u[rightIndex]-input.u[centerIndex];
-			float delta_v2 = input.v[rightIndex]-input.v[centerIndex];
+			double delta_h2 = input.h[topIndex]-input.h[centerIndex];
+			double delta_u2 = input.u[topIndex]-input.u[centerIndex];
+			double delta_v2 = input.v[topIndex]-input.v[centerIndex];
 
-			float dh = lim_minmod(delta_h1,delta_h2);
-			float dz_h = lim_minmod(delta_h1+temp.delta_z2[leftIndex],delta_h2+temp.delta_z2[centerIndex]);
-			float du = lim_minmod(delta_u1,delta_u2);
-			float dv = lim_minmod(delta_v1,delta_v2);
+			double dh = lim_minmod(delta_h1,delta_h2);
+			double dz_h = lim_minmod(delta_h1+temp.delta_z2[bottomIndex],delta_h2+temp.delta_z2[centerIndex]);
+			double du = lim_minmod(delta_u1,delta_u2);
+			double dv = lim_minmod(delta_v1,delta_v2);
 
 			temp.h2r[centerIndex] = input.h[centerIndex]+dh*0.5;
 			temp.h2l[centerIndex] = input.h[centerIndex]-dh*0.5;
@@ -763,9 +762,9 @@ void MekkaFlood_solver::rec_muscl(const int patchid, int dim, unsigned int* stri
 			temp.z2r[centerIndex] = input.z[centerIndex]+0.5*(dz_h-dh);
 			temp.z2l[centerIndex] = input.z[centerIndex]+0.5*(dh-dz_h);
 			temp.delzc2[centerIndex] = temp.z2r[centerIndex]-temp.z2l[centerIndex];
-			temp.delz2[leftIndex] = temp.z2l[centerIndex]-temp.z2r[leftIndex];
+			temp.delz2[bottomIndex] = temp.z2l[centerIndex]-temp.z2r[bottomIndex];
 
-            float scalar = 0.0;
+            double scalar = 0.0;
 			if (input.h[centerIndex]>0.) { // blend / select operation
                 scalar = temp.h2l[centerIndex] / input.h[centerIndex];
             } else {
@@ -794,22 +793,22 @@ void MekkaFlood_solver::rec_muscl(const int patchid, int dim, unsigned int* stri
         index[0] = NYCELL+1;
         index[1] = i; // >= 1
         index[2] = patchid;
-        rightIndex = linearizeIndex(3, index, strideinfo);
+        topIndex = linearizeIndex(3, index, strideinfo);
   
         index[0] = NYCELL;
         index[1] = i;
         index[2] = patchid;
         centerIndex = linearizeIndex(3, index, strideinfo);
 	
-		temp.h2l[rightIndex] = input.h[rightIndex];
-		temp.u2l[rightIndex] = input.u[rightIndex];
-		temp.v2l[rightIndex] = input.v[rightIndex];
+		temp.h2l[topIndex] = input.h[topIndex];
+		temp.u2l[topIndex] = input.u[topIndex];
+		temp.v2l[topIndex] = input.v[topIndex];
 
-		temp.delz2[centerIndex] = temp.z2l[rightIndex]-temp.z2r[centerIndex];
+		temp.delz2[centerIndex] = temp.z2l[topIndex]-temp.z2r[centerIndex];
 	} //end for i
 }
 
-void MekkaFlood_solver::rec_hydro(float hg,float hd,float dz, float& hg_rec, float& hd_rec){
+void MekkaFlood_solver::rec_hydro(double hg,double hd,double dz, double& hg_rec, double& hd_rec){
 	
 	/**
 	 * @details
@@ -822,23 +821,23 @@ void MekkaFlood_solver::rec_hydro(float hg,float hd,float dz, float& hg_rec, flo
 	 * Hydrostatic#hr_rec, set to \f$ \left(hr\_0 -\max (0, -dz) \right)_+\f$.
 	 */
 	
-  hg_rec = std::max(0.f,hg-std::max(0.f,dz));
-  hd_rec = std::max(0.f,hd-std::max(0.f,-dz));
+  hg_rec = std::max(FZERO,hg-std::max(FZERO,dz));
+  hd_rec = std::max(FZERO,hd-std::max(FZERO,-dz));
 }
 
-void MekkaFlood_solver::flux_hll(const Constants& constants, float h_L,float u_L,float v_L,float h_R,float u_R,float v_R, float& f1, float& f2, float& f3, float& cfl){
+void MekkaFlood_solver::flux_hll(const Constants& constants, double h_L,double u_L,double v_L,double h_R,double u_R,double v_R, double& f1, double& f2, double& f3, double& cfl){
 	if (h_L<=0. && h_R<=0.){
 		f1 = 0.;
 		f2 = 0.;
 		f3 = 0.;
 		cfl = 0.;
 	}else{
-		float grav_h_L = constants.GRAV*h_L;
-		float grav_h_R = constants.GRAV*h_R;
-		float q_R = u_R*h_R;
-		float q_L = u_L*h_L;
-		float c1 = std::min(u_L-sqrt(grav_h_L),u_R-sqrt(grav_h_R));
-		float c2 = std::max(u_L+sqrt(grav_h_L),u_R+sqrt(grav_h_R));
+		double grav_h_L = constants.GRAV*h_L;
+		double grav_h_R = constants.GRAV*h_R;
+		double q_R = u_R*h_R;
+		double q_L = u_L*h_L;
+		double c1 = std::min(u_L-sqrt(grav_h_L),u_R-sqrt(grav_h_R));
+		double c2 = std::max(u_L+sqrt(grav_h_L),u_R+sqrt(grav_h_R));
 
 		//cfl is the velocity to calculate the real cfl=max(fabs(c1),fabs(c2))*tx with tx=dt/dx
         if (fabs(c1)<constants.EPSILON && fabs(c2)<constants.EPSILON){              //dry state
@@ -857,7 +856,7 @@ void MekkaFlood_solver::flux_hll(const Constants& constants, float h_L,float u_L
 			f3=q_R*v_R;
 			cfl=fabs(c1); //max(fabs(c1),fabs(c2))=fabs(c1)
 		}else{ //subcritical flow
-		        float tmp = 1./(c2-c1);
+		        double tmp = 1./(c2-c1);
 			f1=(c2*q_L-c1*q_R)*tmp+c1*c2*(h_R-h_L)*tmp;
 			f2=(c2*(q_L*u_L+constants.GRAV*h_L*h_L*0.5)-c1*(q_R*u_R+constants.GRAV*h_R*h_R*0.5))*tmp+c1*c2*(q_R-q_L)*tmp;
 			f3=(c2*(q_L*v_L)-c1*(q_R*v_R))*tmp+c1*c2*(h_R*v_R-h_L*v_L)*tmp;
@@ -869,9 +868,9 @@ void MekkaFlood_solver::flux_hll(const Constants& constants, float h_L,float u_L
 // this method originally used an variable "T" which specified the maximum simulation time.
 // However, this variable is not used anymore. Similar holds for "tps"
 void MekkaFlood_solver::maincalcflux(const int patchid, int dim, unsigned int* strideinfo, TempArrays& temp, const Constants& constants,
-                                     float cflfix, float dt_max, float& dt) { // dt is both input and output
-  float dt_tmp,dtx,dty;
-  float velocity_max_x,velocity_max_y;              //tempory velocity to verify if clf > cflfix
+                                     double cflfix, double dt_max, double& dt) { // dt is both input and output
+  double dt_tmp,dtx,dty;
+  double velocity_max_x,velocity_max_y;              //tempory velocity to verify if clf > cflfix
   dtx=dty=dt_max;
   velocity_max_x=velocity_max_y=-constants.VE_CA;
  
@@ -882,10 +881,11 @@ void MekkaFlood_solver::maincalcflux(const int patchid, int dim, unsigned int* s
   unsigned int leftIndex;
   unsigned int centerIndex;
   unsigned int bottomIndex;
+ 
+  double cfl = 0.0;
 
   for (int i=1 ; i<=NXCELL+1 ; i++){
     for (int j=1 ; j<NYCELL+1 ; j++){
-        float cfl = 0.0;
  
         index[0] = j;
         index[1] = i-1;
@@ -914,11 +914,12 @@ void MekkaFlood_solver::maincalcflux(const int patchid, int dim, unsigned int* s
 
     } //end for j
   } //end for i
+ 
+  std::cout << "- dtx " << dtx << std::endl;
 
 
   for (int i=1 ; i<NXCELL+1 ; i++){
     for (int j=1 ; j<=NYCELL+1 ; j++){
-        float cfl = 0.0;
 
         index[0] = j-1;
         index[1] = i;
@@ -932,7 +933,8 @@ void MekkaFlood_solver::maincalcflux(const int patchid, int dim, unsigned int* s
  
       rec_hydro(temp.h2r[bottomIndex],temp.h2l[centerIndex],temp.delz2[bottomIndex], temp.h2right[bottomIndex], temp.h2left[centerIndex]);
 
-      flux_hll(constants, temp.h2right[bottomIndex],temp.v2r[bottomIndex],temp.u2r[bottomIndex],temp.h2left[centerIndex],temp.v2l[centerIndex],temp.u2l[centerIndex], temp.g1[centerIndex], temp.g3[centerIndex], temp.g2[centerIndex], cfl );
+      flux_hll(constants, temp.h2right[bottomIndex],temp.v2r[bottomIndex],temp.u2r[bottomIndex],temp.h2left[centerIndex],temp.v2l[centerIndex],temp.u2l[centerIndex],
+               temp.g1[centerIndex], temp.g3[centerIndex], temp.g2[centerIndex], cfl );
       //g1[i][j] = flux_num->get_f1();
       //g2[i][j] = flux_num->get_f3(); // this looks wrong but the arguments to the flux are also twisted
       //g3[i][j] = flux_num->get_f2();
@@ -949,7 +951,8 @@ void MekkaFlood_solver::maincalcflux(const int patchid, int dim, unsigned int* s
     } //end for j
   } //end for i
  
-  
+    std::cout << "- dty " << dty << std::endl;
+
 #if 0 // TODO: this might be changeable in the future, but for this DEMO case the SCHEME_TYPE is always 1
 
   if (1 == SCHEME_TYPE){
@@ -973,7 +976,7 @@ void MekkaFlood_solver::maincalcflux(const int patchid, int dim, unsigned int* s
 }
 
 void MekkaFlood_solver::maincalcscheme(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, SchemeArrays& output, TempArrays& temp, const Constants& constants,
-                                       float tps, float dt, int verif)
+                                       double tps, double dt, int verif)
 {
 
     const int NXCELL = constants.NXCELL;
@@ -1021,10 +1024,10 @@ void MekkaFlood_solver::maincalcscheme(const int patchid, int dim, unsigned int*
                         
   /*---------------------------------------------------------------------------------------------------------*/    
 
-  float tx=dt/constants.DX;
-  float ty=dt/constants.DY;
+  double tx=dt/constants.DX;
+  double ty=dt/constants.DY;
   
-  float dt_first = FZERO;
+  double dt_first = FZERO;
 
   // flux' s computation  at each boundaries-----------------------------------------------
     if (1 == verif){
@@ -1142,7 +1145,7 @@ void MekkaFlood_solver::maincalcscheme(const int patchid, int dim, unsigned int*
 }
 
 void MekkaFlood_solver::rain(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, TempArrays& temp, const Constants& constants,
-                             float time)
+                             double time)
 {
   const int NXCELL = constants.NXCELL;
   const int NYCELL = constants.NYCELL;
@@ -1163,7 +1166,7 @@ void MekkaFlood_solver::rain(const int patchid, int dim, unsigned int* strideinf
   }
 }
 
-void MekkaFlood_solver::friction(float uold, float vold, float hnew, float q1new, float q2new, float dt, float cf, float& q1mod, float& q2mod)
+void MekkaFlood_solver::friction(double uold, double vold, double hnew, double q1new, double q2new, double dt, double cf, double& q1mod, double& q2mod)
 {
 #if 0 // really do nothing
 	q1mod = q1new;
@@ -1172,7 +1175,7 @@ void MekkaFlood_solver::friction(float uold, float vold, float hnew, float q1new
 }
 
 void MekkaFlood_solver::infiltration(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, TempArrays& temp, const Constants& constants,
-                                     float dt)
+                                     double dt)
 {
 #if 0 // really do nothing
   for (int i=1 ; i<NXCELL+1 ; i++){

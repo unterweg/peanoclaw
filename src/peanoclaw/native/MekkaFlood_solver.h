@@ -11,102 +11,102 @@ class MekkaFlood_solver {
     private:
         // this structs are not allocated and serve just as links to temp data
         struct SchemeArrays {
-            float *h;
-            float *u;
-            float *v;
-            float *q1;
-            float *q2;
-            float *z;
+            double *h;
+            double *u;
+            double *v;
+            double *q1;
+            double *q2;
+            double *z;
         };
 
     public:
         struct InputArrays {
              // 0 = stride between elements, 1 stride between rows, 2 stride between patches
 
-            float *h;
-            float *u;
-            float *v;
-            float *z;
+            double *h;
+            double *u;
+            double *v;
+            double *z;
         };
 
         struct TempArrays {
             // set by MUSCL reconstruction
-            float *h1r;
-            float *h1l;
+            double *h1r;
+            double *h1l;
 
-            float *u1r;
-            float *u1l;
+            double *u1r;
+            double *u1l;
 
-            float *v1r;
-            float *v1l;
+            double *v1r;
+            double *v1l;
 
-            float *z1r;
-            float *z1l;
-            float *delta_z1; // maybe we can rules this one away its just: z[i+1][j]-z[i][j];
-            float *delzc1;
-            float *delz1;
+            double *z1r;
+            double *z1l;
+            double *delta_z1; // maybe we can rules this one away its just: z[i+1][j]-z[i][j];
+            double *delzc1;
+            double *delz1;
 
-            float *h2r;
-            float *h2l;
+            double *h2r;
+            double *h2l;
  
-            float *u2r;
-            float *u2l;
+            double *u2r;
+            double *u2l;
 
-            float *v2r;
-            float *v2l;
+            double *v2r;
+            double *v2l;
 
-            float *z2r;
-            float *z2l;
-            float *delta_z2; // maybe we can rules this one away its just: z[i+1][j]-z[i][j];
-            float *delzc2;
-            float *delz2;
+            double *z2r;
+            double *z2l;
+            double *delta_z2; // maybe we can rules this one away its just: z[i+1][j]-z[i][j];
+            double *delzc2;
+            double *delz2;
 
 
             // flux computation
-            float *f1;
-            float *f2;
-            float *f3;
+            double *f1;
+            double *f2;
+            double *f3;
 
-            float *g1;
-            float *g2;
-            float *g3;
+            double *g1;
+            double *g2;
+            double *g3;
 
             // scheme
-            float *q1;
-            float *q2;
+            double *q1;
+            double *q2;
 
-            float *hs;
-            float *us;
-            float *vs;
-            float *qs1;
-            float *qs2;
+            double *hs;
+            double *us;
+            double *vs;
+            double *qs1;
+            double *qs2;
 
-            float *hsa;
-            float *usa;
-            float *vsa;
-            float *qsa1;
-            float *qsa2;
+            double *hsa;
+            double *usa;
+            double *vsa;
+            double *qsa1;
+            double *qsa2;
 
-            float *Vin1;
-            float *Vin2;
-            float *Vin_tot;
+            double *Vin1;
+            double *Vin2;
+            double *Vin_tot;
 
             // friction
-            float *Fric_tab;
+            double *Fric_tab;
 
             // set by hydrostatic reconstruction
-            float *h1right;
-            float *h1left;
-            float *h2right;
-            float *h2left;
+            double *h1right;
+            double *h1left;
+            double *h2right;
+            double *h2left;
 
             // rain:
-            float *Tab_rain;
+            double *Tab_rain;
         };
 
 
         struct Constants {
-            Constants(int nx, int ny, float dx, float dy) : 
+            Constants(int nx, int ny, double dx, double dy) : 
                 NXCELL(nx), 
                 NYCELL(ny), 
                 DX(dx),
@@ -116,50 +116,50 @@ class MekkaFlood_solver {
                 GRAV_DEM = 4.905;
                 CONST_CFL_X = 0.5;
                 CONST_CFL_Y = 0.5;
-                HE_CA = 1e-8;
-                VE_CA = 1e-8;
+                HE_CA = 1.e-12;
+                VE_CA = 1.e-12;
                 MAX_CFL_X = 0.;
                 MAX_CFL_Y = 0.;
                 NB_CHAR = 256;
                 ZERO = 0.;
                 IE_CA = 1.e-8;
-                EPSILON = 1.e-9;
+                EPSILON = 1.e-13;
                 Ratio_Close_cell = 1e-3;
-                MAX_SCAL = std::numeric_limits<float>::max();
-                RainIntensity = 0.001;
+                MAX_SCAL = std::numeric_limits<double>::max();
+                RainIntensity = 0.00001;
                 
                 FRICCOEF = 0.0; // TODO get real value for this
                 CFL_FIX = 0.5;
             }
 
-            float GRAV; // 9.81
+            double GRAV; // 9.81
 
-            float GRAV_DEM; // 4.905
-            float CONST_CFL_X; // 0.5
-            float CONST_CFL_Y; // 0.5
-            float HE_CA; //1e-12;
-            float VE_CA; //1e-12;
+            double GRAV_DEM; // 4.905
+            double CONST_CFL_X; // 0.5
+            double CONST_CFL_Y; // 0.5
+            double HE_CA; //1e-12;
+            double VE_CA; //1e-12;
 
-            float MAX_CFL_X; // 0.
-            float MAX_CFL_Y; // 0.
+            double MAX_CFL_X; // 0.
+            double MAX_CFL_Y; // 0.
 
             int NB_CHAR; // 256 // TODO: what is its use?
-            float ZERO; // 0
-            float IE_CA; // 1.e-8;
-            float EPSILON; // 1.e-13
+            double ZERO; // 0
+            double IE_CA; // 1.e-8;
+            double EPSILON; // 1.e-13
 
-            float Ratio_Close_cell; // 1e-3
-            float MAX_SCAL; // DBL_MAX
+            double Ratio_Close_cell; // 1e-3
+            double MAX_SCAL; // DBL_MAX
 
-            float RainIntensity; // 0.001;
+            double RainIntensity; // 0.001;
 
-            float FRICCOEF;
-            float CFL_FIX;
+            double FRICCOEF;
+            double CFL_FIX;
 
             const int NXCELL;
             const int NYCELL;
-            const float DX;
-            const float DY;
+            const double DX;
+            const double DY;
         };
 
         // index helper
@@ -181,41 +181,41 @@ class MekkaFlood_solver {
         virtual ~MekkaFlood_solver();
 
         // returns used timestep
-        static float calcul(const int patchid, int dim, unsigned int* strideinfo, InputArrays& input, TempArrays& temp, const Constants& constants, float dt_max);
+        static double calcul(const int patchid, int dim, unsigned int* strideinfo, InputArrays& input, TempArrays& temp, const Constants& constants, double dt_max);
 
         static void boundary(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, TempArrays& temp, const Constants& constants,
-                             float time_tmp);
+                             double time_tmp);
         
         // minmod slope limiter
-        static float lim_minmod(float a, float b);
+        static double lim_minmod(double a, double b);
 
         // muscl reconstruction
         static void rec_muscl_init(const int patchid, int dim, unsigned int* strideinfo, InputArrays& input, TempArrays& temp, const Constants& constants);
         static void rec_muscl(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, TempArrays& temp, const Constants& constants);
 
         // hydrostatic reconstruction
-        static void rec_hydro(float hg, float hd,float dz, float& hg_rec, float& hd_rec);
+        static void rec_hydro(double hg, double hd,double dz, double& hg_rec, double& hd_rec);
 
         // HLL flux
-        static void flux_hll(const Constants& constants, float h_L,float u_L,float v_L,float h_R,float u_R,float v_R, float& f1, float& f2, float& f3, float& cfl);
+        static void flux_hll(const Constants& constants, double h_L,double u_L,double v_L,double h_R,double u_R,double v_R, double& f1, double& f2, double& f3, double& cfl);
 
         // rain
         static void rain(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, TempArrays& temp, const Constants& constants,
-                         float time);
+                         double time);
 
         // friction: (actually no friction)
         // CAREFUL: input.q1 == output.q1 and input.q2 == output.q2
-        static void friction(float uold, float vold, float hnew, float q1new, float q2new, float dt, float cf, float& q1mod, float& q2mod);
+        static void friction(double uold, double vold, double hnew, double q1new, double q2new, double dt, double cf, double& q1mod, double& q2mod);
 
         // infiltration: (actually no infiltration)
         static void infiltration(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, TempArrays& temp, const Constants& constants,
-                                 float dt);
+                                 double dt);
 
         // general scheme:
         static void maincalcflux(const int patchid, int dim, unsigned int* strideinfo, TempArrays& temp, const Constants& constants,
-                                 float cflfix, float dt_max, float& dt); // dt is both input AND output
+                                 double cflfix, double dt_max, double& dt); // dt is both input AND output
         static void maincalcscheme(const int patchid, int dim, unsigned int* strideinfo, SchemeArrays& input, SchemeArrays& output, TempArrays& temp, const Constants& constants,
-                                   float tps, float dt, int verif); // there was originally a "n" input parameter which was not used here.
+                                   double tps, double dt, int verif); // there was originally a "n" input parameter which was not used here.
 };
 
 #endif // _MEKKAFLOOD_SOLVER_H_

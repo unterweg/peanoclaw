@@ -255,7 +255,8 @@ void peanoclaw::mappings::SolveTimestep::destroyCell(
   //peanoclaw::statistics::LevelInformation& levelInformation = _levelStatistics.at(fineGridVerticesEnumerator.getLevel()-1);
   //levelInformation._destroyedPatches++;
 
-  _subgridStatistics.destroyedSubgrid(fineGridCell.getCellDescriptionIndex());
+// TODO: ROLAND: workaround - this crashes, probably because the respective cell was already destroyed in Remesh
+  //_subgridStatistics.destroyedSubgrid(fineGridCell.getCellDescriptionIndex());
 
   logTraceOutWith1Argument( "destroyCell(...)", fineGridCell );
 }
@@ -512,14 +513,14 @@ void peanoclaw::mappings::SolveTimestep::touchVertexFirstTime(
       fineGridVertex.shouldErase()
       && fineGridVertex.getRefinementControl() == peanoclaw::Vertex::Records::Refined
 //      && fineGridVertex.getCurrentAdjacentCellsHeight() == 1
-    ) {
+  ) {
     //TODO unterweg debug
 //    logInfo("", "Erasing vertex at " << fineGridX << " on level " << (coarseGridVerticesEnumerator.getLevel()+1)
 //      #ifdef Parallel
 //      << " on rank " << tarch::parallel::Node::getInstance().getRank()
 //      #endif
 //    );
-    fineGridVertex.erase();
+//    fineGridVertex.erase();
   }
   fineGridVertex.setShouldRefine(false);
   fineGridVertex.resetSubcellsEraseVeto();
@@ -603,7 +604,6 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
                                                 _useDimensionalSplittingOptimization
                                               );
         patch.setDemandedMeshWidth(requiredMeshWidth);
-
         #ifdef Parallel
         ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
         parallelSubgrid.markCurrentStateAsSent(false);
@@ -699,6 +699,12 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
 
     //TODO unterweg debug
     assertion1(!tarch::la::smaller(patch.getTimeIntervals().getTimestepSize(), 0.0) || !patch.isLeaf(), patch);
+
+//    if (patch.getAge() >= 2) {
+        fineGridCell.setCellIsAForkCandidate(true);
+//    } else {
+//        fineGridCell.setCellIsAForkCandidate(false);
+//    }
   }
 }
 

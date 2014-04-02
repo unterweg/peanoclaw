@@ -221,6 +221,9 @@ if (PEANOCLAW_FULLSWOF2D)
         src/peanoclaw/native/FullSWOF2D.cpp
 
         src/peanoclaw/native/dem.cpp
+
+        # "standalone" of FullSWOF2D combination
+        src/peanoclaw/native/MekkaFlood_solver.cpp
     )
 endif(PEANOCLAW_FULLSWOF2D)
 
@@ -346,7 +349,9 @@ add_library (peanoclaw_static STATIC ${PEANOCLAW_SOURCES})
 add_library (peanoclaw_static_norle STATIC ${PEANOCLAW_SOURCES})
 SET_TARGET_PROPERTIES(peanoclaw_static_norle PROPERTIES COMPILE_FLAGS "-DnoPackedEmptyHeapMessages" )
 
-target_link_libraries (peano-claw-${PEANO_DIMENSIONS}d peano_shared  peano_tarch_shared ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES}  ${PEANO_LIBRARIES} ${NETCDF_LIBRARIES})
+target_link_libraries (peano-claw-${PEANO_DIMENSIONS}d peano_shared
+    peano_tarch_shared ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES}
+    ${PEANO_LIBRARIES} ${NETCDF_LIBRARIES} -lpng)
 target_link_libraries (peanoclaw_static peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
 target_link_libraries (peanoclaw_static_norle peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES} ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES})
 
@@ -365,6 +370,17 @@ if (PEANOCLAW_SWE OR PEANOCLAW_FULLSWOF2D)
     add_executable (peanoclaw_run src/peanoclaw/native/main.cpp)
     add_executable (peanoclaw_run_norle src/peanoclaw/native/main.cpp)
 
-    target_link_libraries (peanoclaw_run peanoclaw_static ${NETCDF_LIBRARIES})
-    target_link_libraries (peanoclaw_run_norle peanoclaw_static_norle ${NETCDF_LIBRARIES})
+    target_link_libraries (peanoclaw_run peanoclaw_static ${NETCDF_LIBRARIES} -lpng)
+    target_link_libraries (peanoclaw_run_norle peanoclaw_static_norle ${NETCDF_LIBRARIES} -lpng)
 endif (PEANOCLAW_SWE OR PEANOCLAW_FULLSWOF2D)
+
+
+
+## tools
+
+if (PEANOCLAW_FULLSWOF2D)
+    add_executable (FullSWOF2D_Kernel_Benchmark tools/FullSWOF2D_Kernel_Benchmark.cpp)
+    target_link_libraries (FullSWOF2D_Kernel_Benchmark peanoclaw_static
+        peano_static peano_tarch_static ${PEANOCLAW_LIBRARIES}  ${TOOLBOXES_LIBRARIES} ${PEANO_LIBRARIES} ${NETCDF_LIBRARIES})
+endif (PEANOCLAW_FULLSWOF2D)
+

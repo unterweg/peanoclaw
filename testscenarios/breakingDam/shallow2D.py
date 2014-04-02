@@ -24,74 +24,29 @@ def qinit(state,hl,ul,vl,hr,ur,vr,radDam):
     state.q[1,:,:] = hl*ul*(r<=radDam) + hr*ur*(r>radDam)
     state.q[2,:,:] = hl*vl*(r<=radDam) + hr*vr*(r>radDam)
     
-def refinement_criterion(state):
-    center_x = 0.5
-    center_y = 0.5
-    radius1 = 0.25
-    
-    import math
-    dimension_x = state.patch.dimensions[0]
-    dimension_y = state.patch.dimensions[1]
-    
-    distance_to_circle1 = abs(math.sqrt(((dimension_x.lower + dimension_x.upper) / 2 - center_x) ** 2 
-                          + ((dimension_y.lower + dimension_y.upper) / 2 - center_y) ** 2) - radius1)
-    
-    if (distance_to_circle1 < (dimension_x.upper - dimension_x.lower) / 2):
-        return 1.0/(6.0*81.0)
-        #return 1.0/(6.0*27.0)
-    elif (distance_to_circle1 > (dimension_x.upper - dimension_x.lower) * 1.5 
-        #  and distance_to_circle2 > (dimension_x.upper - dimension_x.lower) * 1.5
-        #  and distance_to_circle3 > (dimension_x.upper - dimension_x.lower) * 1.5
-        ):
-        return 1.0/(6.0*9.0)
-    else:
-        return dimension_x.delta
-    
-def refinement_criterion_time_dependent(state):
-    center_x = 0.5
-    center_y = 0.5
-    radius1 = 0.25 + state.t * 0.75 / 0.5
-    radius2 = 0.25 - state.t * 0.5 / 0.5
-    radius3 = 0.25 - state.t * 0.7 / 0.5
-    
-    import math
-    dimension_x = state.patch.dimensions[0]
-    dimension_y = state.patch.dimensions[1]
-    
-    distance_to_circle1 = abs(math.sqrt(((dimension_x.lower + dimension_x.upper) / 2 - center_x) ** 2 
-                          + ((dimension_y.lower + dimension_y.upper) / 2 - center_y) ** 2) - radius1)
-    distance_to_circle2 = abs(math.sqrt(((dimension_x.lower + dimension_x.upper) / 2 - center_x) ** 2 
-                          + ((dimension_y.lower + dimension_y.upper) / 2 - center_y) ** 2) - radius2)
-    distance_to_circle3 = abs(math.sqrt(((dimension_x.lower + dimension_x.upper) / 2 - center_x) ** 2 
-                          + ((dimension_y.lower + dimension_y.upper) / 2 - center_y) ** 2) - radius3)
-    
-    if (distance_to_circle1 < (dimension_x.upper - dimension_x.lower) / 2
-        or distance_to_circle2 < (dimension_x.upper - dimension_x.lower) / 2
-        or distance_to_circle3 < (dimension_x.upper - dimension_x.lower) / 2
-        ):
-        return 1.0/(6.0*27.0)
-        #return 1.0/(6.0*81.0)
-    elif (distance_to_circle1 > (dimension_x.upper - dimension_x.lower) * 1.5 
-        and distance_to_circle2 > (dimension_x.upper - dimension_x.lower) * 1.5
-        and distance_to_circle3 > (dimension_x.upper - dimension_x.lower) * 1.5
-        ):
-        return 1.0/(6.0*9.0)
-    else:
-        return dimension_x.delta
-
 def refinement_criterion_gradient(state):
   import numpy
   dimension_x = state.patch.dimensions[0]
   dimension_y = state.patch.dimensions[1]
-  #max_gradient = numpy.max(numpy.abs(numpy.gradient(state.q[0,:,:], dimension_x.delta, dimension_y.delta)))
-  max_gradient = numpy.max(numpy.abs(numpy.gradient(state.q[0,:,:])))
+  max_gradient = numpy.max(numpy.abs(numpy.gradient(state.q[0,:,:], dimension_x.delta, dimension_y.delta)))
+  #max_gradient = numpy.max(numpy.abs(numpy.gradient(state.q[0,:,:])))
   
   if max_gradient > 0.25:
       return 1.0/(6.0*81.0)
-  elif max_gradient < 0.001:
+  elif max_gradient < 0.1:
       return 1.0/(6.0*9.0)
   else:
-      return dimension_x.delta
+      new_delta = new_delta * (6*9.0)
+ 
+  # ensure minimal refinement
+  if new_delta > 1.0/(6.0*9.0):
+      new_delta = 1.0/(6.0*9.0)
+
+  # ensure maximum refinement
+  if new_delta < 1.0/(6.0*27.0):
+      new_delta = 1.0/(6.0*27.0)
+
+  return new_delta
     
 def shallow2D(use_petsc=False,iplot=0,htmlplot=False,outdir='./_output',solver_type='classic',amr_type=None):
     #===========================================================================
@@ -128,7 +83,7 @@ def shallow2D(use_petsc=False,iplot=0,htmlplot=False,outdir='./_output',solver_t
     mgrid = 6
 
     # number of initial AMR grids in each dimension
-    msubgrid = 9
+    msubgrid = 9 
 
     if amr_type is not None:
         m = mgrid
@@ -187,7 +142,7 @@ def shallow2D(use_petsc=False,iplot=0,htmlplot=False,outdir='./_output',solver_t
                                         ,qinit_callback
                                         #,refinement_criterion=refinement_criterion_time_dependent
                                         #,refinement_criterion=refinement_criterion
-                                        #,refinement_criterion=refinement_criterion_gradient
+                                        ,refinement_criterion=refinement_criterion_gradient
                                         ,internal_settings=amrclaw.InternalSettings(enable_peano_logging=True, fork_level_increment=2)
                                         )
             claw.solution = amrclaw.Solution(state, domain)

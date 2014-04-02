@@ -26,6 +26,10 @@ namespace peanoclaw {
   namespace parallel {
     class MasterWorkerAndForkJoinCommunicator;
   }
+
+  namespace mappings {
+    class Remesh;
+  }
 }
 
 /**
@@ -40,6 +44,9 @@ class peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator {
     typedef peanoclaw::records::CellDescription CellDescription;
     typedef peanoclaw::records::Data Data;
 
+    //TODO unterweg debug
+    friend class peanoclaw::mappings::Remesh;
+
     /**
      * Logging device.
      */
@@ -47,13 +54,13 @@ class peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator {
 
     SubgridCommunicator _subgridCommunicator;
 
-    int _remoteRank;
+    const int _remoteRank;
 
-    tarch::la::Vector<DIMENSIONS,double> _position;
+    const tarch::la::Vector<DIMENSIONS,double> _position;
 
-    int _level;
+    const int _level;
 
-    peano::heap::MessageType _messageType;
+    const peano::heap::MessageType _messageType;
 
     /**
      * Deletes the cell description and the according arrays.

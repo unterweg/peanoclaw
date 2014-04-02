@@ -227,14 +227,14 @@ void peanoclaw::mappings::InitialiseGrid::createCell(
       #ifdef Asserts
       dfor(subcellIndex, patch.getSubdivisionFactor()) {
         tarch::la::Vector<DIMENSIONS, int> subcellIndexInDestinationPatch = subcellIndex;
-        assertion3(tarch::la::greater(patch.getValueUNew(subcellIndexInDestinationPatch, 0), 0.0),
+        /*assertion3(tarch::la::smaller(patch.getValueUNew(subcellIndexInDestinationPatch, 0), 0.0),
                 patch.getValueUNew(subcellIndexInDestinationPatch, 0),
                 subcellIndex,
                 subcellIndexInDestinationPatch);
-        assertion3(tarch::la::greater(patch.getValueUOld(subcellIndexInDestinationPatch, 0), 0.0),
+        assertion3(tarch::la::smaller(patch.getValueUOld(subcellIndexInDestinationPatch, 0), 0.0),
                 patch.getValueUOld(subcellIndexInDestinationPatch, 0),
                 subcellIndex,
-                subcellIndexInDestinationPatch);
+                subcellIndexInDestinationPatch);*/
       }
       #endif
 

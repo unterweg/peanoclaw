@@ -25,6 +25,11 @@
 
 namespace peanoclaw {
 
+  //TODO unterweg debug
+  namespace mappings {
+    class Remesh;
+  }
+
   namespace records {
     class CellDescription;
     class Data;
@@ -50,6 +55,9 @@ class peanoclaw::parallel::NeighbourCommunicator {
     typedef peanoclaw::records::CellDescription CellDescription;
     typedef peanoclaw::records::Data Data;
 
+    //TODO unterweg debug
+    friend class peanoclaw::mappings::Remesh;
+
   public:
     typedef std::map<tarch::la::Vector<DIMENSIONS_PLUS_ONE,double>, int, tarch::la::VectorCompare<DIMENSIONS_PLUS_ONE> > RemoteSubgridMap;
 
@@ -59,12 +67,12 @@ class peanoclaw::parallel::NeighbourCommunicator {
      */
     static tarch::logging::Log                 _log;
 
-    int                                        _remoteRank;
-    tarch::la::Vector<DIMENSIONS,double>       _position;
-    int                                        _level;
-    tarch::la::Vector<DIMENSIONS,double>       _subgridSize;
-    RemoteSubgridMap&                          _remoteSubgridMap;
-    peanoclaw::statistics::ParallelStatistics& _statistics;
+    const int                                        _remoteRank;
+    const tarch::la::Vector<DIMENSIONS,double>       _position;
+    const int                                        _level;
+    const tarch::la::Vector<DIMENSIONS,double>       _subgridSize;
+    RemoteSubgridMap&                                _remoteSubgridMap;
+    peanoclaw::statistics::ParallelStatistics&       _statistics;
 
     /**
      * Tries to send subgrids only once per iteration.

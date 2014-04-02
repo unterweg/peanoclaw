@@ -151,7 +151,7 @@ double peanoclaw::pyclaw::PyClaw::solveTimestep(Patch& patch, double maximumTime
   assertion(patch.getTimeIntervals().getTimestepSize() < std::numeric_limits<double>::infinity());
 
   //Check for zeros in solution
-  assertion3(!patch.containsNonPositiveNumberInUnknown(0), patch, patch.toStringUNew(), patch.toStringUOldWithGhostLayer());
+  //assertion3(!patch.containsNonPositiveNumberInUnknown(0), patch, patch.toStringUNew(), patch.toStringUOldWithGhostLayer());
 
   patch.getTimeIntervals().advanceInTime();
   patch.getTimeIntervals().setTimestepSize(dtAndEstimatedNextDt[0]);

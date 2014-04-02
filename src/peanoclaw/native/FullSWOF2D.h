@@ -24,6 +24,8 @@
 
 #include "peanoclaw/native/SWEKernel.h"
 
+#include "peanoclaw/native/MekkaFlood_solver.h"
+
 #include "peanoclaw/native/FullSWOF_2D/Headers/libparameters/parameters.hpp"
 
 #include "peanoclaw/native/FullSWOF_2D/Headers/libschemes/choice_scheme.hpp"
@@ -133,6 +135,9 @@ public:
 
   void copyPatchToScheme(Patch& patch, Scheme* scheme);
   void copySchemeToPatch(Scheme* scheme, Patch& patch);
+
+  void copyPatchToSet(Patch& patch, unsigned int *strideinfo, MekkaFlood_solver::InputArrays& input, MekkaFlood_solver::TempArrays& temp);
+  void copySetToPatch(unsigned int *strideinfo, MekkaFlood_solver::InputArrays& input, MekkaFlood_solver::TempArrays& temp, Patch& patch);
 };
 
 class peanoclaw::native::FullSWOF2D_Parameters : public Parameters {

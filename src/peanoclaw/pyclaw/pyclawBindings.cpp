@@ -39,7 +39,6 @@ void configureLogFilter(bool enablePeanoLogging) {
   // Configure the output
   tarch::logging::CommandLineLogger::getInstance().clearFilterList();
 
-  enablePeanoLogging = true;
   if(enablePeanoLogging) {
     tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
     tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
@@ -174,7 +173,7 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   //Check parameters
   assertion1(tarch::la::greater(domainSizeX0, 0.0) && tarch::la::greater(domainSizeX1, 0.0), domainSize);
   if(initialMaximalMeshWidthScalar > domainSizeX0 || initialMaximalMeshWidthScalar > domainSizeX1) {
-    logError("pyclaw_peano_new(...)", "Domainsize or initialMinimalMeshWidth not set properly.");
+    logError("pyclaw_peano_new(...)", "Domainsize or initialMinimalMeshWidth not set properly." << domainSizeX0 << " " << domainSizeX1 << " " << initialMinimalMeshWidth);
   }
   if(tarch::la::oneGreater(tarch::la::Vector<DIMENSIONS, int>(1), subdivisionFactor) ) {
     logError("pyclaw_peano_new(...)", "subdivisionFactor not set properly.");

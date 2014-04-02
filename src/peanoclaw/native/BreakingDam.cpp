@@ -4,7 +4,7 @@
 BreakingDam_SWEKernelScenario::BreakingDam_SWEKernelScenario() {}
 BreakingDam_SWEKernelScenario::~BreakingDam_SWEKernelScenario() {}
 
-void BreakingDam_SWEKernelScenario::initializePatch(peanoclaw::Patch& patch) {
+double BreakingDam_SWEKernelScenario::initializePatch(peanoclaw::Patch& patch) {
     // dam coordinates
     double x0=10/3.0;
     double y0=10/3.0;
@@ -42,6 +42,7 @@ void BreakingDam_SWEKernelScenario::initializePatch(peanoclaw::Patch& patch) {
             patch.setValueUNew(subcellIndex, 2, q2);
         }
     }
+    return 10.0/9/9;
 }
 
 double BreakingDam_SWEKernelScenario::computeDemandedMeshWidth(peanoclaw::Patch& patch) {

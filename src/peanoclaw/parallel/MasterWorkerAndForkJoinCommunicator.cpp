@@ -56,6 +56,10 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::receivePatch(int 
   logTraceInWith3Arguments("receivePatch", localCellDescriptionIndex, _position, _level);
   #ifdef Parallel
 
+  //TODO unterweg debug
+//  std::cout << "Receiving subgrid on " << tarch::parallel::Node::getInstance().getRank() << " from "
+//      << _remoteRank << " at " << _position << std::endl;
+
   std::vector<CellDescription> remoteCellDescriptionVector = CellDescriptionHeap::getInstance().receiveData(_remoteRank, _position, _level, _messageType);
   assertionEquals2(remoteCellDescriptionVector.size(), 1, _position, _level);
   CellDescription remoteCellDescription = remoteCellDescriptionVector[0];
@@ -73,6 +77,10 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::receivePatch(int 
 
   //Load arrays and stores according indices in cell description
   if(remoteCellDescription.getUIndex() != -1) {
+
+    //TODO unterweg debug
+    assertion2(tarch::la::equals(_subgridCommunicator._position, _position), _subgridCommunicator._position, _position);
+
     remoteCellDescription.setUIndex(_subgridCommunicator.receiveDataArray());
   }
 
@@ -93,7 +101,7 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::receivePatch(int 
 void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::sendSubgridBetweenMasterAndWorker(
   Patch& subgrid
 ) {
-  logTraceInWith3Arguments("sendSubgridBetweenMasterAndWorker", subgrid, position, size);
+  logTraceInWith3Arguments("sendSubgridBetweenMasterAndWorker", subgrid, _position, _level);
   _subgridCommunicator.sendSubgrid(subgrid);
   logTraceOut("sendSubgridBetweenMasterAndWorker");
 }
@@ -136,6 +144,9 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::mergeCellDuringFo
   #ifdef Parallel
   bool isForking = !tarch::parallel::Node::getInstance().isGlobalMaster()
                    && _remoteRank == tarch::parallel::NodePool::getInstance().getMasterRank();
+
+  //TODO unterweg debug
+  assertionNumericalEquals(_position, _subgridCommunicator._position);
 
   if(localCell.isInside()
       && (
@@ -180,6 +191,9 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::mergeCellDuringFo
         _level
       );
 
+      //TODO unterweg debug
+      assertionNumericalEquals(_position, _subgridCommunicator._position);
+
       receivePatch(localPatch.getCellDescriptionIndex());
       localPatch.loadCellDescription(localCell.getCellDescriptionIndex());
 
@@ -208,6 +222,7 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::mergeWorkerStateI
         workerState.getEndMinimumGlobalTimeInterval()
   );
 
+  //std::cout << "minimal timestep: " << workerState.getMinimalTimestep() << std::endl;
   masterState.updateMinimalTimestep(workerState.getMinimalTimestep());
 
   //TODO unterweg debug

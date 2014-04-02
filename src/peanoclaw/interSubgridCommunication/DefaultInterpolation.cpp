@@ -171,6 +171,7 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolation::interpolate(
     assertion(false);
   }
 
+#if 0
   dfor(subcellIndex, destinationSize) {
     tarch::la::Vector<DIMENSIONS, int> subcellIndexInDestinationPatch = subcellIndex + destinationOffset;
     double checkedValue
@@ -183,10 +184,11 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolation::interpolate(
           << "from patch " << std::endl << source.toString() << std::endl << source.toStringUNew() << std::endl << source.toStringUOldWithGhostLayer()
           << std::endl << "to patch" << std::endl << destination.toString() << std::endl << destination.toStringUNew() << std::endl << destination.toStringUOldWithGhostLayer()
           << std::endl << "value=" << destination.getValueUOld(subcellIndexInDestinationPatch, 0) << std::endl;
-      assertion(false);
-      throw "";
+      //assertion(false);
+      //throw "";
     }
   }
+#endif
   #endif
 
   logTraceOut("");

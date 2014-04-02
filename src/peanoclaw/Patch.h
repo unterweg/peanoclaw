@@ -656,6 +656,7 @@ public:
    * Returns the age of this patch in terms of grid iterations.
    */
   int getAge() const;
+  void resetAge() const;
 
   /**
    * Resets the bounds for the overlap of neighboring ghostlayers.

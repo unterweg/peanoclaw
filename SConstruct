@@ -56,6 +56,7 @@ def addPeanoClawFlags(libpath, libs, cpppath, cppdefines):
    if '-Werror' in ccflags:
      ccflags.remove('-Werror')
      
+
 #########################################################################
 ##### MAIN CODE
 #########################################################################
@@ -81,15 +82,20 @@ except ImportError:
   pass
 p3SourcePath = join(p3Path, 'src')
 toolboxSourcePath = join(p3Path, 'toolboxes')
+
 cpppath.append(p3SourcePath)
 cpppath.append(toolboxSourcePath)
+cpppath.append(toolboxSourcePath+'/ControlLoopLoadBalancer')
+
+
 
 # Platform specific settings
 environment = Environment()
+
 # Only include library rt if not compiling on Mac OS.
 if(environment['PLATFORM'] != 'darwin'):
     libs.append('rt')
-
+    
 ##### Determine dimension for which to build
 #
 dim = ARGUMENTS.get('dim', 2)  # Read command line parameter
@@ -207,7 +213,12 @@ if compiler == 'gcc':
    # if multicore == 'no' or multicore == 'multicore_no':
       # ccflags.append('-Wconversion')
    ccflags.append('-Wno-non-virtual-dtor')
-   ccflags.append('-std=c++11')
+
+   gccversion = environment['CCVERSION'].split('.')
+   if int(gccversion[0] > 4 or int(gccversion[1]) > 6:
+     ccflags.append('-std=c++11')
+   else:
+     ccflags.append('-std=c++0x')
    if build == 'debug':
       ccflags.append('-g3')
       ccflags.append('-O0')
@@ -245,7 +256,7 @@ elif compiler == 'icc':
      cxx = 'mpiCC'
    ccflags.append('-fstrict-aliasing')
    ccflags.append('-qpack_semantic=gnu')
-   ccflags.append('-std=c++11')
+   ccflags.append('-std=c++0x')
    if build == 'debug':
       ccflags.append('-O0')
    elif build == 'asserts':
@@ -295,8 +306,34 @@ elif solver == 'swe':
   
   cppdefines.append('WAVE_PROPAGATION_SOLVER=4')
   cppdefines.append('VECTORIZE')
+elif solver == 'fullswof2d':
+  #Configure SWE-Sources
+  swePath = 'src/peanoclaw/native/SWE/src'
+  cpppath.append(swePath)
+  cppdefines.append('SWE')
+  cppdefines.append('NDEBUG')
+  
+  cppdefines.append('WAVE_PROPAGATION_SOLVER=1')
+  cppdefines.append('VECTORIZE')
+
+  #Configure fullswof2d
+  # add FULLSWOF2D mode
+  cppdefines.append('PEANOCLAW_FULLSWOF2D')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/liblimitations')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libfrictions')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libparser')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libflux')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libsave')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libschemes')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libreconstructions')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libinitializations')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/librain_infiltration')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libboundaryconditions')
+  cpppath.append( 'src/peanoclaw/native/FullSWOF_2D/Headers/libparameters')
+  libs.append('png') # for texture file
+
 else:
-  raise Exception("ERROR: solver must be 'pyclaw' or 'swe'")
+  raise Exception("ERROR: solver must be 'pyclaw' or 'swe' or 'fullswof2d'")
 
 ##### Determine Heap Compression
 #
@@ -348,6 +385,8 @@ print
 
 VariantDir (buildpath, './src', duplicate=0)  # Set build directory for PeanoClaw sources
 VariantDir (join(buildpath, 'kernel'), p3SourcePath, duplicate=0)  # Set build directory for Peano sources
+VariantDir (join(buildpath, 'toolboxes'), toolboxSourcePath, duplicate=0)  # Set build directory for Peano sources
+
 if solver == 'swe':
   
   print "VariantDir(", join(buildpath, 'swe'), ",", swePath, ")"
@@ -472,11 +511,13 @@ sourcesParallel = [
  Glob(join(buildpath, 'kernel/tarch/parallel/dastgen/*.cpp')),
  Glob(join(buildpath, 'kernel/tarch/parallel/configurations/*.cpp')),
  Glob(join(buildpath, 'kernel/peano/parallel/*.cpp')),
+ Glob(join(buildpath, 'kernel/peano/parallel/*.cc')),
  Glob(join(buildpath, 'kernel/peano/parallel/configurations/*.cpp')),
  Glob(join(buildpath, 'kernel/peano/parallel/loadbalancing/*.cpp')),
  Glob(join(buildpath, 'kernel/peano/parallel/messages/*.cpp')),
  Glob(join(buildpath, 'kernel/peano/parallel/tests/*.cpp')),
- Glob(join(buildpath, 'kernel/tarch/mpianalysis/*.cpp'))
+ Glob(join(buildpath, 'kernel/tarch/mpianalysis/*.cpp')),
+ Glob(join(buildpath, 'kernel/tarch/analysis/*.cpp'))
 ]
 
 
@@ -559,9 +600,8 @@ sourcesPeanoBase = [
 ]
 
 sourcesToolBox = [
-  Glob(join(buildpath, 'toolboxes/mpibalancing/*.cpp')),
-  Glob(join(buildpath, 'toolboxes/mpibalancing/ControlLoopLoadBalancer/*.cpp')),
-  Glob(join(buildpath, 'toolboxes/mpibalancing/ControlLoopLoadBalancer/strategies/*.cpp'))
+  Glob(join(buildpath, 'toolboxes/ControlLoopLoadBalancer/ControlLoopLoadBalancer/*.cpp')),
+  Glob(join(buildpath, 'toolboxes/ControlLoopLoadBalancer/ControlLoopLoadBalancer/strategies/*.cpp'))
 ]
 
 sourcesToolBoxVHH = [
@@ -598,6 +638,23 @@ elif solver == 'pyclaw':
   sourcesSolver = [
      Glob(join(buildpath, 'peanoclaw/pyclaw/*.cpp'))
      ]
+elif solver == 'fullswof2d':
+  sourcesSolver = [
+     Glob(join(buildpath, 'peanoclaw/native/*.cpp')),
+     Glob(join(buildpath, 'peanoclaw/native/SWE/src/blocks/SWE_Block.cpp')),
+     Glob(join(buildpath, 'peanoclaw/native/SWE/src/blocks/SWE_WavePropagationBlock.cpp')),
+     Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/liblimitations/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libfrictions/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libparser/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libflux/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libsave/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libschemes/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libreconstructions/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libinitializations/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/librain_infiltration/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libboundaryconditions/*.cpp')),
+      Glob(join(buildpath, 'peanoclaw/native/FullSWOF_2D/Sources/libparameters/*.cpp'))
+     ]
 sourcesPeanoClaw.extend(sourcesSolver)
 
 ################################################################################
@@ -631,6 +688,13 @@ elif solver == 'swe':
     source=source
     )
     
+elif solver == 'fullswof2d':
+  targetfilename = 'peano-claw-' + str(dim) + 'd'
+  target = buildpath + targetfilename
+  executable = env.Program ( 
+    target=target,
+    source=source
+    )
   ##### Copy executable to bin directory
   #
   installation = env.Alias('install', env.Install('bin', executable))
