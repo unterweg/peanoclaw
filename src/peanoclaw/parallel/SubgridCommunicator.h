@@ -15,6 +15,14 @@
 
 #include "tarch/logging/Log.h"
 
+#if !defined(UseBlockedMeshCommunication) && !defined(DoNotUseBlockedMeshCommunication)
+#error "If no blocked mesh communciation should be used then please define 'DoNotUseBlockedMeshCommunication'"
+#endif
+
+#if defined(UseBlockedMeshCommunication) && defined(DoNotUseBlockedMeshCommunication)
+#error "Please define 'UseBlockedMeshCommunication' or 'DoNotUseBlockedMeshCommunication', but not both!"
+#endif
+
 namespace peanoclaw {
   namespace parallel {
     class SubgridCommunicator;
@@ -41,7 +49,7 @@ class peanoclaw::parallel::SubgridCommunicator {
     static tarch::logging::Log _log;
 
     int _remoteRank;
-    const tarch::la::Vector<DIMENSIONS,double>& _position;
+    tarch::la::Vector<DIMENSIONS,double>        _position;
     int                                         _level;
     peano::heap::MessageType                    _messageType;
     bool                                        _onlySendOverlappedCells;

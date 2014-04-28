@@ -77,6 +77,8 @@ private:
    * Initializes the MPI environment
    */
   void initializeParallelEnvironment();
+ 
+  void iterateRemesh();
 
   void iterateInitialiseGrid();
 
@@ -99,7 +101,8 @@ public:
     const tarch::la::Vector<DIMENSIONS, int>& subdivisionFactor,
     int ghostLayerWidth,
     int unknownsPerSubcell,
-    int auxiliarFieldsPerSubcell,
+    int parametersWithoutGhostlayerPerSubcell,
+    int parametersWithGhostlayerPerSubcell,
     double initialTimestepSize,
     bool useDimensionalSplitting,
     bool reduceReductions,
@@ -125,5 +128,9 @@ public:
   void runNextPossibleTimestep();
 
   void updateOracle();
+
+  peanoclaw::State& getState() {
+    return _repository->getState();
+  }
 };
 #endif /* PEANO_APPLICATIONS_PEANOCLAW_RUNNERS_PEANOCLAWLIBRARYRUNNER_H_ */

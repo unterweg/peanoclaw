@@ -85,6 +85,9 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::receivePatch(int 
   CellDescriptionHeap::getInstance().getData(localCellDescriptionIndex).at(0) = remoteCellDescription;
   assertionEquals(CellDescriptionHeap::getInstance().getData(localCellDescriptionIndex).size(), 1);
 
+  Patch subgrid(localCellDescriptionIndex);
+  subgrid.initializeNonParallelFields();
+
   assertionEquals(CellDescriptionHeap::getInstance().getData(localCellDescriptionIndex).at(0).getCellDescriptionIndex(), localCellDescriptionIndex);
   #endif
   logTraceOut("receivePatch");
@@ -93,7 +96,7 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::receivePatch(int 
 void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::sendSubgridBetweenMasterAndWorker(
   Patch& subgrid
 ) {
-  logTraceInWith3Arguments("sendSubgridBetweenMasterAndWorker", subgrid, position, size);
+  logTraceInWith3Arguments("sendSubgridBetweenMasterAndWorker", subgrid, _position, _level);
   _subgridCommunicator.sendSubgrid(subgrid);
   logTraceOut("sendSubgridBetweenMasterAndWorker");
 }
@@ -150,7 +153,8 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::mergeCellDuringFo
       Patch temporaryPatch(
         _position - cellSize * 0.5,
         cellSize,
-        1,
+        0,
+        0,
         0,
         1,
         1,

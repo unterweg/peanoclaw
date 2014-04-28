@@ -9,8 +9,6 @@ def installPeano3():
   p3RepositorySubpath = '.'
   p3Revision = 'HEAD'
   p3Build = 'release'
-  global p3ParallelSupport
-  p3ParallelSupport = p3ParallelSupport
   try:
     import peanoConfiguration
     p3Path = peanoConfiguration.getPeano3Path()
@@ -32,8 +30,7 @@ def installPeano3():
     print("Checking out Peano3 Repository")
     call("svn checkout -r" + p3Revision + join(" svn://svn.code.sf.net/p/peano/code/trunk", p3RepositorySubpath) + " " + p3Path, shell=True)
   print("Building PeanoClaw")
-  returnValue = call("scons build=" + str(p3Build) + " parallel=" + str(p3ParallelSupport) + " dim=2" + " -j2", shell=True)
-  #call("scons build=" + str(p3Build) + " parallel=" + str(p3ParallelSupport) + " dim=3" + " -j2", shell=True)
+  returnValue = call("scons build=" + str(p3Build) + " parallel=yes dim=2" + " -j2", shell=True)
   
   if returnValue != 0:
     raise Exception("PeanoClaw: Build failed.")
@@ -51,13 +48,6 @@ class Peano3Develop(develop):
     
 #Read command line parameters
 import sys
-
-global p3ParallelSupport
-p3ParallelSupport = "no"
-for argument in sys.argv:
-  splitargument = argument.split('=')
-  if splitargument[0]=="--parallel":
-      buildParallel = splitargument[1].lower()
 
 setup(name='PeanoClaw',
       version='0.1',

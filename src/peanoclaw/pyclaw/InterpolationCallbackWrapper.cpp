@@ -24,7 +24,8 @@ void peanoclaw::pyclaw::InterpolationCallbackWrapper::interpolate (
   const peanoclaw::Patch& source,
   peanoclaw::Patch&        destination,
   bool interpolateToUOld,
-  bool interpolateToCurrentTime
+  bool interpolateToCurrentTime,
+  bool useTimeUNewOrTimeUOld
 ) {
 
   PyClawState sourceState(source);
@@ -85,7 +86,7 @@ void peanoclaw::pyclaw::InterpolationCallbackWrapper::interpolate (
     destination.getTimeIntervals().getCurrentTime(),
     destination.getTimeIntervals().getTimestepSize(),
     source.getUnknownsPerSubcell(),
-    source.getAuxiliarFieldsPerSubcell()
+    source.getNumberOfParametersWithoutGhostlayerPerSubcell()
   );
 }
 

@@ -13,6 +13,17 @@ peanoclaw::State::State():
   resetGlobalTimeIntervals();
   resetMinimalTimestep();
   resetTotalNumberOfCellUpdates();
+
+  //Flags that might not be initialized by Peano
+  _stateData.setHasChangedVertexOrCellState(false);
+  _stateData.setHasRefined(false);
+  _stateData.setHasErased(false);
+  _stateData.setHasTriggeredRefinementForNextIteration(false);
+  _stateData.setHasTriggeredEraseForNextIteration(false);
+  #ifdef Parallel
+  _stateData.setCouldNotEraseDueToDecompositionFlag(false);
+  _stateData.setSubWorkerIsInvolvedInJoinOrFork(false);
+  #endif
 }
 
 
@@ -47,12 +58,20 @@ int peanoclaw::State::getUnknownsPerSubcell() const {
   return _stateData.getUnknownsPerSubcell();
 }
 
-void peanoclaw::State::setAuxiliarFieldsPerSubcell(int auxiliarFieldsPerSubcell) {
-  _stateData.setAuxiliarFieldsPerSubcell(auxiliarFieldsPerSubcell);
+void peanoclaw::State::setNumberOfParametersWithoutGhostlayerPerSubcell(int numberOfParametersWithoutGhostlayerPerSubcell) {
+  _stateData.setNumberOfParametersWithoutGhostlayerPerSubcell(numberOfParametersWithoutGhostlayerPerSubcell);
 }
 
-int peanoclaw::State::getAuxiliarFieldsPerSubcell() const {
-  return _stateData.getAuxiliarFieldsPerSubcell();
+int peanoclaw::State::getNumberOfParametersWithoutGhostlayerPerSubcell() const {
+  return _stateData.getNumberOfParametersWithoutGhostlayerPerSubcell();
+}
+
+void peanoclaw::State::setNumberOfParametersWithGhostlayerPerSubcell(int numberOfParametersWithGhostlayerPerSubcell) {
+  _stateData.setNumberOfParametersWithGhostlayerPerSubcell(numberOfParametersWithGhostlayerPerSubcell);
+}
+
+int peanoclaw::State::getNumberOfParametersWithGhostlayerPerSubcell() const {
+  return _stateData.getNumberOfParametersWithGhostlayerPerSubcell();
 }
 
 void peanoclaw::State::setDefaultSubdivisionFactor(const tarch::la::Vector<DIMENSIONS, int>& defaultSubdivisionFactor) {

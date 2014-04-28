@@ -11,7 +11,8 @@ class peanoclaw::records::CellDescription {
   parallelise persistent int  subdivisionFactor[DIMENSIONS] from -1 to 1048575;
   parallelise packed persistent int  ghostlayerWidth from 0 to 15;
   parallelise packed persistent int  unknownsPerSubcell from 0 to 15;
-  parallelise packed persistent int  auxiliarFieldsPerSubcell from 0 to 15;
+  parallelise packed persistent int  numberOfParametersWithoutGhostlayerPerSubcell from 0 to 7;
+  parallelise packed persistent int  numberOfParametersWithGhostlayerPerSubcell from 0 to 7;
   parallelise packed persistent int  level from 0 to 31;
   parallelise packed persistent bool isVirtual;
   
@@ -36,7 +37,13 @@ class peanoclaw::records::CellDescription {
    * Indicates, whether the current state of the subgrid has been send to 
    * all adjacent neighbors.
    */
-  persistent packed bool currentStateWasSend;
+  persistent packed bool currentStateWasSent;
+  
+  /**
+   * Indicates, whether the current state should be marked as sent from
+   * the next grid iteration on.
+   */
+  persistent packed bool markStateAsSentInNextIteration;
   
   /**
    * Indicates, whether the adjacent ranks changed, i.e. the parallel topology
@@ -154,7 +161,7 @@ class peanoclaw::records::CellDescription {
   /**
    * The mesh width that is demanded by the application.
    */
-  parallelise persistent double demandedMeshWidth;
+  parallelise persistent double demandedMeshWidth[DIMENSIONS];
   
   /**
    * Lower bounds for area overlapped by coarser ghostlayer. I.e. defining

@@ -17,6 +17,7 @@ peanoclaw::Vertex::Vertex():
   _vertexData.setShouldRefine(false);
   #ifdef Parallel
   _vertexData.setAdjacentRanksChanged(false);
+  _vertexData.setAdjacentRanksInFormerIteration(-1);
   #endif
 }
 
@@ -110,7 +111,6 @@ void peanoclaw::Vertex::fillAdjacentGhostLayers(
 
   interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor(patches, level, numerics, useDimensionalSplitting);
 
-//  ghostLayerCompositor.updateNeighborTimes();
   ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(destinationPatch);
   ghostLayerCompositor.updateGhostlayerBounds();
 
@@ -153,7 +153,8 @@ void peanoclaw::Vertex::applyFluxCorrection(
   //Apply coarse grid correction
   interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor(patches, 0, numerics, false);
 
-  ghostLayerCompositor.applyFluxCorrection();
+  //TODO unterweg debug
+//  ghostLayerCompositor.applyFluxCorrection();
 }
 
 void peanoclaw::Vertex::setShouldRefine(bool shouldRefine) {

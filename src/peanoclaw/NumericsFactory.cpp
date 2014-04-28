@@ -45,13 +45,15 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createSWENumerics(
     fluxCorrection
   );
 }
+#endif
 
-#else
+#if defined(PEANOCLAW_PYCLAW)
 
 peanoclaw::Numerics* peanoclaw::NumericsFactory::createPyClawNumerics(
   InitializationCallback initializationCallback,
   BoundaryConditionCallback boundaryConditionCallback,
   SolverCallback solverCallback,
+  RefinementCriterionCallback refinementCriterionCallback,
   AddPatchToSolutionCallback addPatchToSolutionCallback,
   InterPatchCommunicationCallback interpolationCallback,
   InterPatchCommunicationCallback restrictionCallback,
@@ -92,7 +94,34 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createPyClawNumerics(
     initializationCallback,
     boundaryConditionCallback,
     solverCallback,
+    refinementCriterionCallback,
     addPatchToSolutionCallback,
+    interpolation,
+    restriction,
+    fluxCorrection
+  );
+}
+#endif
+
+#if defined(PEANOCLAW_FULLSWOF2D)
+peanoclaw::Numerics* peanoclaw::NumericsFactory::createFullSWOF2DNumerics(
+  peanoclaw::native::SWEKernelScenario& scenario
+) {
+
+  //Interpolation Callback
+  peanoclaw::interSubgridCommunication::Interpolation* interpolation;
+  interpolation = new peanoclaw::interSubgridCommunication::DefaultInterpolation();
+
+  //Restriction Callback
+  peanoclaw::interSubgridCommunication::Restriction* restriction;
+  restriction = new peanoclaw::interSubgridCommunication::DefaultRestriction();
+
+  //Flux Correction Callback
+  peanoclaw::interSubgridCommunication::FluxCorrection* fluxCorrection;
+  fluxCorrection = new peanoclaw::interSubgridCommunication::DefaultFluxCorrection();
+
+  return new peanoclaw::native::FullSWOF2D(
+    scenario,
     interpolation,
     restriction,
     fluxCorrection

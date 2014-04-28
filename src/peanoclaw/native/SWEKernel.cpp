@@ -31,19 +31,17 @@ peanoclaw::native::SWEKernel::~SWEKernel()
 }
 
 
-double peanoclaw::native::SWEKernel::initializePatch(
+void peanoclaw::native::SWEKernel::initializePatch(
   Patch& patch
 ) {
   logTraceIn( "initializePatch(...)");
 
   _scenario.initializePatch(patch);
-  double demandedMeshWidth = _scenario.computeDemandedMeshWidth(patch);
 
   logTraceOutWith1Argument( "initializePatch(...)", demandedMeshWidth);
-  return demandedMeshWidth;
 }
 
-double peanoclaw::native::SWEKernel::solveTimestep(Patch& patch, double maximumTimestepSize, bool useDimensionalSplitting) {
+void peanoclaw::native::SWEKernel::solveTimestep(Patch& patch, double maximumTimestepSize, bool useDimensionalSplitting) {
   logTraceInWith2Arguments( "solveTimestep(...)", maximumTimestepSize, useDimensionalSplitting);
 
   assertion2(tarch::la::greater(maximumTimestepSize, 0.0), "Timestepsize == 0 should be checked outside.", patch.getTimeIntervals().getMinimalNeighborTimeConstraint());
@@ -79,7 +77,10 @@ double peanoclaw::native::SWEKernel::solveTimestep(Patch& patch, double maximumT
   patch.getTimeIntervals().setEstimatedNextTimestepSize(estimatedNextTimestepSize);
 
   logTraceOut( "solveTimestep(...)");
-  return _scenario.computeDemandedMeshWidth(patch);
+}
+
+tarch::la::Vector<DIMENSIONS, double> peanoclaw::native::SWEKernel::getDemandedMeshWidth(Patch& patch, bool isInitializing) {
+  return _scenario.computeDemandedMeshWidth(patch, isInitializing);
 }
 
 void peanoclaw::native::SWEKernel::addPatchToSolution(Patch& patch) {
@@ -96,7 +97,7 @@ void peanoclaw::native::SWEKernel::fillBoundaryLayer(Patch& patch, int dimension
    //std::cout << patch.toStringUOldWithGhostLayer() << std::endl;
    //std::cout << "||||||" << std::endl;
 
-  // implement a wall boundary
+   // implement a wall boundary
     tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
     tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
 
