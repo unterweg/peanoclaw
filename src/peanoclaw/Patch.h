@@ -34,6 +34,11 @@ namespace peanoclaw {
   class Area;
   class Cell;
   class Patch;
+
+  namespace grid {
+    template<int NumberOfUnknowns>
+    class SubgridAccessor;
+  }
 }
 
 /**
@@ -127,6 +132,9 @@ class peanoclaw::Patch {
 public:
   friend class peanoclaw::grid::TimeIntervals;
 
+  template<int NumberOfUnknowns>
+  friend class peanoclaw::grid::SubgridAccessor;
+
   typedef peanoclaw::records::CellDescription CellDescription;
   typedef peanoclaw::records::Data Data;
 
@@ -144,8 +152,8 @@ private:
   int                _parameterWithoutGhostlayerArrayIndex;
   int                _parameterWithGhostlayerArrayIndex;
 
-  int uNewStrideCache[DIMENSIONS+1];
-  int uOldStrideCache[DIMENSIONS+1];
+  int _uNewStrideCache[DIMENSIONS+1];
+  int _uOldStrideCache[DIMENSIONS+1];
 
   tarch::la::Vector<DIMENSIONS, double> _subcellSize;
 
@@ -176,9 +184,9 @@ private:
     int ghostlayerWidth = _cellDescription->getGhostlayerWidth();
 
     for(int d = 0; d < DIMENSIONS; d++) {
-      index += (subcellIndex(d) + ghostlayerWidth) * uOldStrideCache[d+1];
+      index += (subcellIndex(d) + ghostlayerWidth) * _uOldStrideCache[d+1];
     }
-    index += unknown * uOldStrideCache[0];
+    index += unknown * _uOldStrideCache[0];
     return index;
   }
   #else
@@ -200,7 +208,12 @@ private:
   );
 
   //Methods for evaluating CellDescriptions
-  static bool isValid(const CellDescription* cellDescription);
+  static bool isValid(const CellDescription* cellDescription) {
+    assertion(cellDescription == 0 || tarch::la::allGreater(cellDescription->getSubdivisionFactor(), tarch::la::Vector<DIMENSIONS, int>(-1)));
+    return cellDescription != 0;
+  //      && tarch::la::allGreater(cellDescription->getSubdivisionFactor(),
+  //          tarch::la::Vector<DIMENSIONS, int>(-1));
+  }
 
   static bool isLeaf(const CellDescription* cellDescription);
 
@@ -432,7 +445,7 @@ public:
   double getValueUNew(int linearIndex, int unknown) const
   #ifdef PATCH_INLINE_GETTERS_AND_SETTERS
   {
-    size_t index = linearIndex + uNewStrideCache[0] * unknown;
+    size_t index = linearIndex + _uNewStrideCache[0] * unknown;
     #ifdef PATCH_RANGE_CHECK
     return _uNew->at(index).getU();
     #else
@@ -449,7 +462,7 @@ public:
   void setValueUNew(int linearIndex, int unknown, double value)
   #ifdef PATCH_INLINE_GETTERS_AND_SETTERS
   {
-    int index = linearIndex + uNewStrideCache[0] * unknown;
+    int index = linearIndex + _uNewStrideCache[0] * unknown;
     #ifdef PATCH_RANGE_CHECK
     _uNew->at(index).setU(value);
     #else
@@ -469,7 +482,7 @@ public:
   double getValueUOld(int linearIndex, int unknown) const
   #ifdef PATCH_INLINE_GETTERS_AND_SETTERS
   {
-    int index = linearIndex + uOldStrideCache[0] * unknown;
+    int index = linearIndex + _uOldStrideCache[0] * unknown;
     #ifdef PATCH_RANGE_CHECK
     return _uNew->at(_uOldWithGhostlayerArrayIndex + index).getU();
     #else
@@ -483,7 +496,7 @@ public:
   void setValueUOld(int linearIndex, int unknown, double value)
   #ifdef PATCH_INLINE_GETTERS_AND_SETTERS
   {
-    int index = linearIndex + uOldStrideCache[0] * unknown;
+    int index = linearIndex + _uOldStrideCache[0] * unknown;
     #ifdef PATCH_RANGE_CHECK
     _uNew->at(_uOldWithGhostlayerArrayIndex + index).setU(value);
     #else
@@ -551,7 +564,10 @@ public:
   /**
    * Returns the uNew double array.
    */
-  double* getUNewArray() const;
+  double* getUNewArray() const {
+    assertion1(_uNew != 0, toString());
+    return reinterpret_cast<double*>(&(_uNew->at(0)));
+  }
 
   /**
    * Returns the uOld double array.

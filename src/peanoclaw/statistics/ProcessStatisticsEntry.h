@@ -1,5 +1,5 @@
-#ifndef _PEANOCLAW_RECORDS_VERTEXDESCRIPTION_H
-#define _PEANOCLAW_RECORDS_VERTEXDESCRIPTION_H
+#ifndef _PEANOCLAW_STATISTICS_PROCESSSTATISTICSENTRY_H
+#define _PEANOCLAW_STATISTICS_PROCESSSTATISTICSENTRY_H
 
 #include "peano/utils/Globals.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
@@ -18,9 +18,9 @@
 #include <iostream>
 
 namespace peanoclaw {
-   namespace records {
-      class VertexDescription;
-      class VertexDescriptionPacked;
+   namespace statistics {
+      class ProcessStatisticsEntry;
+      class ProcessStatisticsEntryPacked;
    }
 }
 
@@ -34,19 +34,15 @@ namespace peanoclaw {
  *
  * @date   06/05/2014 09:22
  */
-class peanoclaw::records::VertexDescription { 
+class peanoclaw::statistics::ProcessStatisticsEntry { 
    
    public:
       
-      typedef peanoclaw::records::VertexDescriptionPacked Packed;
-      
-      enum IterationParity {
-         EVEN = 0, ODD = 1
-      };
+      typedef peanoclaw::statistics::ProcessStatisticsEntryPacked Packed;
       
       struct PersistentRecords {
-         tarch::la::Vector<TWO_POWER_D,int> _indicesOfAdjacentCellDescriptions;
-         bool _touched;
+         int _rank;
+         int _numberOfCellUpdates;
          /**
           * Generated
           */
@@ -55,45 +51,45 @@ class peanoclaw::records::VertexDescription {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const bool& touched);
+         PersistentRecords(const int& rank, const int& numberOfCellUpdates);
          
          
-         inline tarch::la::Vector<TWO_POWER_D,int> getIndicesOfAdjacentCellDescriptions() const 
+         inline int getRank() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-            return _indicesOfAdjacentCellDescriptions;
+            return _rank;
          }
          
          
          
-         inline void setIndicesOfAdjacentCellDescriptions(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions) 
+         inline void setRank(const int& rank) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-            _indicesOfAdjacentCellDescriptions = (indicesOfAdjacentCellDescriptions);
+            _rank = rank;
          }
          
          
          
-         inline bool getTouched() const 
+         inline int getNumberOfCellUpdates() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-            return _touched;
+            return _numberOfCellUpdates;
          }
          
          
          
-         inline void setTouched(const bool& touched) 
+         inline void setNumberOfCellUpdates(const int& numberOfCellUpdates) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-            _touched = touched;
+            _numberOfCellUpdates = numberOfCellUpdates;
          }
          
          
@@ -107,98 +103,62 @@ class peanoclaw::records::VertexDescription {
       /**
        * Generated
        */
-      VertexDescription();
+      ProcessStatisticsEntry();
       
       /**
        * Generated
        */
-      VertexDescription(const PersistentRecords& persistentRecords);
+      ProcessStatisticsEntry(const PersistentRecords& persistentRecords);
       
       /**
        * Generated
        */
-      VertexDescription(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const bool& touched);
+      ProcessStatisticsEntry(const int& rank, const int& numberOfCellUpdates);
       
       /**
        * Generated
        */
-      ~VertexDescription();
+      ~ProcessStatisticsEntry();
       
       
-      inline tarch::la::Vector<TWO_POWER_D,int> getIndicesOfAdjacentCellDescriptions() const 
+      inline int getRank() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-         return _persistentRecords._indicesOfAdjacentCellDescriptions;
+         return _persistentRecords._rank;
       }
       
       
       
-      inline void setIndicesOfAdjacentCellDescriptions(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions) 
+      inline void setRank(const int& rank) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-         _persistentRecords._indicesOfAdjacentCellDescriptions = (indicesOfAdjacentCellDescriptions);
+         _persistentRecords._rank = rank;
       }
       
       
       
-      inline int getIndicesOfAdjacentCellDescriptions(int elementIndex) const 
+      inline int getNumberOfCellUpdates() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-         assertion(elementIndex>=0);
-         assertion(elementIndex<TWO_POWER_D);
-         return _persistentRecords._indicesOfAdjacentCellDescriptions[elementIndex];
-         
+         return _persistentRecords._numberOfCellUpdates;
       }
       
       
       
-      inline void setIndicesOfAdjacentCellDescriptions(int elementIndex, const int& indicesOfAdjacentCellDescriptions) 
+      inline void setNumberOfCellUpdates(const int& numberOfCellUpdates) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-         assertion(elementIndex>=0);
-         assertion(elementIndex<TWO_POWER_D);
-         _persistentRecords._indicesOfAdjacentCellDescriptions[elementIndex]= indicesOfAdjacentCellDescriptions;
-         
+         _persistentRecords._numberOfCellUpdates = numberOfCellUpdates;
       }
       
-      
-      
-      inline bool getTouched() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-         return _persistentRecords._touched;
-      }
-      
-      
-      
-      inline void setTouched(const bool& touched) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-         _persistentRecords._touched = touched;
-      }
-      
-      
-      /**
-       * Generated
-       */
-      static std::string toString(const IterationParity& param);
-      
-      /**
-       * Generated
-       */
-      static std::string getIterationParityMapping();
       
       /**
        * Generated
@@ -215,7 +175,7 @@ class peanoclaw::records::VertexDescription {
       /**
        * Generated
        */
-      VertexDescriptionPacked convert() const;
+      ProcessStatisticsEntryPacked convert() const;
       
       
    #ifdef Parallel
@@ -260,15 +220,13 @@ class peanoclaw::records::VertexDescription {
           *
           * @date   06/05/2014 09:22
           */
-         class peanoclaw::records::VertexDescriptionPacked { 
+         class peanoclaw::statistics::ProcessStatisticsEntryPacked { 
             
             public:
                
-               typedef peanoclaw::records::VertexDescription::IterationParity IterationParity;
-               
                struct PersistentRecords {
-                  tarch::la::Vector<TWO_POWER_D,int> _indicesOfAdjacentCellDescriptions;
-                  bool _touched;
+                  int _rank;
+                  int _numberOfCellUpdates;
                   /**
                    * Generated
                    */
@@ -277,45 +235,45 @@ class peanoclaw::records::VertexDescription {
                   /**
                    * Generated
                    */
-                  PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const bool& touched);
+                  PersistentRecords(const int& rank, const int& numberOfCellUpdates);
                   
                   
-                  inline tarch::la::Vector<TWO_POWER_D,int> getIndicesOfAdjacentCellDescriptions() const 
+                  inline int getRank() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     return _indicesOfAdjacentCellDescriptions;
+                     return _rank;
                   }
                   
                   
                   
-                  inline void setIndicesOfAdjacentCellDescriptions(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions) 
+                  inline void setRank(const int& rank) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     _indicesOfAdjacentCellDescriptions = (indicesOfAdjacentCellDescriptions);
+                     _rank = rank;
                   }
                   
                   
                   
-                  inline bool getTouched() const 
+                  inline int getNumberOfCellUpdates() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     return _touched;
+                     return _numberOfCellUpdates;
                   }
                   
                   
                   
-                  inline void setTouched(const bool& touched) 
+                  inline void setNumberOfCellUpdates(const int& numberOfCellUpdates) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                     _touched = touched;
+                     _numberOfCellUpdates = numberOfCellUpdates;
                   }
                   
                   
@@ -329,98 +287,62 @@ class peanoclaw::records::VertexDescription {
                /**
                 * Generated
                 */
-               VertexDescriptionPacked();
+               ProcessStatisticsEntryPacked();
                
                /**
                 * Generated
                 */
-               VertexDescriptionPacked(const PersistentRecords& persistentRecords);
+               ProcessStatisticsEntryPacked(const PersistentRecords& persistentRecords);
                
                /**
                 * Generated
                 */
-               VertexDescriptionPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const bool& touched);
+               ProcessStatisticsEntryPacked(const int& rank, const int& numberOfCellUpdates);
                
                /**
                 * Generated
                 */
-               ~VertexDescriptionPacked();
+               ~ProcessStatisticsEntryPacked();
                
                
-               inline tarch::la::Vector<TWO_POWER_D,int> getIndicesOfAdjacentCellDescriptions() const 
+               inline int getRank() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  return _persistentRecords._indicesOfAdjacentCellDescriptions;
+                  return _persistentRecords._rank;
                }
                
                
                
-               inline void setIndicesOfAdjacentCellDescriptions(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions) 
+               inline void setRank(const int& rank) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  _persistentRecords._indicesOfAdjacentCellDescriptions = (indicesOfAdjacentCellDescriptions);
+                  _persistentRecords._rank = rank;
                }
                
                
                
-               inline int getIndicesOfAdjacentCellDescriptions(int elementIndex) const 
+               inline int getNumberOfCellUpdates() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  assertion(elementIndex>=0);
-                  assertion(elementIndex<TWO_POWER_D);
-                  return _persistentRecords._indicesOfAdjacentCellDescriptions[elementIndex];
-                  
+                  return _persistentRecords._numberOfCellUpdates;
                }
                
                
                
-               inline void setIndicesOfAdjacentCellDescriptions(int elementIndex, const int& indicesOfAdjacentCellDescriptions) 
+               inline void setNumberOfCellUpdates(const int& numberOfCellUpdates) 
  #ifdef UseManualInlining
  __attribute__((always_inline))
  #endif 
  {
-                  assertion(elementIndex>=0);
-                  assertion(elementIndex<TWO_POWER_D);
-                  _persistentRecords._indicesOfAdjacentCellDescriptions[elementIndex]= indicesOfAdjacentCellDescriptions;
-                  
+                  _persistentRecords._numberOfCellUpdates = numberOfCellUpdates;
                }
                
-               
-               
-               inline bool getTouched() const 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                  return _persistentRecords._touched;
-               }
-               
-               
-               
-               inline void setTouched(const bool& touched) 
- #ifdef UseManualInlining
- __attribute__((always_inline))
- #endif 
- {
-                  _persistentRecords._touched = touched;
-               }
-               
-               
-               /**
-                * Generated
-                */
-               static std::string toString(const IterationParity& param);
-               
-               /**
-                * Generated
-                */
-               static std::string getIterationParityMapping();
                
                /**
                 * Generated
@@ -437,7 +359,7 @@ class peanoclaw::records::VertexDescription {
                /**
                 * Generated
                 */
-               VertexDescription convert() const;
+               ProcessStatisticsEntry convert() const;
                
                
             #ifdef Parallel

@@ -1,109 +1,94 @@
-#include "peanoclaw/records/VertexDescription.h"
+#include "peanoclaw/statistics/ProcessStatisticsEntry.h"
 
-peanoclaw::records::VertexDescription::PersistentRecords::PersistentRecords() {
+peanoclaw::statistics::ProcessStatisticsEntry::PersistentRecords::PersistentRecords() {
    
 }
 
 
-peanoclaw::records::VertexDescription::PersistentRecords::PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const bool& touched):
-_indicesOfAdjacentCellDescriptions(indicesOfAdjacentCellDescriptions),
-_touched(touched) {
+peanoclaw::statistics::ProcessStatisticsEntry::PersistentRecords::PersistentRecords(const int& rank, const int& numberOfCellUpdates):
+_rank(rank),
+_numberOfCellUpdates(numberOfCellUpdates) {
    
 }
 
-peanoclaw::records::VertexDescription::VertexDescription() {
-   
-}
-
-
-peanoclaw::records::VertexDescription::VertexDescription(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._indicesOfAdjacentCellDescriptions, persistentRecords._touched) {
+peanoclaw::statistics::ProcessStatisticsEntry::ProcessStatisticsEntry() {
    
 }
 
 
-peanoclaw::records::VertexDescription::VertexDescription(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const bool& touched):
-_persistentRecords(indicesOfAdjacentCellDescriptions, touched) {
+peanoclaw::statistics::ProcessStatisticsEntry::ProcessStatisticsEntry(const PersistentRecords& persistentRecords):
+_persistentRecords(persistentRecords._rank, persistentRecords._numberOfCellUpdates) {
    
 }
 
 
-peanoclaw::records::VertexDescription::~VertexDescription() { }
-
-std::string peanoclaw::records::VertexDescription::toString(const IterationParity& param) {
-   switch (param) {
-      case EVEN: return "EVEN";
-      case ODD: return "ODD";
-   }
-   return "undefined";
-}
-
-std::string peanoclaw::records::VertexDescription::getIterationParityMapping() {
-   return "IterationParity(EVEN=0,ODD=1)";
+peanoclaw::statistics::ProcessStatisticsEntry::ProcessStatisticsEntry(const int& rank, const int& numberOfCellUpdates):
+_persistentRecords(rank, numberOfCellUpdates) {
+   
 }
 
 
-std::string peanoclaw::records::VertexDescription::toString() const {
+peanoclaw::statistics::ProcessStatisticsEntry::~ProcessStatisticsEntry() { }
+
+
+
+std::string peanoclaw::statistics::ProcessStatisticsEntry::toString() const {
    std::ostringstream stringstr;
    toString(stringstr);
    return stringstr.str();
 }
 
-void peanoclaw::records::VertexDescription::toString (std::ostream& out) const {
+void peanoclaw::statistics::ProcessStatisticsEntry::toString (std::ostream& out) const {
    out << "("; 
-   out << "indicesOfAdjacentCellDescriptions:[";
-   for (int i = 0; i < TWO_POWER_D-1; i++) {
-      out << getIndicesOfAdjacentCellDescriptions(i) << ",";
-   }
-   out << getIndicesOfAdjacentCellDescriptions(TWO_POWER_D-1) << "]";
+   out << "rank:" << getRank();
    out << ",";
-   out << "touched:" << getTouched();
+   out << "numberOfCellUpdates:" << getNumberOfCellUpdates();
    out <<  ")";
 }
 
 
-peanoclaw::records::VertexDescription::PersistentRecords peanoclaw::records::VertexDescription::getPersistentRecords() const {
+peanoclaw::statistics::ProcessStatisticsEntry::PersistentRecords peanoclaw::statistics::ProcessStatisticsEntry::getPersistentRecords() const {
    return _persistentRecords;
 }
 
-peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescription::convert() const{
-   return VertexDescriptionPacked(
-      getIndicesOfAdjacentCellDescriptions(),
-      getTouched()
+peanoclaw::statistics::ProcessStatisticsEntryPacked peanoclaw::statistics::ProcessStatisticsEntry::convert() const{
+   return ProcessStatisticsEntryPacked(
+      getRank(),
+      getNumberOfCellUpdates()
    );
 }
 
 #ifdef Parallel
-   tarch::logging::Log peanoclaw::records::VertexDescription::_log( "peanoclaw::records::VertexDescription" );
+   tarch::logging::Log peanoclaw::statistics::ProcessStatisticsEntry::_log( "peanoclaw::statistics::ProcessStatisticsEntry" );
    
-   MPI_Datatype peanoclaw::records::VertexDescription::Datatype = 0;
-   MPI_Datatype peanoclaw::records::VertexDescription::FullDatatype = 0;
+   MPI_Datatype peanoclaw::statistics::ProcessStatisticsEntry::Datatype = 0;
+   MPI_Datatype peanoclaw::statistics::ProcessStatisticsEntry::FullDatatype = 0;
    
    
-   void peanoclaw::records::VertexDescription::initDatatype() {
+   void peanoclaw::statistics::ProcessStatisticsEntry::initDatatype() {
       {
-         VertexDescription dummyVertexDescription[2];
+         ProcessStatisticsEntry dummyProcessStatisticsEntry[2];
          
          const int Attributes = 3;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //indicesOfAdjacentCellDescriptions
-            MPI_CHAR,		 //touched
+            MPI_INT,		 //rank
+            MPI_INT,		 //numberOfCellUpdates
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
-            TWO_POWER_D,		 //indicesOfAdjacentCellDescriptions
-            1,		 //touched
+            1,		 //rank
+            1,		 //numberOfCellUpdates
             1		 // end/displacement flag
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescription[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescription[0]._persistentRecords._indicesOfAdjacentCellDescriptions[0]))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescription[0]._persistentRecords._touched))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyVertexDescription[1]._persistentRecords._indicesOfAdjacentCellDescriptions[0])), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntry[0]))), &base);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntry[0]._persistentRecords._rank))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntry[0]._persistentRecords._numberOfCellUpdates))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntry[1]._persistentRecords._rank))), 		&disp[2] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -111,33 +96,33 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
          for (int i=0; i<Attributes; i++) {
             disp[i] -= base;
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &VertexDescription::Datatype );
-         MPI_Type_commit( &VertexDescription::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ProcessStatisticsEntry::Datatype );
+         MPI_Type_commit( &ProcessStatisticsEntry::Datatype );
          
       }
       {
-         VertexDescription dummyVertexDescription[2];
+         ProcessStatisticsEntry dummyProcessStatisticsEntry[2];
          
          const int Attributes = 3;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //indicesOfAdjacentCellDescriptions
-            MPI_CHAR,		 //touched
+            MPI_INT,		 //rank
+            MPI_INT,		 //numberOfCellUpdates
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
-            TWO_POWER_D,		 //indicesOfAdjacentCellDescriptions
-            1,		 //touched
+            1,		 //rank
+            1,		 //numberOfCellUpdates
             1		 // end/displacement flag
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescription[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescription[0]._persistentRecords._indicesOfAdjacentCellDescriptions[0]))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescription[0]._persistentRecords._touched))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyVertexDescription[1]._persistentRecords._indicesOfAdjacentCellDescriptions[0])), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntry[0]))), &base);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntry[0]._persistentRecords._rank))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntry[0]._persistentRecords._numberOfCellUpdates))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntry[1]._persistentRecords._rank))), 		&disp[2] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -145,27 +130,27 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
          for (int i=0; i<Attributes; i++) {
             disp[i] -= base;
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &VertexDescription::FullDatatype );
-         MPI_Type_commit( &VertexDescription::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ProcessStatisticsEntry::FullDatatype );
+         MPI_Type_commit( &ProcessStatisticsEntry::FullDatatype );
          
       }
       
    }
    
    
-   void peanoclaw::records::VertexDescription::shutdownDatatype() {
-      MPI_Type_free( &VertexDescription::Datatype );
-      MPI_Type_free( &VertexDescription::FullDatatype );
+   void peanoclaw::statistics::ProcessStatisticsEntry::shutdownDatatype() {
+      MPI_Type_free( &ProcessStatisticsEntry::Datatype );
+      MPI_Type_free( &ProcessStatisticsEntry::FullDatatype );
       
    }
    
-   void peanoclaw::records::VertexDescription::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void peanoclaw::statistics::ProcessStatisticsEntry::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
       if (communicateBlocking) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
             std::ostringstream msg;
-            msg << "was not able to send message peanoclaw::records::VertexDescription "
+            msg << "was not able to send message peanoclaw::statistics::ProcessStatisticsEntry "
             << toString()
             << " to node " << destination
             << ": " << tarch::parallel::MPIReturnValueToString(result);
@@ -202,7 +187,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
          }
          if  (result!=MPI_SUCCESS) {
             std::ostringstream msg;
-            msg << "was not able to send message peanoclaw::records::VertexDescription "
+            msg << "was not able to send message peanoclaw::statistics::ProcessStatisticsEntry "
             << toString()
             << " to node " << destination
             << ": " << tarch::parallel::MPIReturnValueToString(result);
@@ -215,7 +200,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
             result = MPI_Test( sendRequestHandle, &flag, &status );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
-               msg << "testing for finished send task for peanoclaw::records::VertexDescription "
+               msg << "testing for finished send task for peanoclaw::statistics::ProcessStatisticsEntry "
                << toString()
                << " sent to node " << destination
                << " failed: " << tarch::parallel::MPIReturnValueToString(result);
@@ -229,7 +214,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
                (!triggeredTimeoutWarning)
             ) {
                tarch::parallel::Node::getInstance().writeTimeOutWarning(
-               "peanoclaw::records::VertexDescription",
+               "peanoclaw::statistics::ProcessStatisticsEntry",
                "send(int)", destination,tag,1
                );
                triggeredTimeoutWarning = true;
@@ -239,7 +224,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
                (clock()>timeOutShutdown)
             ) {
                tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-               "peanoclaw::records::VertexDescription",
+               "peanoclaw::statistics::ProcessStatisticsEntry",
                "send(int)", destination,tag,1
                );
             }
@@ -257,14 +242,14 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
    
    
    
-   void peanoclaw::records::VertexDescription::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void peanoclaw::statistics::ProcessStatisticsEntry::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
       if (communicateBlocking) {
       
          MPI_Status  status;
          const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
          if ( result != MPI_SUCCESS ) {
             std::ostringstream msg;
-            msg << "failed to start to receive peanoclaw::records::VertexDescription from node "
+            msg << "failed to start to receive peanoclaw::statistics::ProcessStatisticsEntry from node "
             << source << ": " << tarch::parallel::MPIReturnValueToString(result);
             _log.error( "receive(int)", msg.str() );
          }
@@ -297,7 +282,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
          }
          if ( result != MPI_SUCCESS ) {
             std::ostringstream msg;
-            msg << "failed to start to receive peanoclaw::records::VertexDescription from node "
+            msg << "failed to start to receive peanoclaw::statistics::ProcessStatisticsEntry from node "
             << source << ": " << tarch::parallel::MPIReturnValueToString(result);
             _log.error( "receive(int)", msg.str() );
          }
@@ -309,7 +294,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
             result = MPI_Test( sendRequestHandle, &flag, &status );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
-               msg << "testing for finished receive task for peanoclaw::records::VertexDescription failed: "
+               msg << "testing for finished receive task for peanoclaw::statistics::ProcessStatisticsEntry failed: "
                << tarch::parallel::MPIReturnValueToString(result);
                _log.error("receive(int)", msg.str() );
             }
@@ -321,7 +306,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
                (!triggeredTimeoutWarning)
             ) {
                tarch::parallel::Node::getInstance().writeTimeOutWarning(
-               "peanoclaw::records::VertexDescription",
+               "peanoclaw::statistics::ProcessStatisticsEntry",
                "receive(int)", source,tag,1
                );
                triggeredTimeoutWarning = true;
@@ -331,7 +316,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
                (clock()>timeOutShutdown)
             ) {
                tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-               "peanoclaw::records::VertexDescription",
+               "peanoclaw::statistics::ProcessStatisticsEntry",
                "receive(int)", source,tag,1
                );
             }
@@ -350,7 +335,7 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
    
    
    
-   bool peanoclaw::records::VertexDescription::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
+   bool peanoclaw::statistics::ProcessStatisticsEntry::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
       MPI_Status status;
       int  flag        = 0;
       MPI_Iprobe(
@@ -375,107 +360,95 @@ peanoclaw::records::VertexDescriptionPacked peanoclaw::records::VertexDescriptio
 #endif
 
 
-peanoclaw::records::VertexDescriptionPacked::PersistentRecords::PersistentRecords() {
+peanoclaw::statistics::ProcessStatisticsEntryPacked::PersistentRecords::PersistentRecords() {
    
 }
 
 
-peanoclaw::records::VertexDescriptionPacked::PersistentRecords::PersistentRecords(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const bool& touched):
-_indicesOfAdjacentCellDescriptions(indicesOfAdjacentCellDescriptions),
-_touched(touched) {
+peanoclaw::statistics::ProcessStatisticsEntryPacked::PersistentRecords::PersistentRecords(const int& rank, const int& numberOfCellUpdates):
+_rank(rank),
+_numberOfCellUpdates(numberOfCellUpdates) {
    
 }
 
-peanoclaw::records::VertexDescriptionPacked::VertexDescriptionPacked() {
-   
-}
-
-
-peanoclaw::records::VertexDescriptionPacked::VertexDescriptionPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._indicesOfAdjacentCellDescriptions, persistentRecords._touched) {
+peanoclaw::statistics::ProcessStatisticsEntryPacked::ProcessStatisticsEntryPacked() {
    
 }
 
 
-peanoclaw::records::VertexDescriptionPacked::VertexDescriptionPacked(const tarch::la::Vector<TWO_POWER_D,int>& indicesOfAdjacentCellDescriptions, const bool& touched):
-_persistentRecords(indicesOfAdjacentCellDescriptions, touched) {
+peanoclaw::statistics::ProcessStatisticsEntryPacked::ProcessStatisticsEntryPacked(const PersistentRecords& persistentRecords):
+_persistentRecords(persistentRecords._rank, persistentRecords._numberOfCellUpdates) {
    
 }
 
 
-peanoclaw::records::VertexDescriptionPacked::~VertexDescriptionPacked() { }
-
-std::string peanoclaw::records::VertexDescriptionPacked::toString(const IterationParity& param) {
-   return peanoclaw::records::VertexDescription::toString(param);
-}
-
-std::string peanoclaw::records::VertexDescriptionPacked::getIterationParityMapping() {
-   return peanoclaw::records::VertexDescription::getIterationParityMapping();
+peanoclaw::statistics::ProcessStatisticsEntryPacked::ProcessStatisticsEntryPacked(const int& rank, const int& numberOfCellUpdates):
+_persistentRecords(rank, numberOfCellUpdates) {
+   
 }
 
 
+peanoclaw::statistics::ProcessStatisticsEntryPacked::~ProcessStatisticsEntryPacked() { }
 
-std::string peanoclaw::records::VertexDescriptionPacked::toString() const {
+
+
+std::string peanoclaw::statistics::ProcessStatisticsEntryPacked::toString() const {
    std::ostringstream stringstr;
    toString(stringstr);
    return stringstr.str();
 }
 
-void peanoclaw::records::VertexDescriptionPacked::toString (std::ostream& out) const {
+void peanoclaw::statistics::ProcessStatisticsEntryPacked::toString (std::ostream& out) const {
    out << "("; 
-   out << "indicesOfAdjacentCellDescriptions:[";
-   for (int i = 0; i < TWO_POWER_D-1; i++) {
-      out << getIndicesOfAdjacentCellDescriptions(i) << ",";
-   }
-   out << getIndicesOfAdjacentCellDescriptions(TWO_POWER_D-1) << "]";
+   out << "rank:" << getRank();
    out << ",";
-   out << "touched:" << getTouched();
+   out << "numberOfCellUpdates:" << getNumberOfCellUpdates();
    out <<  ")";
 }
 
 
-peanoclaw::records::VertexDescriptionPacked::PersistentRecords peanoclaw::records::VertexDescriptionPacked::getPersistentRecords() const {
+peanoclaw::statistics::ProcessStatisticsEntryPacked::PersistentRecords peanoclaw::statistics::ProcessStatisticsEntryPacked::getPersistentRecords() const {
    return _persistentRecords;
 }
 
-peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacked::convert() const{
-   return VertexDescription(
-      getIndicesOfAdjacentCellDescriptions(),
-      getTouched()
+peanoclaw::statistics::ProcessStatisticsEntry peanoclaw::statistics::ProcessStatisticsEntryPacked::convert() const{
+   return ProcessStatisticsEntry(
+      getRank(),
+      getNumberOfCellUpdates()
    );
 }
 
 #ifdef Parallel
-   tarch::logging::Log peanoclaw::records::VertexDescriptionPacked::_log( "peanoclaw::records::VertexDescriptionPacked" );
+   tarch::logging::Log peanoclaw::statistics::ProcessStatisticsEntryPacked::_log( "peanoclaw::statistics::ProcessStatisticsEntryPacked" );
    
-   MPI_Datatype peanoclaw::records::VertexDescriptionPacked::Datatype = 0;
-   MPI_Datatype peanoclaw::records::VertexDescriptionPacked::FullDatatype = 0;
+   MPI_Datatype peanoclaw::statistics::ProcessStatisticsEntryPacked::Datatype = 0;
+   MPI_Datatype peanoclaw::statistics::ProcessStatisticsEntryPacked::FullDatatype = 0;
    
    
-   void peanoclaw::records::VertexDescriptionPacked::initDatatype() {
+   void peanoclaw::statistics::ProcessStatisticsEntryPacked::initDatatype() {
       {
-         VertexDescriptionPacked dummyVertexDescriptionPacked[2];
+         ProcessStatisticsEntryPacked dummyProcessStatisticsEntryPacked[2];
          
          const int Attributes = 3;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //indicesOfAdjacentCellDescriptions
-            MPI_CHAR,		 //touched
+            MPI_INT,		 //rank
+            MPI_INT,		 //numberOfCellUpdates
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
-            TWO_POWER_D,		 //indicesOfAdjacentCellDescriptions
-            1,		 //touched
+            1,		 //rank
+            1,		 //numberOfCellUpdates
             1		 // end/displacement flag
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescriptionPacked[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescriptionPacked[0]._persistentRecords._indicesOfAdjacentCellDescriptions[0]))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescriptionPacked[0]._persistentRecords._touched))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyVertexDescriptionPacked[1]._persistentRecords._indicesOfAdjacentCellDescriptions[0])), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntryPacked[0]))), &base);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntryPacked[0]._persistentRecords._rank))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntryPacked[0]._persistentRecords._numberOfCellUpdates))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntryPacked[1]._persistentRecords._rank))), 		&disp[2] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -483,33 +456,33 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
          for (int i=0; i<Attributes; i++) {
             disp[i] -= base;
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &VertexDescriptionPacked::Datatype );
-         MPI_Type_commit( &VertexDescriptionPacked::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ProcessStatisticsEntryPacked::Datatype );
+         MPI_Type_commit( &ProcessStatisticsEntryPacked::Datatype );
          
       }
       {
-         VertexDescriptionPacked dummyVertexDescriptionPacked[2];
+         ProcessStatisticsEntryPacked dummyProcessStatisticsEntryPacked[2];
          
          const int Attributes = 3;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //indicesOfAdjacentCellDescriptions
-            MPI_CHAR,		 //touched
+            MPI_INT,		 //rank
+            MPI_INT,		 //numberOfCellUpdates
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
-            TWO_POWER_D,		 //indicesOfAdjacentCellDescriptions
-            1,		 //touched
+            1,		 //rank
+            1,		 //numberOfCellUpdates
             1		 // end/displacement flag
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescriptionPacked[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescriptionPacked[0]._persistentRecords._indicesOfAdjacentCellDescriptions[0]))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyVertexDescriptionPacked[0]._persistentRecords._touched))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyVertexDescriptionPacked[1]._persistentRecords._indicesOfAdjacentCellDescriptions[0])), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntryPacked[0]))), &base);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntryPacked[0]._persistentRecords._rank))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntryPacked[0]._persistentRecords._numberOfCellUpdates))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyProcessStatisticsEntryPacked[1]._persistentRecords._rank))), 		&disp[2] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -517,27 +490,27 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
          for (int i=0; i<Attributes; i++) {
             disp[i] -= base;
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &VertexDescriptionPacked::FullDatatype );
-         MPI_Type_commit( &VertexDescriptionPacked::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ProcessStatisticsEntryPacked::FullDatatype );
+         MPI_Type_commit( &ProcessStatisticsEntryPacked::FullDatatype );
          
       }
       
    }
    
    
-   void peanoclaw::records::VertexDescriptionPacked::shutdownDatatype() {
-      MPI_Type_free( &VertexDescriptionPacked::Datatype );
-      MPI_Type_free( &VertexDescriptionPacked::FullDatatype );
+   void peanoclaw::statistics::ProcessStatisticsEntryPacked::shutdownDatatype() {
+      MPI_Type_free( &ProcessStatisticsEntryPacked::Datatype );
+      MPI_Type_free( &ProcessStatisticsEntryPacked::FullDatatype );
       
    }
    
-   void peanoclaw::records::VertexDescriptionPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void peanoclaw::statistics::ProcessStatisticsEntryPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
       if (communicateBlocking) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
             std::ostringstream msg;
-            msg << "was not able to send message peanoclaw::records::VertexDescriptionPacked "
+            msg << "was not able to send message peanoclaw::statistics::ProcessStatisticsEntryPacked "
             << toString()
             << " to node " << destination
             << ": " << tarch::parallel::MPIReturnValueToString(result);
@@ -574,7 +547,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
          }
          if  (result!=MPI_SUCCESS) {
             std::ostringstream msg;
-            msg << "was not able to send message peanoclaw::records::VertexDescriptionPacked "
+            msg << "was not able to send message peanoclaw::statistics::ProcessStatisticsEntryPacked "
             << toString()
             << " to node " << destination
             << ": " << tarch::parallel::MPIReturnValueToString(result);
@@ -587,7 +560,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
             result = MPI_Test( sendRequestHandle, &flag, &status );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
-               msg << "testing for finished send task for peanoclaw::records::VertexDescriptionPacked "
+               msg << "testing for finished send task for peanoclaw::statistics::ProcessStatisticsEntryPacked "
                << toString()
                << " sent to node " << destination
                << " failed: " << tarch::parallel::MPIReturnValueToString(result);
@@ -601,7 +574,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
                (!triggeredTimeoutWarning)
             ) {
                tarch::parallel::Node::getInstance().writeTimeOutWarning(
-               "peanoclaw::records::VertexDescriptionPacked",
+               "peanoclaw::statistics::ProcessStatisticsEntryPacked",
                "send(int)", destination,tag,1
                );
                triggeredTimeoutWarning = true;
@@ -611,7 +584,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
                (clock()>timeOutShutdown)
             ) {
                tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-               "peanoclaw::records::VertexDescriptionPacked",
+               "peanoclaw::statistics::ProcessStatisticsEntryPacked",
                "send(int)", destination,tag,1
                );
             }
@@ -629,14 +602,14 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
    
    
    
-   void peanoclaw::records::VertexDescriptionPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void peanoclaw::statistics::ProcessStatisticsEntryPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
       if (communicateBlocking) {
       
          MPI_Status  status;
          const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
          if ( result != MPI_SUCCESS ) {
             std::ostringstream msg;
-            msg << "failed to start to receive peanoclaw::records::VertexDescriptionPacked from node "
+            msg << "failed to start to receive peanoclaw::statistics::ProcessStatisticsEntryPacked from node "
             << source << ": " << tarch::parallel::MPIReturnValueToString(result);
             _log.error( "receive(int)", msg.str() );
          }
@@ -669,7 +642,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
          }
          if ( result != MPI_SUCCESS ) {
             std::ostringstream msg;
-            msg << "failed to start to receive peanoclaw::records::VertexDescriptionPacked from node "
+            msg << "failed to start to receive peanoclaw::statistics::ProcessStatisticsEntryPacked from node "
             << source << ": " << tarch::parallel::MPIReturnValueToString(result);
             _log.error( "receive(int)", msg.str() );
          }
@@ -681,7 +654,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
             result = MPI_Test( sendRequestHandle, &flag, &status );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
-               msg << "testing for finished receive task for peanoclaw::records::VertexDescriptionPacked failed: "
+               msg << "testing for finished receive task for peanoclaw::statistics::ProcessStatisticsEntryPacked failed: "
                << tarch::parallel::MPIReturnValueToString(result);
                _log.error("receive(int)", msg.str() );
             }
@@ -693,7 +666,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
                (!triggeredTimeoutWarning)
             ) {
                tarch::parallel::Node::getInstance().writeTimeOutWarning(
-               "peanoclaw::records::VertexDescriptionPacked",
+               "peanoclaw::statistics::ProcessStatisticsEntryPacked",
                "receive(int)", source,tag,1
                );
                triggeredTimeoutWarning = true;
@@ -703,7 +676,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
                (clock()>timeOutShutdown)
             ) {
                tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-               "peanoclaw::records::VertexDescriptionPacked",
+               "peanoclaw::statistics::ProcessStatisticsEntryPacked",
                "receive(int)", source,tag,1
                );
             }
@@ -722,7 +695,7 @@ peanoclaw::records::VertexDescription peanoclaw::records::VertexDescriptionPacke
    
    
    
-   bool peanoclaw::records::VertexDescriptionPacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
+   bool peanoclaw::statistics::ProcessStatisticsEntryPacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
       MPI_Status status;
       int  flag        = 0;
       MPI_Iprobe(

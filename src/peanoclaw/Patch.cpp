@@ -12,6 +12,8 @@
 #include "Area.h"
 #include "Cell.h"
 #include "Heap.h"
+#include "peanoclaw/grid/SubgridAccessor.h"
+
 #include "peano/heap/Heap.h"
 #include "peano/utils/Loop.h"
 
@@ -32,10 +34,10 @@ int peanoclaw::Patch::linearize(int unknown,
 //        toString());
 //    index += subcellIndex(d) * stride;
 //    stride *= _cellDescription->getSubdivisionFactor()(d);
-    index += subcellIndex(d) * uNewStrideCache[d + 1];
+    index += subcellIndex(d) * _uNewStrideCache[d + 1];
   }
 //  index += unknown * stride;
-  index += unknown * uNewStrideCache[0];
+  index += unknown * _uNewStrideCache[0];
 
   return index;
 }
@@ -59,9 +61,9 @@ int peanoclaw::Patch::linearizeWithGhostlayer(
 //    );
 //    index += (subcellIndex(d) + ghostlayerWidth) * stride;
 //    stride *= (subdivisionFactor(d) + 2*ghostlayerWidth);
-    index += (subcellIndex(d) + ghostlayerWidth) * uOldStrideCache[d+1];
+    index += (subcellIndex(d) + ghostlayerWidth) * _uOldStrideCache[d+1];
   }
-  index += unknown * uOldStrideCache[0];
+  index += unknown * _uOldStrideCache[0];
 //  index += unknown * stride;
   return index;
 }
@@ -77,19 +79,19 @@ void peanoclaw::Patch::fillCaches() {
   //UOld
   int stride = 1;
   for (int d = DIMENSIONS; d > 0; d--) {
-    uOldStrideCache[d] = stride;
+    _uOldStrideCache[d] = stride;
     stride *= subdivisionFactor(d - 1) + 2 * ghostlayerWidth;
   }
-  uOldStrideCache[0] = stride;
+  _uOldStrideCache[0] = stride;
   _uOldWithGhostlayerArrayIndex = tarch::la::volume(subdivisionFactor) * _cellDescription->getUnknownsPerSubcell();
 
   //UNew
   stride = 1;
   for (int d = DIMENSIONS; d > 0; d--) {
-    uNewStrideCache[d] = stride;
+    _uNewStrideCache[d] = stride;
     stride *= subdivisionFactor(d - 1);
   }
-  uNewStrideCache[0] = stride;
+  _uNewStrideCache[0] = stride;
 
   //Parameter without ghostlayer
   tarch::la::Vector<DIMENSIONS, int> ghostlayer = tarch::la::Vector<DIMENSIONS, int>(2*ghostlayerWidth);
@@ -101,8 +103,9 @@ void peanoclaw::Patch::fillCaches() {
       + tarch::la::volume(_cellDescription->getSubdivisionFactor()) * _cellDescription->getNumberOfParametersWithoutGhostlayerPerSubcell();
 
   //Precompute subcell size
+  tarch::la::Vector<DIMENSIONS,double> size = _cellDescription->getSize();
   for (int d = 0; d < DIMENSIONS; d++) {
-    _subcellSize[d] = _cellDescription->getSize()[d] / subdivisionFactor[d];
+    _subcellSize[d] = size[d] / subdivisionFactor[d];
   }
 }
 
@@ -123,12 +126,6 @@ void peanoclaw::Patch::switchAreaToMinimalFineGridTimeInterval(const Area& area,
       setValueUNew(linearIndexUNew, unknown, valueUOld * (1.0 - factorForUNew) + valueUNew * factorForUNew);
     }
   }
-}
-
-bool peanoclaw::Patch::isValid(const CellDescription* cellDescription) {
-  return (cellDescription != 0)
-      && tarch::la::allGreater(cellDescription->getSubdivisionFactor(),
-          tarch::la::Vector<DIMENSIONS, int>(-1));
 }
 
 bool peanoclaw::Patch::isLeaf(const CellDescription* cellDescription) {
@@ -211,18 +208,18 @@ peanoclaw::Patch::Patch(const tarch::la::Vector<DIMENSIONS, double>& position,
   std::vector<CellDescription>& cellDescriptions = CellDescriptionHeap::getInstance().getData(cellDescriptionIndex);
 
   CellDescription cellDescription;
-  
+
   //Data
   cellDescription.setCellDescriptionIndex(cellDescriptionIndex);
   cellDescription.setUIndex(-1);
-  
+
   //Geometry
   cellDescription.setSize(size);
   cellDescription.setPosition(position);
   cellDescription.setLevel(level);
   cellDescription.setSubdivisionFactor(subdivisionFactor);
   cellDescription.setGhostlayerWidth(ghostLayerWidth);
-  
+
   //Timestepping
   cellDescription.setTime(0.0);
   cellDescription.setTimestepSize(0.0);
@@ -235,16 +232,16 @@ peanoclaw::Patch::Patch(const tarch::la::Vector<DIMENSIONS, double>& position,
   cellDescription.setMaximumFineGridTime(-1.0);
   cellDescription.setMinimumFineGridTimestep(std::numeric_limits<double>::max());
   cellDescription.setMinimalLeafNeighborTimeConstraint(std::numeric_limits<double>::max());
-  
+
   //Numerics
   cellDescription.setUnknownsPerSubcell(unknownsPerSubcell);
   cellDescription.setNumberOfParametersWithoutGhostlayerPerSubcell(parameterWithoutGhostlayer);
   cellDescription.setNumberOfParametersWithGhostlayerPerSubcell(parameterWithGhostlayer);
-    
+
   //Spacetree state
   cellDescription.setIsVirtual(false);
   cellDescription.setAgeInGridIterations(0);
-  
+
   //Refinement
   cellDescription.setDemandedMeshWidth(
       tarch::la::multiplyComponents(size, tarch::la::invertEntries(subdivisionFactor.convertScalar<double>()))
@@ -253,7 +250,7 @@ peanoclaw::Patch::Patch(const tarch::la::Vector<DIMENSIONS, double>& position,
   cellDescription.setRestrictionUpperBounds(-std::numeric_limits<double>::max());
   cellDescription.setSynchronizeFineGrids(false);
   cellDescription.setWillCoarsen(false);
-  
+
   //Parallel
 #ifdef Parallel
   cellDescription.setIsRemote(false);
@@ -291,9 +288,9 @@ void peanoclaw::Patch::loadCellDescription(int cellDescriptionIndex) {
 
   _timeIntervals = peanoclaw::grid::TimeIntervals(_cellDescription);
 
-  if (_cellDescription->getUIndex() != -1) {
-    _uNew = &DataHeap::getInstance().getData(
-        _cellDescription->getUIndex());
+  int uIndex = _cellDescription->getUIndex();
+  if ( uIndex != -1) {
+    _uNew = &DataHeap::getInstance().getData(uIndex);
   } else {
     _uNew = 0;
   }
@@ -512,7 +509,7 @@ int peanoclaw::Patch::getLinearIndexUOld(tarch::la::Vector<DIMENSIONS, int> subc
 
 #ifndef PATCH_INLINE_GETTERS_AND_SETTERS
 double peanoclaw::Patch::getValueUNew(int linearIndex, int unknown) const {
-  int index = linearIndex + uNewStrideCache[0] * unknown;
+  int index = linearIndex + _uNewStrideCache[0] * unknown;
 #ifdef PATCH_DISABLE_RANGE_CHECK
   return (*_uNew)[index].getU();
 #else
@@ -523,7 +520,7 @@ double peanoclaw::Patch::getValueUNew(int linearIndex, int unknown) const {
 
 #ifndef PATCH_INLINE_GETTERS_AND_SETTERS
 void peanoclaw::Patch::setValueUNew(int linearIndex, int unknown, double value) {
-  int index = linearIndex + uNewStrideCache[0] * unknown;
+  int index = linearIndex + _uNewStrideCache[0] * unknown;
 #ifdef PATCH_DISABLE_RANGE_CHECK
   (*_uNew)[index].setU(value);
 #else
@@ -533,7 +530,7 @@ void peanoclaw::Patch::setValueUNew(int linearIndex, int unknown, double value) 
 #endif
 
 void peanoclaw::Patch::setValueUNewAndResize(int linearIndex, int unknown, double value) {
-  size_t index = linearIndex + uNewStrideCache[0] * unknown;
+  size_t index = linearIndex + _uNewStrideCache[0] * unknown;
   if(index + 1 > _uNew->size()) {
     _uNew->resize(index + 1);
   }
@@ -542,7 +539,7 @@ void peanoclaw::Patch::setValueUNewAndResize(int linearIndex, int unknown, doubl
 
 #ifndef PATCH_INLINE_GETTERS_AND_SETTERS
 double peanoclaw::Patch::getValueUOld(int linearIndex, int unknown) const {
-  int index = linearIndex + uOldStrideCache[0] * unknown;
+  int index = linearIndex + _uOldStrideCache[0] * unknown;
 #ifdef PATCH_DISABLE_RANGE_CHECK
   return (*_uNew)[_uOldWithGhostlayerArrayIndex + index].getU();
 #else
@@ -553,7 +550,7 @@ double peanoclaw::Patch::getValueUOld(int linearIndex, int unknown) const {
 
 #ifndef PATCH_INLINE_GETTERS_AND_SETTERS
 void peanoclaw::Patch::setValueUOld(int linearIndex, int unknown, double value) {
-  int index = linearIndex + uOldStrideCache[0] * unknown;
+  int index = linearIndex + _uOldStrideCache[0] * unknown;
 #ifdef PATCH_DISABLE_RANGE_CHECK
   (*_uNew)[_uOldWithGhostlayerArrayIndex + index].setU(value);
 #else
@@ -563,7 +560,7 @@ void peanoclaw::Patch::setValueUOld(int linearIndex, int unknown, double value) 
 #endif
 
 void peanoclaw::Patch::setValueUOldAndResize(int linearIndex, int unknown, double value) {
-  size_t index = linearIndex + uOldStrideCache[0] * unknown;
+  size_t index = linearIndex + _uOldStrideCache[0] * unknown;
   if(_uOldWithGhostlayerArrayIndex + index + 1 > _uNew->size()) {
     _uNew->resize(_uOldWithGhostlayerArrayIndex + index + 1);
   }
@@ -646,6 +643,17 @@ void peanoclaw::Patch::copyUNewToUOld() {
       setValueUOld(subcellIndex, unknown, getValueUNew(subcellIndex, unknown));
     }
   }
+//  peanoclaw::grid::SubgridAccessor accessor(
+//    *this,
+//    tarch::la::Vector<DIMENSIONS, int>(0),
+//    _cellDescription->getSubdivisionFactor()
+//  );
+//
+//  while(accessor.moveToNextCell()) {
+//    while(accessor.moveToNextUnknown()) {
+//      accessor.setUnknownUOld(accessor.getUnknownUNew());
+//    }
+//  }
 }
 
 void peanoclaw::Patch::clearRegion(tarch::la::Vector<DIMENSIONS, int> offset,
@@ -667,11 +675,6 @@ void peanoclaw::Patch::clearRegion(tarch::la::Vector<DIMENSIONS, int> offset,
   }
 }
 #endif
-}
-
-double* peanoclaw::Patch::getUNewArray() const {
-  assertion1(_uNew != 0, toString());
-  return reinterpret_cast<double*>(&(_uNew->at(0)));
 }
 
 double* peanoclaw::Patch::getUOldWithGhostlayerArray() const {
@@ -1149,7 +1152,6 @@ int peanoclaw::Patch::getAge() const {
 void peanoclaw::Patch::resetAge() const {
   return _cellDescription->setAgeInGridIterations(0);
 }
-
 
 void peanoclaw::Patch::resetNeighboringGhostlayerBounds() {
   _cellDescription->setRestrictionLowerBounds(
