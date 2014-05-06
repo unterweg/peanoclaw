@@ -159,7 +159,7 @@ def shockbubble(use_petsc=False, iplot=False, htmlplot=False, outdir='./_output'
     mx=int(12*factor); my=int(6*factor); mz=int(6*factor)
     
     # number of initial AMR grids in each dimension
-    msubgrid = 9
+    msubgrid = 27
     
     if amr_type is None:
         # number of Domain grid cells expressed as the product of
@@ -198,7 +198,7 @@ def shockbubble(use_petsc=False, iplot=False, htmlplot=False, outdir='./_output'
                                     #,refinement_criterion=refinement_criterion_gradient
                                     ,internal_settings=amrclaw.InternalSettings(
                                         enable_peano_logging=True,
-                                        fork_level_increment=2,
+                                        fork_level_increment=1,
                                         use_dimensional_splitting_optimization=True))
         claw.solution = amrclaw.Solution(state, domain)
       else:

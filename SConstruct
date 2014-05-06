@@ -394,7 +394,8 @@ buildpath = buildpath + '/'
    
 ##### Specify build settings
 #
-addPeanoClawFlags(libpath, libs, cpppath, cppdefines)
+if solver=='pyclaw':
+   addPeanoClawFlags(libpath, libs, cpppath, cppdefines)
 
 ##### Print options used to build
 #

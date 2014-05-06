@@ -169,8 +169,8 @@ void peanoclaw::parallel::SubgridCommunicator::sendPaddingCellDescription() {
     std::vector<CellDescription>& localCellDescriptionVector = CellDescriptionHeap::getInstance().getData(cellDescriptionIndex);
 
     Serialization::SendBuffer& sendbuffer = peano::parallel::SerializationMap::getInstance().getSendBuffer(_remoteRank)[1];
-
-    //    size_t numberOfCellDescriptions = 1;
+    
+	//    size_t numberOfCellDescriptions = 1;
     //    int cellDescriptionSize = sizeof(CellDescription::Packed);
     Serialization::Block block = sendbuffer.reserveBlock(1);
     unsigned char CellDescriptionType = 0x10;

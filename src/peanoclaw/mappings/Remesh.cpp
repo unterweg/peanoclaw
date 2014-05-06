@@ -715,7 +715,9 @@ bool peanoclaw::mappings::Remesh::prepareSendToWorker(
 
   logTraceOut( "prepareSendToWorker(...)" );
 
-  return requiresReduction;
+  //TODO unterweg debug
+  return true;
+  //return requiresReduction;
 }
 
 void peanoclaw::mappings::Remesh::prepareSendToMaster(
@@ -1200,10 +1202,10 @@ void peanoclaw::mappings::Remesh::endIteration(
 ) {
   logTraceInWith1Argument( "endIteration(State)", solverState );
   _iterationWatch.stopTimer();
-  logInfo("logStatistics()", "Waiting time for iteration: "
+  logInfo("endIteration", "Waiting time for iteration: "
       << _iterationWatch.getCalendarTime() << " (total), "
       << _iterationWatch.getCalendarTime() << " (average) "
-      << 1 << " samples");
+      << 1 << " samples " << _isInitializing);
 
   delete _gridLevelTransfer;
 
@@ -1277,6 +1279,10 @@ void peanoclaw::mappings::Remesh::ascend(
       logWarning("ascend(...)", "Oscillating refinement may occur. Check refinement criterion... Coarse subgrid: " << coarseSubgrid);
     }
   }
+  // @todo Insert your code here
+
+ DataHeap::getInstance().receiveDanglingMessages(); 
+ CellDescriptionHeap::getInstance().receiveDanglingMessages(); 
 
   logTraceOut( "ascend(...)" );
 }

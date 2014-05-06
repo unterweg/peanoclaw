@@ -12,11 +12,8 @@ def addTime(times, rank, time, samples):
   if not times.has_key(rank):
     times[rank] = Entry(0.0, 0)
     
-  #times[rank].time += time
-  #times[rank].samples += samples
-  times[rank].time = time
-  times[rank].samples = samples
-
+  times[rank].time += time
+  times[rank].samples += samples
   
 def processLine(line, times):
   rank = int(re.search("rank:(\d*)", line).group(1))
@@ -70,7 +67,6 @@ def main():
       
   #Header
   print "#Rank\tm-w s/t\t\tm-w s/g\t\tn s/g\t\tn s/t\t\tv s/t\t\tit"
-      
   ranks = masterWorkerSubgridTimes.keys()
   ranks.sort()
   for rank in ranks:
@@ -89,7 +85,7 @@ def main():
     sendStateToMasterTime = "0\t"
     if sendStateToMasterTimes.has_key(rank):
       sendStateToMasterTime = "%.2e" % (sendStateToMasterTimes[rank].time)
-      
+
     print str(rank) + ",\t" \
       + "%.2e" % (masterWorkerSpacetreeTimes[rank].time) + ",\t" \
       + "%.2e" % (masterWorkerSubgridTimes[rank].time) + ",\t" \
