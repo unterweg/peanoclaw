@@ -54,8 +54,8 @@ template<int NumberOfUnknowns>
 class peanoclaw::grid::SubgridIterator {
 
   private:
-    typedef peanoclaw::records::Data Data;
     typedef peanoclaw::records::CellDescription CellDescription;
+    typedef peanoclaw::records::Data Data;
 
     std::vector<Data>& _u;
     tarch::la::Vector<DIMENSIONS, int> _offset;
@@ -203,7 +203,7 @@ class peanoclaw::grid::SubgridAccessor {
         _uOldWithGhostlayerArrayIndex(-1),
         _parameterWithoutGhostlayerArrayIndex(-1),
         _parameterWithGhostlayerArrayIndex(-1),
-        _linearization(cellDescription.getSubdivisionFactor(), cellDescription.getGhostlayerWidth()) {
+        _linearization(cellDescription.getSubdivisionFactor(), cellDescription.getUnknownsPerSubcell(), cellDescription.getGhostlayerWidth()) {
 
       int volumeNew = tarch::la::volume(cellDescription.getSubdivisionFactor());
       int volumeOld = tarch::la::volume(cellDescription.getSubdivisionFactor() + 2*cellDescription.getGhostlayerWidth());
