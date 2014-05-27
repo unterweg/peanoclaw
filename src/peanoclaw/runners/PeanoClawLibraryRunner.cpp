@@ -17,6 +17,7 @@
 #include "peanoclaw/records/Cell.h"
 #include "peanoclaw/records/Vertex.h"
 #include "peanoclaw/statistics/LevelStatistics.h"
+#include "peanoclaw/statistics/MemoryInformation.h"
 
 #include "peanoclaw/Heap.h"
 #include "peano/utils/UserInterface.h"
@@ -173,7 +174,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   int parameterWithoutGhostlayerPerSubcell,
   int parameterWithGhostlayerPerSubcell,
   double initialTimestepSize,
-  bool useDimensionalSplittingOptimization,
+  bool useDimensionalSplittingExtrapolation,
   bool reduceReductions,
   int  forkLevelIncrement
 ) :
@@ -226,7 +227,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setNumerics(numerics);
   state.setInitialTimestepSize(initialTimestepSize);
   state.setDomain(domainOffset, domainSize);
-  state.setUseDimensionalSplittingOptimization(useDimensionalSplittingOptimization && !_configuration.disableDimensionalSplittingOptimization());
+  state.setUseDimensionalSplittingExtrapolation(useDimensionalSplittingExtrapolation && !_configuration.disableDimensionalSplittingOptimization());
   state.setReduceReductions(reduceReductions);
 
   //Initialise Grid (two iterations needed to set the initial ghostlayers of patches neighboring refined patches)
@@ -340,6 +341,9 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
   #endif
   peano::shutdownParallelEnvironment();
   peano::shutdownSharedMemoryEnvironment();
+
+  //Print maximum memory demand
+  logInfo("~PeanoClawLibraryRunner", "Peak resident set size: " << peanoclaw::statistics::getPeakRSS() << "b");
 
   logTraceOut("~PeanoClawLibraryRunner");
 }
