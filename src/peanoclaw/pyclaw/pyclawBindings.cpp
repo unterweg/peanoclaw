@@ -259,7 +259,9 @@ void pyclaw_peano_destroy(peanoclaw::runners::PeanoClawLibraryRunner* runner) {
   logTraceIn("pyclaw_peano_destroy");
   assertionMsg(runner!=0, "call pyclaw_peano_new before calling pyclaw_peano_destroy.");
 
-  delete runner;
+  if(runner != 0) {
+	  delete runner;
+  }
 
   if(_configuration != 0) {
     delete _configuration;
