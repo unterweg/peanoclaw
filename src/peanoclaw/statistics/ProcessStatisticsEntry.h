@@ -32,7 +32,7 @@ namespace peanoclaw {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   26/05/2014 08:57
+ * @date   04/06/2014 13:50
  */
 class peanoclaw::statistics::ProcessStatisticsEntry { 
    
@@ -218,7 +218,7 @@ class peanoclaw::statistics::ProcessStatisticsEntry {
           *
           * 		   build date: 09-02-2014 14:40
           *
-          * @date   26/05/2014 08:57
+          * @date   04/06/2014 13:50
           */
          class peanoclaw::statistics::ProcessStatisticsEntryPacked { 
             

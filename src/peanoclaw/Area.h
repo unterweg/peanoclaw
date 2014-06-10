@@ -9,6 +9,7 @@
 #define PENAO_APPLICATIONS_PEANOCLAW_AREA_H_
 
 #include "tarch/la/Vector.h"
+#include "tarch/logging/Log.h"
 #include "peano/utils/Globals.h"
 
 namespace peanoclaw {
@@ -32,6 +33,11 @@ class peanoclaw::Area {
 
   private:
     friend class peanoclaw::tests::PatchTest;
+
+	/**
+	 * Logging device.
+	 */
+	static tarch::logging::Log _log;
 
     static int factorial(int i);
 

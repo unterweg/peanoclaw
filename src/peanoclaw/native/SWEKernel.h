@@ -13,19 +13,19 @@
 #include "peano/utils/Dimensions.h"
 
 #include "peanoclaw/Numerics.h"
-/*#include "peanoclaw/pyclaw/PyClawCallbacks.h"
-#include "peanoclaw/pyclaw/InterpolationCallbackWrapper.h"
-#include "peanoclaw/pyclaw/RestrictionCallbackWrapper.h"
-#include "peanoclaw/pyclaw/FluxCorrectionCallbackWrapper.h"*/
 
 #include "peanoclaw/interSubgridCommunication/Interpolation.h"
 #include "peanoclaw/interSubgridCommunication/Restriction.h"
 #include "peanoclaw/interSubgridCommunication/FluxCorrection.h"
 
+#include "peanoclaw/native/scenarios/SWEScenario.h"
+
+#include <memory>
+
+class SWE_WavePropagationBlock_patch;
 namespace peanoclaw {
   namespace native {
     class SWEKernel;
-    class SWEKernelScenario;
   }
 } /* namespace peanoclaw */
 
@@ -37,20 +37,17 @@ private:
    */
   static tarch::logging::Log     _log;
 
-  /*InitializationCallback         _initializationCallback;
-
-  BoundaryConditionCallback      _boundaryConditionCallback;
-
-  SolverCallback                 _solverCallback;
-
-  AddPatchToSolutionCallback     _addPatchToSolutionCallback;*/
-
   double _totalSolverCallbackTime;
 
-  SWEKernelScenario& _scenario;
+  peanoclaw::native::scenarios::SWEScenario& _scenario;
+
+  tarch::la::Vector<DIMENSIONS,int> _cachedSubdivisionFactor;
+  int                               _cachedGhostlayerWidth;
+  std::auto_ptr<SWE_WavePropagationBlock_patch> _cachedBlock;
+
 public:
   SWEKernel(
-    SWEKernelScenario& scenario,
+    peanoclaw::native::scenarios::SWEScenario& scenario,
     peanoclaw::interSubgridCommunication::DefaultTransfer* transfer,
     peanoclaw::interSubgridCommunication::Interpolation*  interpolation,
     peanoclaw::interSubgridCommunication::Restriction*    restriction,
@@ -96,32 +93,14 @@ public:
    */
   int getNumberOfUnknownsPerCell() const { return 3; }
 
-  int getNumberOfParameterFieldsWithoutGhostlayer() const { return 1; }
+  int getNumberOfParameterFieldsWithoutGhostlayer() const { return 0; }
 
-  int getNumberOfParameterFieldsWithGhostlayer() const { return 0; }
+  int getNumberOfParameterFieldsWithGhostlayer() const { return 1; }
 
   /**
    * @see peanoclaw::Numerics
    */
   int getGhostlayerWidth() const { return 1; }
-};
-
-class peanoclaw::native::SWEKernelScenario {
-    public:
-        virtual ~SWEKernelScenario() {}
-        virtual void initializePatch(Patch& patch) = 0;
-        virtual tarch::la::Vector<DIMENSIONS,double> computeDemandedMeshWidth(Patch& patch, bool isInitializing) = 0;
-        virtual void update(Patch& patch) = 0;
-
-        virtual tarch::la::Vector<DIMENSIONS,double> getDomainOffset() const = 0;
-        virtual tarch::la::Vector<DIMENSIONS,double> getDomainSize() const = 0;
-        virtual tarch::la::Vector<DIMENSIONS,double> getInitialMinimalMeshWidth() const = 0;
-        virtual tarch::la::Vector<DIMENSIONS,int>    getSubdivisionFactor() const = 0;
-        virtual double getGlobalTimestepSize() const = 0;
-        virtual double getEndTime() const = 0;
-        virtual double getInitialTimestepSize() const = 0;
-    protected:
-        SWEKernelScenario() {}
 };
 
 #endif /* PEANOCLAW_SWEKERNEL_NATIVE_H_ */
