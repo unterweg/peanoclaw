@@ -17,7 +17,6 @@
 #include "peanoclaw/Numerics.h"
 #include "peanoclaw/NumericsFactory.h"
 #include "peanoclaw/configurations/PeanoClawConfigurationForSpacetreeGrid.h"
-#include "peanoclaw/native/sweMain.h"
 #include "peanoclaw/native/SWEKernel.h"
 #include "peanoclaw/native/SWECommandLineParser.h"
 #include "peanoclaw/native/scenarios/SWEScenario.h"
@@ -25,6 +24,10 @@
 #include "tarch/logging/LogFilterFileReader.h"
 #include "tarch/logging/Log.h"
 #include "tarch/tests/TestCaseRegistry.h"
+
+#ifdef PEANOCLAW_SWE
+#include "peanoclaw/native/sweMain.h"
+#endif
 
 #if USE_VALGRIND
 #include <callgrind.h>
@@ -64,9 +67,34 @@ void initializeLogFilter() {
   tarch::logging::CommandLineLogger::getInstance().setLogFormat( " ", false, false, true, false, true, logFileName.str() );
 }
 
+int readOptionalArguments(int argc, char** argv, bool& usePeanoClaw, std::string& plotName) {
+  //Optional arguments
+  int remaining = argc;
+  if (argc == 1) {
+    usePeanoClaw = true;
+    plotName = "adaptive";
+  } else if (argc == 2) {
+    if(std::string(argv[argc-1]) == "--usePeano") {
+      usePeanoClaw = true;
+      remaining = argc-1;
+    }
+  } else if (argc >= 3) {
+    if(std::string(argv[argc-1]) == "--usePeano" || std::string(argv[argc-3]) == "--usePeano") {
+      usePeanoClaw = true;
+      remaining = argc-1;
+    }
+    if(std::string(argv[argc-2]) == "--plotName") {
+      plotName = std::string(argv[argc-1]);
+      remaining-=2;
+    }
+  }
+  return remaining;
+}
+
 void runSimulation(
   peanoclaw::native::scenarios::SWEScenario& scenario,
   peanoclaw::Numerics& numerics,
+  std::string& plotName,
   bool useCornerExtrapolation
 ) {
   tarch::la::Vector<DIMENSIONS,double> domainOffset = scenario.getDomainOffset();
@@ -93,7 +121,10 @@ void runSimulation(
     initialMinimalMeshWidth,
     subdivisionFactor,
     scenario.getInitialTimestepSize(),
-    useCornerExtrapolation
+    useCornerExtrapolation,
+    true, //Reduce reductions
+    1, //Fork level increment
+    plotName
   );
 
 #if defined(Parallel)
@@ -147,12 +178,8 @@ int main(int argc, char **argv) {
   _configuration = new peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid;
 
   bool usePeanoClaw;
-  if (argc == 1) {
-    usePeanoClaw = true;
-  } else if (std::string(argv[argc-1]) == "--usePeano") {
-    usePeanoClaw = true;
-    argc--;
-  }
+  std::string plotName;
+  argc = readOptionalArguments(argc, argv, usePeanoClaw, plotName);
 
   //Create Scenario
   peanoclaw::native::scenarios::SWEScenario* scenario;
@@ -170,12 +197,17 @@ int main(int argc, char **argv) {
 
   //PyClaw - this object is copied to the runner and is stored there.
   peanoclaw::NumericsFactory numericsFactory;
+  #if defined(PEANOCLAW_SWE)
   peanoclaw::Numerics* numerics = numericsFactory.createSWENumerics(*scenario);
+  #elif defined(PEANOCLAW_FULLSWOF2D)
+  peanoclaw::Numerics* numerics = numericsFactory.createFullSWOF2DNumerics(*scenario);
+  #endif
 
   if(usePeanoClaw) {
     runSimulation(
       *scenario,
       *numerics,
+      plotName,
       true
     );
   } else {
@@ -183,7 +215,7 @@ int main(int argc, char **argv) {
   tarch::la::Vector<DIMENSIONS,int> numberOfCells = scenario->getSubdivisionFactor();
   sweMain(*scenario, numberOfCells);
   #else
-  #error Pure solver use not implemented
+  assertionFail("Pure solver use not implemented");
   #endif
   }
 
