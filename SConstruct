@@ -393,7 +393,7 @@ buildpath = buildpath + '/'
 ##### Specify build settings
 #
 if solver=='pyclaw':
-   addPeanoClawFlags(libpath, libs, cpppath, cppdefines)
+   addPeanoClawFlags(libpath, libs, cpppath, cppdefines, solver)
 
 ##### Print options used to build
 #
@@ -518,7 +518,7 @@ if solver == 'pyclaw':
   #
   installation = env.Alias('install', env.Install('src/python/peanoclaw', library))
 elif solver == 'swe':
-  targetfilename = 'peano-claw-swe'
+  targetfilename = 'peano-claw-swe' + '-parallel' if parallel == 'yes' or parallel == 'parallel_yes' else ''
   target = buildpath + targetfilename
   executable = env.Program ( 
     target=target,
