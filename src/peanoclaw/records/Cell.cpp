@@ -205,7 +205,10 @@
       
       void peanoclaw::records::Cell::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
          _senderDestinationRank = destination;
-         
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:209" << std::endl;
+        throw "";
+ 
          if (communicateBlocking) {
          
             const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -623,7 +626,10 @@ peanoclaw::records::Cell peanoclaw::records::CellPacked::convert() const{
    
    void peanoclaw::records::CellPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
       _senderDestinationRank = destination;
-      
+          //TODO unterweg debug
+        std::cerr << "Cell.cpp:630" << std::endl;
+        throw "";
+ 
       if (communicateBlocking) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -1047,7 +1053,10 @@ void peanoclaw::records::Cell::shutdownDatatype() {
 
 void peanoclaw::records::Cell::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
    _senderDestinationRank = destination;
-   
+       //TODO unterweg debug
+        std::cerr << "Cell.cpp:1057" << std::endl;
+        throw "";
+ 
    if (communicateBlocking) {
    
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -1461,6 +1470,9 @@ MPI_Type_free( &CellPacked::FullDatatype );
 
 void peanoclaw::records::CellPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:1474" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -1950,6 +1962,9 @@ MPI_Type_free( &Cell::FullDatatype );
 
 void peanoclaw::records::Cell::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:1966" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -2425,6 +2440,9 @@ MPI_Type_free( &CellPacked::FullDatatype );
 
 void peanoclaw::records::CellPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:2444" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -2840,6 +2858,9 @@ MPI_Type_free( &Cell::FullDatatype );
 
 void peanoclaw::records::Cell::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:2862" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -3244,6 +3265,9 @@ MPI_Type_free( &CellPacked::FullDatatype );
 
 void peanoclaw::records::CellPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:3269" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -3757,6 +3781,9 @@ MPI_Type_free( &Cell::FullDatatype );
 
 void peanoclaw::records::Cell::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:3785" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -4256,6 +4283,9 @@ MPI_Type_free( &CellPacked::FullDatatype );
 
 void peanoclaw::records::CellPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:4287" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -4755,6 +4785,9 @@ MPI_Type_free( &Cell::FullDatatype );
 
 void peanoclaw::records::Cell::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:4789" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -5240,6 +5273,9 @@ MPI_Type_free( &CellPacked::FullDatatype );
 
 void peanoclaw::records::CellPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:5277" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -5743,6 +5779,9 @@ MPI_Type_free( &Cell::FullDatatype );
 
 void peanoclaw::records::Cell::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:5783" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -6232,6 +6271,9 @@ MPI_Type_free( &CellPacked::FullDatatype );
 
 void peanoclaw::records::CellPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:6275" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -6671,6 +6713,9 @@ MPI_Type_free( &Cell::FullDatatype );
 
 void peanoclaw::records::Cell::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:6717" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -7099,6 +7144,9 @@ MPI_Type_free( &CellPacked::FullDatatype );
 
 void peanoclaw::records::CellPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+     //TODO unterweg debug
+        std::cerr << "Cell.cpp:7148" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 

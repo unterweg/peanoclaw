@@ -7,6 +7,7 @@
 
 #include "peano/grid/aspects/VertexStateAnalysis.h"
 #include "tarch/parallel/Node.h"
+#include "tarch/multicore/Lock.h"
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
@@ -592,6 +593,7 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
   logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
   if(fineGridCell.isInside()) {
+
     //Create patch
     Patch subgrid (
       fineGridCell
@@ -656,6 +658,7 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
         ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
         parallelSubgrid.markCurrentStateAsSent(false);
         #endif
+        _sharedMemoryStatistics.addCellUpdatesForThread(subgrid);
 
         // Coarse grid correction
         if(_correctFluxes) {

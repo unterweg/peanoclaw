@@ -330,7 +330,10 @@
       
       void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
          _senderDestinationRank = destination;
-         
+        //TODO unterweg debug
+        std::cerr << "Vertex.cpp:334" << std::endl;
+        throw "";
+ 
          if (communicateBlocking) {
          
             const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -839,7 +842,10 @@ peanoclaw::records::Vertex peanoclaw::records::VertexPacked::convert() const{
    
    void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
       _senderDestinationRank = destination;
-      
+        //TODO unterweg debug
+        std::cerr << "Vertex.cpp:846" << std::endl;
+        throw "";
+ 
       if (communicateBlocking) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -1341,7 +1347,10 @@ void peanoclaw::records::Vertex::shutdownDatatype() {
 
 void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
    _senderDestinationRank = destination;
-   
+        //TODO unterweg debug
+        std::cerr << "Vertex.cpp:1351" << std::endl;
+        throw "";
+ 
    if (communicateBlocking) {
    
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -1808,6 +1817,9 @@ MPI_Type_free( &VertexPacked::FullDatatype );
 
 void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+        //TODO unterweg debug
+        std::cerr << "Vertex.cpp:1821" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -2338,6 +2350,9 @@ MPI_Type_free( &Vertex::FullDatatype );
 
 void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+        //TODO unterweg debug
+        std::cerr << "Vertex.cpp:2354" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -2829,6 +2844,9 @@ MPI_Type_free( &VertexPacked::FullDatatype );
 
 void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+        //TODO unterweg debug
+        std::cerr << "Vertex.cpp:2848" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -3356,6 +3374,9 @@ MPI_Type_free( &Vertex::FullDatatype );
 
 void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+        //TODO unterweg debug
+        std::cerr << "Vertex.cpp:3378" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 
@@ -3841,6 +3862,9 @@ MPI_Type_free( &VertexPacked::FullDatatype );
 
 void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+        //TODO unterweg debug
+        std::cerr << "Vertex.cpp:3866" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 

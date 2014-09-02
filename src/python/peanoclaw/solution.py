@@ -117,6 +117,9 @@ class Solution(pyclaw.solution.Solution):
         else:
           self.domain = pyclaw.Domain(self.patch)
           self.solution = pyclaw.Solution(self.state, self.domain)
+
+        #TODO unterweg debug
+        print 'Gathered %d patches in %d states' % (len(self.gathered_patches), len(self.gathered_states))
         
         self.t = self.solution.t      
             

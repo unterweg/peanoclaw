@@ -365,11 +365,11 @@ peanoclaw::statistics::SubgridStatistics::~SubgridStatistics() {
 //  std::cout << "delete process index=" << _processStatisticsIndex << " size=" << (_processStatistics != 0 ? _processStatistics->size() : -1) << std::endl;
 
   if(_levelStatisticsIndex != -1) {
-    LevelStatisticsHeap::getInstance().deleteData(_levelStatisticsIndex);
+    //LevelStatisticsHeap::getInstance().deleteData(_levelStatisticsIndex);
   }
 
   if(_processStatisticsIndex != -1) {
-    ProcessStatisticsHeap::getInstance().deleteData(_processStatisticsIndex);
+    //ProcessStatisticsHeap::getInstance().deleteData(_processStatisticsIndex);
   }
 }
 
@@ -679,6 +679,7 @@ void peanoclaw::statistics::SubgridStatistics::sendToMaster(int masterRank) {
     0,
     peano::heap::MasterWorkerCommunication
   );
+  assertion(_processStatisticsIndex != -1);
   ProcessStatisticsHeap::getInstance().sendData(
     _processStatisticsIndex,
     masterRank,

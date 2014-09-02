@@ -625,7 +625,10 @@
       
       void peanoclaw::records::State::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
          _senderDestinationRank = destination;
-         
+             //TODO unterweg debug
+        std::cerr << "State.cpp:629" << std::endl;
+        throw "";
+ 
          if (communicateBlocking) {
          
             const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -1368,7 +1371,10 @@ peanoclaw::records::State peanoclaw::records::StatePacked::convert() const{
    
    void peanoclaw::records::StatePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
       _senderDestinationRank = destination;
-      
+          //TODO unterweg debug
+        std::cerr << "State.cpp:1375" << std::endl;
+        throw "";
+ 
       if (communicateBlocking) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -2166,7 +2172,10 @@ void peanoclaw::records::State::shutdownDatatype() {
 
 void peanoclaw::records::State::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
    _senderDestinationRank = destination;
-   
+            //TODO unterweg debug
+        std::cerr << "State.cpp:2176" << std::endl;
+        throw "";
+ 
    if (communicateBlocking) {
    
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
@@ -2889,6 +2898,9 @@ MPI_Type_free( &StatePacked::FullDatatype );
 
 void peanoclaw::records::StatePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
 _senderDestinationRank = destination;
+          //TODO unterweg debug
+        std::cerr << "State.cpp:2902" << std::endl;
+        throw "";
 
 if (communicateBlocking) {
 

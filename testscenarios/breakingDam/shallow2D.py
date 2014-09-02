@@ -23,7 +23,9 @@ def qinit(state,hl,ul,vl,hr,ur,vr,radDam):
     state.q[0,:,:] = hl*(r<=radDam) + hr*(r>radDam)
     state.q[1,:,:] = hl*ul*(r<=radDam) + hr*ur*(r>radDam)
     state.q[2,:,:] = hl*vl*(r<=radDam) + hr*vr*(r>radDam)
-    
+
+    print state.q.shape
+     
 def refinement_criterion(state):
     center_x = 0.5
     center_y = 0.5
@@ -128,7 +130,7 @@ def shallow2D(use_petsc=False,iplot=0,htmlplot=False,outdir='./_output',solver_t
     mgrid = 6
 
     # number of initial AMR grids in each dimension
-    msubgrid = 9
+    msubgrid = 1
 
     if amr_type is not None:
         m = mgrid
