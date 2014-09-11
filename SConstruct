@@ -242,6 +242,9 @@ elif compiler == 'icc':
      cxx = 'icpc'
    else:
      cxx = 'mpiCC'
+   ccflags.append('-g')
+   ccflags.append('-g3')
+   #ccflags.append('-traceback')
    ccflags.append('-fstrict-aliasing')
    ccflags.append('-qpack_semantic=gnu')
    ccflags.append('-std=c++11')
