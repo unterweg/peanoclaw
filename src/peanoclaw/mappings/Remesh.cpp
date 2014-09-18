@@ -99,6 +99,7 @@ peanoclaw::mappings::Remesh::Remesh()
   _defaultSubdivisionFactor(-1),
   _defaultGhostLayerWidth(-1),
   _initialTimestepSize(0.0),
+  _process(),
   _numerics(0),
   _gridLevelTransfer(),
   _isInitializing(false),
@@ -742,8 +743,10 @@ bool peanoclaw::mappings::Remesh::prepareSendToWorker(
     requiresReduction = subgrid.isVirtual();
   }
 
-  logTraceOut( "prepareSendToWorker(...)" );
+  //Change priority
+  _process.setToLowPriority();
 
+  logTraceOut( "prepareSendToWorker(...)" );
   //TODO unterweg debug
   return true;
   //return requiresReduction;
@@ -808,6 +811,8 @@ void peanoclaw::mappings::Remesh::mergeWithMaster(
   peanoclaw::State&                masterState
 ) {
   logTraceInWith7Arguments( "mergeWithMaster(...)", workerGridCell, fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, coarseGridVerticesEnumerator.toString(), fineGridPositionOfCell, worker );
+
+  _process.setToNormalPriority();
 
   peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator communicator(
     worker,
