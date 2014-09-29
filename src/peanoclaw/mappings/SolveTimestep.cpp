@@ -137,7 +137,8 @@ peanoclaw::mappings::SolveTimestep::SolveTimestep()
     _useDimensionalSplittingExtrapolation(true),
     _collectSubgridStatistics(true),
     _workerIterations(-1),
-    _correctFluxes(true) {
+    _correctFluxes(true),
+    _iterationWatch("", "", false) {
   logTraceIn( "SolveTimestep()" );
   // @todo Insert your code here
   logTraceOut( "SolveTimestep()" );
@@ -158,14 +159,15 @@ peanoclaw::mappings::SolveTimestep::SolveTimestep(const SolveTimestep&  masterTh
   _domainOffset(masterThread._domainOffset),
   _domainSize(masterThread._domainSize),
   _subgridStatistics(masterThread._globalTimestepEndTime),
+  _sharedMemoryStatistics(),
   _initialMaximalSubgridSize(masterThread._initialMaximalSubgridSize),
   _probeList(masterThread._probeList),
   _useDimensionalSplittingExtrapolation(masterThread._useDimensionalSplittingExtrapolation),
   _collectSubgridStatistics(masterThread._collectSubgridStatistics),
   _correctFluxes(masterThread._correctFluxes),
   _estimatedRemainingIterationsUntilGlobalTimestep(masterThread._estimatedRemainingIterationsUntilGlobalTimestep),
-  _sharedMemoryStatistics(),
-  _workerIterations(masterThread._workerIterations)
+  _workerIterations(masterThread._workerIterations),
+  _iterationWatch("", "", false)
 {
   logTraceIn( "SolveTimestep(SolveTimestep)" );
   // @todo Insert your code here
@@ -427,10 +429,10 @@ void peanoclaw::mappings::SolveTimestep::prepareSendToMaster(
 ) {
   logTraceInWith2Arguments( "prepareSendToMaster(...)", localCell, verticesEnumerator.toString() );
 
-
   //TODO unterweg debug
 //  std::cout << "Estimated on worker: " << _subgridStatistics.getEstimatedIterationsUntilGlobalTimestep() << std::endl;
 
+  _subgridStatistics.setWallclockTimeForIteration(_iterationWatch.getCalendarTime());
   if(_collectSubgridStatistics) {
     _subgridStatistics.sendToMaster(tarch::parallel::NodePool::getInstance().getMasterRank());
   }
@@ -866,6 +868,8 @@ void peanoclaw::mappings::SolveTimestep::beginIteration(
   ProcessStatisticsHeap::getInstance().startToSendSynchronousData();
   ProcessStatisticsHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
   #endif
+
+  _iterationWatch.startTimer();
  
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }

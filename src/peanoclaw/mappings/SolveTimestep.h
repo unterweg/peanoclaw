@@ -3,6 +3,12 @@
 #ifndef PEANOCLAW_MAPPINGS_SolveTimestep_H_
 #define PEANOCLAW_MAPPINGS_SolveTimestep_H_
 
+#include "peanoclaw/Vertex.h"
+#include "peanoclaw/Cell.h"
+#include "peanoclaw/State.h"
+#include "peanoclaw/statistics/LevelStatistics.h"
+#include "peanoclaw/statistics/SubgridStatistics.h"
+#include "peanoclaw/statistics/SharedMemoryStatistics.h"
 
 #include "tarch/logging/Log.h"
 #include "tarch/la/Vector.h"
@@ -12,13 +18,7 @@
 #include "peano/CommunicationSpecification.h"
 
 #include "tarch/multicore/MulticoreDefinitions.h"
-
-#include "peanoclaw/Vertex.h"
-#include "peanoclaw/Cell.h"
-#include "peanoclaw/State.h"
-#include "peanoclaw/statistics/LevelStatistics.h"
-#include "peanoclaw/statistics/SubgridStatistics.h"
-#include "peanoclaw/statistics/SharedMemoryStatistics.h"
+#include "tarch/timing/Watch.h"
 
 #include <map>
 
@@ -73,6 +73,8 @@ class peanoclaw::mappings::SolveTimestep {
     bool _correctFluxes;
 
     std::map<int, int> _estimatedRemainingIterationsUntilGlobalTimestep;
+
+    tarch::timing::Watch _iterationWatch;
 
     /**
      * Counts the number of worker iterations. That means, if a worker
