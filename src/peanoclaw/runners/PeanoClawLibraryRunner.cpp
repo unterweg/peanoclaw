@@ -232,11 +232,9 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setInitialTimestepSize(initialTimestepSize);
   state.setDomain(domainOffset, domainSize);
   state.setUseDimensionalSplittingExtrapolation(useDimensionalSplittingExtrapolation && !_configuration.disableDimensionalSplittingOptimization());
-  state.setReduceReductions(reduceReductions);
+  state.setReduceReductions(reduceReductions || _configuration.shouldReduceReductions());
   state.enableFluxCorrection(configuration.enableFluxCorrection());
   state.setRestrictStatistics(configuration.restrictStatistics());
-//  state.setEnforceGlobalTimestepping(true);
-//  state.updateMinimalEstimatedNextTimestepSize(1e-7);
   state.setPlotName(plotName);
   state.setProbeList(configuration.getProbeList());
 
@@ -481,7 +479,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep() {
     _repository->getState().plotStatisticsForLastGridIteration();
 
     _iterationTimer.stopTimer();
-    _totalRuntime += (double)_iterationTimer.getCPUTicks() / (double)CLOCKS_PER_SEC;
+    _totalRuntime += (double)_iterationTimer.getCalendarTime();
     logInfo("evolveToTime", "Wallclock time for this grid iteration/Total runtime: " << _iterationTimer.getCalendarTime() << "s/" << _totalRuntime << "s");
     logInfo("evolveToTime", "Minimal timestep for this grid iteration: " << _repository->getState().getMinimalTimestep());
 

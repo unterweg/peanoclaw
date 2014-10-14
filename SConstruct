@@ -185,16 +185,20 @@ if compiler == 'gcc':
       ccflags.append('-fopenmp')
       linkerflags.append('-fopenmp')
 elif compiler == 'xlc':
+   ccflags.append('-qlanglvl=extended0x')
+   ccflags.append('-qnoeh')
    if(parallel == 'parallel_no' or parallel == 'no'):
      cxx = 'xlc++'
    else:
      cxx = 'mpixlcxx'
+     ccflags.append('-cxx=xlc++')
    if build == 'debug':
       ccflags.append('-g3')
       ccflags.append('-O0')
    elif build == 'asserts':
       ccflags.append('-qstrict')
       ccflags.append('-O2')
+      ccflags.append('-g')
    elif build == 'release':
       ccflags.append('-qstrict')
       ccflags.append('-O3')

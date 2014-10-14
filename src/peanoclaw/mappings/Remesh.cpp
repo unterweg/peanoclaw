@@ -17,7 +17,11 @@
  * @todo Please tailor the parameters to your mapping's properties.
  */
 peano::CommunicationSpecification   peanoclaw::mappings::Remesh::communicationSpecification() {
-  return peano::CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime);
+  return peano::CommunicationSpecification(
+            peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,
+            peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,
+            false
+         );
 }
 
 peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::VertexMap peanoclaw::mappings::Remesh::_vertexPositionToIndexMap;
@@ -392,7 +396,7 @@ void peanoclaw::mappings::Remesh::createCell(
         #endif
       ) {
         _numerics->update(fineGridPatch);
-        _numerics->interpolate(
+        _numerics->interpolateSolution(
           fineGridPatch.getSubdivisionFactor(),
           0,
           coarseGridPatch,
@@ -401,7 +405,7 @@ void peanoclaw::mappings::Remesh::createCell(
           false,
           false
         );
-        _numerics->interpolate(
+        _numerics->interpolateSolution(
           fineGridPatch.getSubdivisionFactor(),
           0,
           coarseGridPatch,
@@ -476,11 +480,7 @@ void peanoclaw::mappings::Remesh::destroyCell(
     fineGridVerticesEnumerator.getVertexPosition(0),
     fineGridVerticesEnumerator.getCellSize(),
     fineGridVerticesEnumerator.getLevel(),
-    #ifdef Parallel
     tarch::parallel::Node::getInstance().getRank()
-    #else
-    0
-    #endif
   );
 
   Patch finePatch(
@@ -738,8 +738,8 @@ bool peanoclaw::mappings::Remesh::prepareSendToWorker(
     );
     communicator.sendSubgridBetweenMasterAndWorker(subgrid);
 
-    //TODO unterweg dissertation: Subgitter m��ssen auch auf virtuell geschaltet werden, wenn sie
-    //von einer Ghostlayer ��berlappt werden und mit einem Worker geshared sind.
+    //TODO unterweg dissertation: Subgitter müssen auch auf virtuell geschaltet werden, wenn sie
+    //von einer Ghostlayer überlappt werden und mit einem Worker geshared sind.
     requiresReduction = subgrid.isVirtual();
   }
 

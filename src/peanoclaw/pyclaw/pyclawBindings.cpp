@@ -79,7 +79,7 @@ void configureLogFilter(bool enablePeanoLogging) {
   }
 
   std::ostringstream logFileName;
-  #ifdef Parallel
+  #if defined(Parallel) && defined(Asserts)
   logFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-trace.txt";
   #endif
   tarch::logging::CommandLineLogger::getInstance().setLogFormat( " ", false, true, true, false, true, logFileName.str() );
@@ -215,6 +215,7 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
     subdivisionFactor,
     initialTimestepSize,
     useDimensionalSplittingExtrapolation,
+    1, //Number of threads
     reduceReductions,
     forkLevelIncrement
   );

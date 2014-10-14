@@ -229,7 +229,7 @@ void peanoclaw::native::SWEKernel::fillBoundaryLayer(Patch& patch, int dimension
       logTraceOut("fillBoundaryLayerInPyClaw");
     }
 
-void peanoclaw::native::SWEKernel::interpolate(
+void peanoclaw::native::SWEKernel::interpolateSolution (
   const tarch::la::Vector<DIMENSIONS, int>& destinationSize,
   const tarch::la::Vector<DIMENSIONS, int>& destinationOffset,
   peanoclaw::Patch& source,
@@ -260,7 +260,7 @@ void peanoclaw::native::SWEKernel::interpolate(
   transformWaterHeight(source, sourceArea, false, false); // UNew
 
   //Interpolate
-  Numerics::interpolate(
+  Numerics::interpolateSolution (
     destinationSize,
     destinationOffset,
     source,
@@ -278,7 +278,7 @@ void peanoclaw::native::SWEKernel::interpolate(
   transformWaterHeight(destination, destinationArea, interpolateToUOld, true);
 }
 
-void peanoclaw::native::SWEKernel::restrict (
+void peanoclaw::native::SWEKernel::restrictSolution (
   peanoclaw::Patch& source,
   peanoclaw::Patch& destination,
   bool              restrictOnlyOverlappedAreas
@@ -289,7 +289,7 @@ void peanoclaw::native::SWEKernel::restrict (
   transformWaterHeight(source, sourceArea, true, false); //UOld
   transformWaterHeight(source, sourceArea, false, false); //UNew
 
-  Numerics::restrict(
+  Numerics::restrictSolution(
     source,
     destination,
     restrictOnlyOverlappedAreas

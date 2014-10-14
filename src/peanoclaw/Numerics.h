@@ -74,7 +74,7 @@ private:
      * by means of the interpolation method implemented in Python. I.e. this
      * method can only be called if providesInterpolation() returns <tt>true</tt>.
      */
-    virtual void interpolate(
+    virtual void interpolateSolution (
       const tarch::la::Vector<DIMENSIONS, int>&    destinationSize,
       const tarch::la::Vector<DIMENSIONS, int>&    destinationOffset,
       peanoclaw::Patch& source,
@@ -89,7 +89,7 @@ private:
      * by means of the restriction method implemented in Python. I.e. this
      * method can only be called if providesRestriction() returns <tt>true</tt>.
      */
-    virtual void restrict (
+    virtual void restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch& destination,
       bool              restrictOnlyOverlappedAreas
