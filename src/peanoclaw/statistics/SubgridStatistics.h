@@ -8,10 +8,11 @@
 #ifndef PEANOCLAW_STATISTICS_SUBGRIDSTATISTICS_H_
 #define PEANOCLAW_STATISTICS_SUBGRIDSTATISTICS_H_
 
-#include "peanoclaw/Patch.h"
 #include "peanoclaw/records/CellDescription.h"
 #include "peanoclaw/statistics/LevelStatistics.h"
 #include "peanoclaw/statistics/ProcessStatisticsEntry.h"
+
+#include "peanoclaw/Vertex.h"
 
 #include "peano/grid/VertexEnumerator.h"
 
@@ -19,8 +20,11 @@
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
 
+#include <vector>
+
 namespace peanoclaw {
 
+  class Patch;
   class State;
 
   namespace statistics {
@@ -108,7 +112,7 @@ class peanoclaw::statistics::SubgridStatistics {
      * Gives an estimate on how many iterations have to be done for this subgrid
      * to reach the global timestep.
      */
-    int estimateRemainingIterationsUntilGlobalSubgrid(Patch subgrid) const;
+    int estimateRemainingIterationsUntilGlobalSubgrid(const Patch& subgrid) const;
 
     /**
      * Used for assignment operators.
