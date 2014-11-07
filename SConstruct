@@ -338,7 +338,6 @@ elif solver == 'fullswof2d':
   libs.append('png') # for texture file
 elif solver == 'euler3d':
   cppdefines.append('PEANOCLAW_EULER3D')
-  cppdefines.append('EIGEN_DONT_VECTORIZE')
   if dim != 3:
     raise Exception("The Euler3D solver can only be used in 3D.")
   euler3DEulerEquationsPath = '../euler3DEulerEquations'
