@@ -102,7 +102,9 @@ peanoclaw::native::scenarios::ShockBubble::ShockBubble(
     _rhoInside(0.1)
 {
   tarch::la::assignList(_domainSize) = 2, 1, 1;
-  _subdivisionFactor[0] *= 2;
+  for(int d = 1; d < DIMENSIONS; d++) {
+    _subdivisionFactor[d] /= 2;
+  }
 
   _minimalMeshWidth
     = tarch::la::multiplyComponents(domainSize, tarch::la::invertEntries(finestSubgridTopology.convertScalar<double>()));
@@ -139,7 +141,9 @@ peanoclaw::native::scenarios::ShockBubble::ShockBubble(
 
   _rhoInside = atof(arguments[5].c_str());
 
-  _subdivisionFactor[0] *= 2;
+  for(int d = 1; d < DIMENSIONS; d++) {
+    _subdivisionFactor[d] /= 2;
+  }
 }
 
 peanoclaw::native::scenarios::ShockBubble::~ShockBubble() {
