@@ -250,7 +250,7 @@ elif compiler == 'icc':
       ccflags.append('-align')
       ccflags.append('-ansi-alias')
       ccflags.append('-O3')
-      ccflags.append('-xSSE4.2')
+      #ccflags.append('-xSSE4.2')
 #      ccflags.append('-ipo')
    if multicore == 'openmp':
       ccflags.append('-openmp')
