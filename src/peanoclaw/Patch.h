@@ -33,9 +33,12 @@
 #define PATCH_INLINE_GETTERS_AND_SETTERS
 
 namespace peanoclaw {
-  class Area;
   class Cell;
   class Patch;
+
+  namespace geometry {
+    class Region;
+  }
 
   namespace grid {
     class SubgridAccessor;
@@ -207,10 +210,16 @@ private:
   void refreshAccessor();
 
   /**
-   * Switches the values in the given area to the minimal fine grid time interval.
+   * Resets the SubgridAccessor associated with this subgrid.
+   * After this method was called, the accessor is not initialized.
    */
-  void switchAreaToMinimalFineGridTimeInterval(
-    const peanoclaw::Area& area,
+  void resetAccessor();
+
+  /**
+   * Switches the values in the given region to the minimal fine grid time interval.
+   */
+  void switchRegionToMinimalFineGridTimeInterval(
+    const peanoclaw::geometry::Region& region,
     double factorForUOld,
     double factorForUNew
   );
@@ -557,36 +566,6 @@ public:
   tarch::la::Vector<DIMENSIONS, double> getSubcellPosition(tarch::la::Vector<DIMENSIONS, int> subcellIndex) const;
 
   tarch::la::Vector<DIMENSIONS, double> getSubcellSize() const;
-
-  /**
-   * Copies the data from uNew to uOld, i.e. this actually performs the
-   * transition to the next timestep by setting uOld(t) to uOld(t+1).
-   * The ghost layer stays unchanged.
-   */
-//  void copyUNewToUOld();
-
-  /**
-   * Returns the uNew double array.
-   */
-  double* getUNewArray() const {
-    assertion1(_uNew != 0, toString());
-    return reinterpret_cast<double*>(&(_uNew->at(0)));
-  }
-
-  /**
-   * Returns the uOld double array.
-   */
-  double* getUOldWithGhostlayerArray(int unknown) const;
-
-  /**
-   * Returns the aux array as a real double array.
-   */
-  double* getParameterWithoutGhostlayerArray(int parameter) const;
-
-  /**
-   * Returns the parameter array as a real double array.
-   */
-  double* getParameterWithGhostlayerArray(int parameter) const;
 
   /**
    * Returns the index for the uNew array.

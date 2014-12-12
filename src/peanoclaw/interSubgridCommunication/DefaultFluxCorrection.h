@@ -21,10 +21,27 @@
 namespace peanoclaw {
   namespace interSubgridCommunication {
     class DefaultFluxCorrection;
+
+    template<int NumberOfUnknowns>
+    class DefaultFluxCorrectionTemplate;
   }
 
   class Patch;
 }
+
+template<int NumberOfUnknowns>
+class peanoclaw::interSubgridCommunication::DefaultFluxCorrectionTemplate {
+
+  public:
+    void computeFluxes(Patch& subgrid) const;
+
+    void applyCorrection(
+      Patch& sourceSubgrid,
+      Patch& destinationSubgrid,
+      int dimension,
+      int direction
+    ) const;
+};
 
 class peanoclaw::interSubgridCommunication::DefaultFluxCorrection
     : public peanoclaw::interSubgridCommunication::FluxCorrection {
@@ -38,7 +55,7 @@ class peanoclaw::interSubgridCommunication::DefaultFluxCorrection
     friend class peanoclaw::tests::GridLevelTransferTest;
 
     /**
-     * Returns the area of the region where the two given
+     * Returns the region of the region where the two given
      * patches overlap.
      * This overload projects the patches along the given projection axis
      * and just calculates the overlap in this projection.
@@ -46,7 +63,7 @@ class peanoclaw::interSubgridCommunication::DefaultFluxCorrection
      * In 2d this refers to a projection to one-dimensional intervals and
      * the intersection between these intervals.
      */
-    double calculateOverlappingArea(
+    double calculateOverlappingRegion(
       tarch::la::Vector<DIMENSIONS, double> position1,
       tarch::la::Vector<DIMENSIONS, double> size1,
       tarch::la::Vector<DIMENSIONS, double> position2,
@@ -81,11 +98,15 @@ class peanoclaw::interSubgridCommunication::DefaultFluxCorrection
      * Applying the default flux correction on the coarse patch.
      */
     void applyCorrection(
-      const Patch& sourcePatch,
+      Patch& sourcePatch,
       Patch& destinationPatch,
       int dimension,
       int direction
     ) const;
+
+    void computeFluxes(Patch& subgrid) const;
 };
+
+#include "peanoclaw/interSubgridCommunication/DefaultFluxCorrection.cpph"
 
 #endif /* PEANOCLAW_INTERSUBGRIDCOMMUNICATION_DEFAULTFLUXCORRECTION_H_ */

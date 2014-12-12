@@ -92,7 +92,7 @@ private:
     virtual void restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch& destination,
-      bool              restrictOnlyOverlappedAreas
+      bool              restrictOnlyOverlappedRegions
     ) const;
 
     /**
@@ -102,7 +102,7 @@ private:
      */
     virtual void postProcessRestriction(
       peanoclaw::Patch& destination,
-      bool              restrictOnlyOverlappedAreas
+      bool              restrictOnlyOverlappedRegions
     ) const;
 
     /**
@@ -111,11 +111,13 @@ private:
      * method can only be called if providesRestriction() returns <tt>true</tt>.
      */
     virtual void applyFluxCorrection (
-      const Patch& sourceSubgrid,
+      Patch& sourceSubgrid,
       Patch& destinationSubgrid,
       int dimension,
       int direction
     ) const;
+
+    virtual void computeFluxes(Patch& subgrid) const;
 
     /**
      * Fills the specified boundary layer.

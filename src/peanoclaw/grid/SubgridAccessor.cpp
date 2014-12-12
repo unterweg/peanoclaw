@@ -8,6 +8,29 @@
 
 #include "peano/utils/Loop.h"
 
+double* peanoclaw::grid::SubgridAccessor::getUNewArray() const {
+  assertion(_u != 0);
+  return reinterpret_cast<double*>(&(_u->at(0)));
+}
+
+double* peanoclaw::grid::SubgridAccessor::getUOldWithGhostLayerArray(int unknown) const {
+  int index = _linearization.getUOldWithGhostlayerArrayIndex()
+      + tarch::la::volume(_subdivisionFactor + 2*_ghostlayerWidth) * unknown;
+  return reinterpret_cast<double*>(&(_u->at(index)));
+}
+
+double* peanoclaw::grid::SubgridAccessor::getParameterWithoutGhostLayerArray(int parameter) const {
+  int index = _linearization.getParameterWithoutGhostlayerArrayIndex()
+      + tarch::la::volume(_subdivisionFactor) * parameter;
+  return reinterpret_cast<double*>(&(_u->at(index)));
+}
+
+double* peanoclaw::grid::SubgridAccessor::getParameterWithGhostLayerArray(int parameter) const {
+  int index = _linearization.getParameterWithGhostlayerArrayIndex()
+      + tarch::la::volume(_subdivisionFactor + 2*_ghostlayerWidth) * parameter;
+  return reinterpret_cast<double*>(&(_u->at(index)));
+}
+
 void peanoclaw::grid::SubgridAccessor::setValueUNew(tarch::la::Vector<DIMENSIONS, int> subcellIndex, int unknown, double value) {
   assertion(_isLeaf || _isVirtual);
   int index = _linearization.linearize(unknown, subcellIndex);
@@ -24,11 +47,11 @@ void peanoclaw::grid::SubgridAccessor::setValueUOld(tarch::la::Vector<DIMENSIONS
   assertion(_isLeaf || _isVirtual);
   int index = _linearization.linearizeWithGhostlayer(unknown, subcellIndex);
   assertion3(index >= 0, index, subcellIndex, unknown);
-  assertion4(index < _parameterWithoutGhostlayerArrayIndex - _uOldWithGhostlayerArrayIndex, index, subcellIndex, unknown, _parameterWithoutGhostlayerArrayIndex - _uOldWithGhostlayerArrayIndex);
+  assertion4(index < _linearization.getParameterWithoutGhostlayerArrayIndex() - _linearization.getUOldWithGhostlayerArrayIndex(), index, subcellIndex, unknown, _linearization.getParameterWithoutGhostlayerArrayIndex() - _linearization.getUOldWithGhostlayerArrayIndex());
   #ifdef PATCH_RANGE_CHECK
-  _u->at(_uOldWithGhostlayerArrayIndex + index).setU(value);
+  _u->at(_linearization.getUOldWithGhostlayerArrayIndex() + index).setU(value);
   #else
-  (*_u)[_uOldWithGhostlayerArrayIndex + index].setU(value);
+  (*_u)[_linearization.getUOldWithGhostlayerArrayIndex() + index].setU(value);
   #endif
 }
 
@@ -48,11 +71,11 @@ double peanoclaw::grid::SubgridAccessor::getValueUOld(tarch::la::Vector<DIMENSIO
   assertion(_isLeaf || _isVirtual);
   int index = _linearization.linearizeWithGhostlayer(unknown, subcellIndex);
   assertion3(index >= 0, index, subcellIndex, unknown);
-  assertion4(index < _parameterWithoutGhostlayerArrayIndex - _uOldWithGhostlayerArrayIndex, index, subcellIndex, unknown, _parameterWithoutGhostlayerArrayIndex - _uOldWithGhostlayerArrayIndex);
+  assertion4(index < _linearization.getParameterWithoutGhostlayerArrayIndex() - _linearization.getUOldWithGhostlayerArrayIndex(), index, subcellIndex, unknown, _linearization.getParameterWithoutGhostlayerArrayIndex() - _linearization.getUOldWithGhostlayerArrayIndex());
 #ifdef PATCH_DISABLE_RANGE_CHECK
-  return (*_u)[_uOldWithGhostlayerArrayIndex + index].getU();
+  return (*_u)[_linearization.getUOldWithGhostlayerArrayIndex() + index].getU();
 #else
-  return _u->at(_uOldWithGhostlayerArrayIndex + index).getU();
+  return _u->at(_linearization.getUOldWithGhostlayerArrayIndex() + index).getU();
 #endif
 }
 
@@ -93,27 +116,27 @@ void peanoclaw::grid::SubgridAccessor::setValueUNewAndResize(int linearIndex, in
 double peanoclaw::grid::SubgridAccessor::getValueUOld(int linearIndex, int unknown) const {
   int index = linearIndex + _linearization.getQStrideUOld() * unknown;
 #ifdef PATCH_DISABLE_RANGE_CHECK
-  return (*_u)[_uOldWithGhostlayerArrayIndex + index].getU();
+  return (*_u)[_linearization.getUOldWithGhostlayerArrayIndex() + index].getU();
 #else
-  return _u->at(_uOldWithGhostlayerArrayIndex + index).getU();
+  return _u->at(_linearization.getUOldWithGhostlayerArrayIndex() + index).getU();
 #endif
 }
 
 void peanoclaw::grid::SubgridAccessor::setValueUOld(int linearIndex, int unknown, double value) {
   int index = linearIndex + _linearization.getQStrideUOld() * unknown;
 #ifdef PATCH_DISABLE_RANGE_CHECK
-  (*_u)[_uOldWithGhostlayerArrayIndex + index].setU(value);
+  (*_u)[_linearization.getUOldWithGhostlayerArrayIndex() + index].setU(value);
 #else
-  _u->at(_uOldWithGhostlayerArrayIndex + index).setU(value);
+  _u->at(_linearization.getUOldWithGhostlayerArrayIndex() + index).setU(value);
 #endif
 }
 
 void peanoclaw::grid::SubgridAccessor::setValueUOldAndResize(int linearIndex, int unknown, double value) {
   size_t index = linearIndex + _linearization.getQStrideUOld() * unknown;
-  if(_uOldWithGhostlayerArrayIndex + index + 1 > _u->size()) {
-    _u->resize(_uOldWithGhostlayerArrayIndex + index + 1);
+  if(_linearization.getUOldWithGhostlayerArrayIndex() + index + 1 > _u->size()) {
+    _u->resize(_linearization.getUOldWithGhostlayerArrayIndex() + index + 1);
   }
-  _u->at(_uOldWithGhostlayerArrayIndex + index) = value;
+  _u->at(_linearization.getUOldWithGhostlayerArrayIndex() + index) = value;
 }
 
 double peanoclaw::grid::SubgridAccessor::getParameterWithoutGhostlayer(
@@ -129,9 +152,9 @@ double peanoclaw::grid::SubgridAccessor::getParameterWithoutGhostlayer(
 //      << _linearization.getCellStrideParameterWithoutGhostlayer(1) << std::endl;
 
   assertion3(index >= 0, index, subcellIndex, parameter);
-  assertion5(_parameterWithoutGhostlayerArrayIndex+index < static_cast<int>(_u->size()), _parameterWithoutGhostlayerArrayIndex, index, subcellIndex,
+  assertion5(_linearization.getParameterWithoutGhostlayerArrayIndex()+index < static_cast<int>(_u->size()), _linearization.getParameterWithoutGhostlayerArrayIndex(), index, subcellIndex,
         parameter, static_cast<int>(_u->size()));
-  return _u->at(_parameterWithoutGhostlayerArrayIndex + index).getU();
+  return _u->at(_linearization.getParameterWithoutGhostlayerArrayIndex() + index).getU();
 }
 
 void peanoclaw::grid::SubgridAccessor::setParameterWithoutGhostlayer(
@@ -142,9 +165,9 @@ void peanoclaw::grid::SubgridAccessor::setParameterWithoutGhostlayer(
   assertion(_isLeaf || _isVirtual);
   int index = _linearization.linearizeParameterWithGhostlayer(parameter, subcellIndex);
   assertion3(index >= 0, index, subcellIndex, parameter);
-  assertion5(_parameterWithoutGhostlayerArrayIndex+index < static_cast<int>(_u->size()), _parameterWithoutGhostlayerArrayIndex, index, subcellIndex,
+  assertion5(_linearization.getParameterWithoutGhostlayerArrayIndex()+index < static_cast<int>(_u->size()), _linearization.getParameterWithoutGhostlayerArrayIndex(), index, subcellIndex,
         parameter, static_cast<int>(_u->size()));
-  _u->at(_parameterWithoutGhostlayerArrayIndex + index).setU(value);
+  _u->at(_linearization.getParameterWithoutGhostlayerArrayIndex() + index).setU(value);
 }
 
 double peanoclaw::grid::SubgridAccessor::getParameterWithGhostlayer(
@@ -154,9 +177,9 @@ double peanoclaw::grid::SubgridAccessor::getParameterWithGhostlayer(
   assertion(_isLeaf || _isVirtual);
   int index = _linearization.linearizeParameterWithGhostlayer(parameter, subcellIndex);
   assertion3(index >= 0, index, subcellIndex, parameter);
-  assertion5(_parameterWithGhostlayerArrayIndex+index < static_cast<int>(_u->size()), _parameterWithGhostlayerArrayIndex, index, subcellIndex,
+  assertion5(_linearization.getParameterWithGhostlayerArrayIndex()+index < static_cast<int>(_u->size()), _linearization.getParameterWithGhostlayerArrayIndex(), index, subcellIndex,
         parameter, static_cast<int>(_u->size()));
-  return _u->at(_parameterWithGhostlayerArrayIndex + index).getU();
+  return _u->at(_linearization.getParameterWithGhostlayerArrayIndex() + index).getU();
 }
 
 void peanoclaw::grid::SubgridAccessor::setParameterWithGhostlayer(
@@ -167,21 +190,43 @@ void peanoclaw::grid::SubgridAccessor::setParameterWithGhostlayer(
   assertion(_isLeaf || _isVirtual);
   int index = _linearization.linearizeParameterWithGhostlayer(parameter, subcellIndex);
   assertion3(index >= 0, index, subcellIndex, parameter);
-  assertion5(_parameterWithGhostlayerArrayIndex+index < static_cast<int>(_u->size()), _parameterWithGhostlayerArrayIndex, index, subcellIndex,
+  assertion5(_linearization.getParameterWithGhostlayerArrayIndex()+index < static_cast<int>(_u->size()), _linearization.getParameterWithGhostlayerArrayIndex(), index, subcellIndex,
         parameter, static_cast<int>(_u->size()));
-  _u->at(_parameterWithGhostlayerArrayIndex + index).setU(value);
+  _u->at(_linearization.getParameterWithGhostlayerArrayIndex() + index).setU(value);
 }
 
-void peanoclaw::grid::SubgridAccessor::clearRegion(tarch::la::Vector<DIMENSIONS, int> offset,
-    tarch::la::Vector<DIMENSIONS, int> size, bool clearUOld) {
+double peanoclaw::grid::SubgridAccessor::getFlux(
+  const tarch::la::Vector<DIMENSIONS_MINUS_ONE,int>& subcellIndex,
+  int unknown,
+  int dimension,
+  int direction
+) const {
+  return _u->at(_linearization.linearizeFlux(unknown, subcellIndex, dimension, direction)).getU();
+}
+
+void peanoclaw::grid::SubgridAccessor::setFlux(
+  const tarch::la::Vector<DIMENSIONS_MINUS_ONE,int>& subcellIndex,
+  int unknown,
+  int dimension,
+  int direction,
+  double value
+) {
+  _u->at(_linearization.linearizeFlux(unknown, subcellIndex, dimension, direction)).setU(value);
+}
+
+
+void peanoclaw::grid::SubgridAccessor::clearRegion(
+  const peanoclaw::geometry::Region& region,
+  bool clearUOld
+) {
 #if defined(Dim2) && false
 //  for(int x = 0; x < size(0); x++) {
 //    memset(_uOldWithGhostlayer[])
 //  }
 #else
   int unknownsPerSubcell = _cellDescription.getUnknownsPerSubcell();
-  dfor(subcellIndex, size){
-  int linearIndex = clearUOld ? getLinearIndexUOld(subcellIndex + offset) : getLinearIndexUNew(subcellIndex + offset);
+  dfor(subcellIndex, region._size){
+  int linearIndex = clearUOld ? getLinearIndexUOld(subcellIndex + region._offset) : getLinearIndexUNew(subcellIndex + region._offset);
   for(int unknown = 0; unknown < unknownsPerSubcell; unknown++) {
     if(clearUOld) {
       setValueUOld(linearIndex, unknown, 0.0);
@@ -193,3 +238,6 @@ void peanoclaw::grid::SubgridAccessor::clearRegion(tarch::la::Vector<DIMENSIONS,
 #endif
 }
 
+bool peanoclaw::grid::SubgridAccessor::isInitialized() const {
+  return _isInitialized;
+}

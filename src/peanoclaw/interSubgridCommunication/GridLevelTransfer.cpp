@@ -122,13 +122,13 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::switchToAndAddVirt
   //Create virtual patch
   if(subgrid.isVirtual()) {
     subgrid.getAccessor().clearRegion(
-      tarch::la::Vector<DIMENSIONS, int>(0),
-      subgrid.getSubdivisionFactor(),
+      peanoclaw::geometry::Region(tarch::la::Vector<DIMENSIONS, int>(0),
+             subgrid.getSubdivisionFactor()),
       false
     );
     subgrid.getAccessor().clearRegion(
-      tarch::la::Vector<DIMENSIONS, int>(0),
-      subgrid.getSubdivisionFactor(),
+      peanoclaw::geometry::Region(tarch::la::Vector<DIMENSIONS, int>(0),
+             subgrid.getSubdivisionFactor()),
       true
     );
   } else {

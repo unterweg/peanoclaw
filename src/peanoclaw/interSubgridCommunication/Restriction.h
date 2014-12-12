@@ -13,8 +13,11 @@
 
 namespace peanoclaw {
 
-  class Area;
   class Patch;
+
+  namespace geometry {
+    class Region;
+  }
 
   namespace interSubgridCommunication {
     class Restriction;
@@ -32,7 +35,7 @@ class peanoclaw::interSubgridCommunication::Restriction {
     virtual void restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch& destination,
-      bool              restrictOnlyOverlappedAreas
+      bool              restrictOnlyOverlappedRegions
     ) = 0;
 };
 

@@ -66,6 +66,12 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment(
   #if defined(Parallel)
 //  tarch::parallel::Node::getInstance().setTimeOutWarning(4500);
 //  tarch::parallel::Node::getInstance().setDeadlockTimeOut(9000);
+  peanoclaw::records::Data::initDatatype();
+  peanoclaw::records::CellDescription::initDatatype();
+  peanoclaw::records::VertexDescription::initDatatype();
+  peanoclaw::records::Data::Packed::initDatatype();
+  peanoclaw::records::CellDescription::Packed::initDatatype();
+  peanoclaw::records::VertexDescription::Packed::initDatatype();
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 //    tarch::parallel::NodePool::getInstance().setStrategy( new tarch::parallel::FCFSNodePoolStrategy() );
@@ -353,6 +359,13 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
 
   #ifdef Parallel
   tarch::parallel::NodePool::getInstance().terminate();
+
+  peanoclaw::records::Data::shutdownDatatype();
+  peanoclaw::records::Data::Packed::shutdownDatatype();
+  peanoclaw::records::CellDescription::shutdownDatatype();
+  peanoclaw::records::CellDescription::Packed::shutdownDatatype();
+  peanoclaw::records::VertexDescription::shutdownDatatype();
+  peanoclaw::records::VertexDescription::Packed::shutdownDatatype();
   #endif
   peano::shutdownParallelEnvironment();
   peano::shutdownSharedMemoryEnvironment();

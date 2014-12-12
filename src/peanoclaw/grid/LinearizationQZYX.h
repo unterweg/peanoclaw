@@ -20,7 +20,7 @@
  * Refers to Fortran-style arrays where each cell holds an array of unknowns.
  */
 peanoclaw::grid::Linearization::Linearization(
-    const tarch::la::Vector<DIMENSIONS, int> subdivisionFactor,
+    const tarch::la::Vector<DIMENSIONS, int>& subdivisionFactor,
     int numberOfUnknowns,
     int numberOfParameterFieldsWithoutGhostlayer,
     int numberOfParameterFieldsWithGhostlayer,
@@ -57,6 +57,40 @@ peanoclaw::grid::Linearization::Linearization(
     _cellStrideParameterWithGhostlayer[d] = stride;
     stride *= subdivisionFactor[d] + 2 * ghostlayerWidth;
   }
+
+  //Fluxes
+  _faceOffset[0] = 0;
+  _qStrideFlux = tarch::la::Vector<DIMENSIONS, int>(1);
+  for(int d = 0; d < DIMENSIONS; d++) {
+    //Cell stride
+    _cellStrideFlux[DIMENSIONS_MINUS_ONE * d] = numberOfUnknowns;
+    for(int i = 1; i < DIMENSIONS-1; i++) {
+      _cellStrideFlux[DIMENSIONS_MINUS_ONE * d + i]
+        //= _cellStrideFlux[DIMENSIONS_MINUS_ONE * d + i - 1] * subdivisionFactor[subgridDimensions(i-1)];
+        = _cellStrideFlux[DIMENSIONS_MINUS_ONE * d + i - 1] * subdivisionFactor[getGlobalDimension(i-1, d)];
+    }
+
+    //Face offsets
+    if(d > 0) {
+      _faceOffset[2 * d] = _faceOffset[2 * d - 1]
+                              + _cellStrideFlux[DIMENSIONS_MINUS_ONE * (d - 1) + DIMENSIONS - 2] * subdivisionFactor[DIMENSIONS - 1];
+    }
+    _faceOffset[2 * d + 1] = _faceOffset[2 * d]
+                              + _cellStrideFlux[DIMENSIONS_MINUS_ONE * d + DIMENSIONS - 2] * subdivisionFactor[getGlobalDimension(DIMENSIONS - 2, d)];
+
+    //TODO unterweg debug
+//    std::cout << "d=" << d << " subdivisionFactor=" << subdivisionFactor << " unknowns=" << numberOfUnknowns << " faceOffset=" << _faceOffset << " cellStrideFlux=" << _cellStrideFlux
+//        << " qStrideFlux=" << _qStrideFlux << std::endl;
+  }
+
+  //Array indices
+  int volumeNew = tarch::la::volume(subdivisionFactor);
+  int volumeOld = tarch::la::volume(subdivisionFactor + 2*ghostlayerWidth);
+
+  _uOldWithGhostlayerArrayIndex = volumeNew * numberOfUnknowns;
+  _parameterWithoutGhostlayerArrayIndex = _uOldWithGhostlayerArrayIndex + volumeOld * numberOfUnknowns;
+  _parameterWithGhostlayerArrayIndex = _parameterWithoutGhostlayerArrayIndex + volumeNew * numberOfParameterFieldsWithoutGhostlayer;
+  _fluxArrayIndex = _parameterWithGhostlayerArrayIndex + volumeOld * numberOfParameterFieldsWithGhostlayer;
 
   assertion3(tarch::la::allGreater(_cellStrideUNew, tarch::la::Vector<DIMENSIONS,int>(0)), _cellStrideUNew, subdivisionFactor, ghostlayerWidth);
   assertion3(tarch::la::allGreater(_cellStrideUOld, tarch::la::Vector<DIMENSIONS,int>(0)), _cellStrideUOld, subdivisionFactor, ghostlayerWidth);
