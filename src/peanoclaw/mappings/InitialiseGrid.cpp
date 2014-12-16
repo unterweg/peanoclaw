@@ -4,6 +4,7 @@
 #include "peanoclaw/interSubgridCommunication/aspects/AdjacentVertices.h"
 #include "peanoclaw/interSubgridCommunication/DefaultTransfer.h"
 
+#include <limits>
 
 
 /**
