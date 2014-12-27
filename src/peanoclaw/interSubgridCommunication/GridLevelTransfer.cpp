@@ -233,7 +233,9 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::finalizeVirtualSub
   assertionEquals(subgrid.getUIndex(), virtualPatch.getUIndex());
 //    assertionEquals(finePatch.getUOldIndex(), virtualPatch.getUOldIndex());
 
+  #ifndef PEANOCLAW_USE_ASCEND_FOR_RESTRICTION
   _numerics.postProcessRestriction(subgrid, !subgrid.willCoarsen());
+  #endif
 
   //Fill ghostlayer
   for(int i = 0; i < TWO_POWER_D; i++) {
@@ -241,7 +243,11 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::finalizeVirtualSub
       subgrid.getLevel(),
       _useDimensionalSplitting,
       _numerics,
+      #ifdef PEANOCLAW_USE_ASCEND_FOR_RESTRICTION
+      tarch::la::multiplyComponents(peano::utils::dDelinearised(i, 2).convertScalar<double>(), subgrid.getSize()) + subgrid.getPosition()
+      #else
       fineGridVerticesEnumerator.getVertexPosition(i)
+      #endif
     );
   }
 
@@ -378,7 +384,8 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepDown(
       fineGridVerticesEnumerator.getLevel(),
       _useDimensionalSplitting,
       _numerics,
-      fineGridVerticesEnumerator.getVertexPosition(i),
+      fineGridVerticesEnumerator.getVertexPosition(peano::utils::dDelinearised(i, 2)),
+//      fineGridVerticesEnumerator.getVertexPosition(i),
       i
     );
   }
@@ -437,11 +444,17 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepUp(
 
       //Fill ghostlayer
       for(int i = 0; i < TWO_POWER_D; i++) {
+
         fineGridVertices[fineGridVerticesEnumerator(i)].fillAdjacentGhostLayers(
           finePatch.getLevel(),
           _useDimensionalSplitting,
           _numerics,
-          fineGridVerticesEnumerator.getVertexPosition(i));
+          #ifdef PEANOCLAW_USE_ASCEND_FOR_RESTRICTION
+          tarch::la::multiplyComponents(peano::utils::dDelinearised(i, 2).convertScalar<double>(), finePatch.getSize()) + finePatch.getPosition()
+          #else
+          fineGridVerticesEnumerator.getVertexPosition(i)
+          #endif
+        );
       }
 
       finePatch.switchToNonVirtual();
