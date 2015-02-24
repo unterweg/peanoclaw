@@ -545,6 +545,9 @@ std::string peanoclaw::Patch::toStringUOldWithGhostLayer() const {
     str << "q2:" << std::endl;
     printUnknownWithGhostLayer(str, 2);
 
+//      str << "bathymetry:" << std::endl;
+//      printUnknownWithGhostLayer(str, 6);
+
     //Fluxes
     for(int d = 0; d < DIMENSIONS; d++) {
       str << "dimension=" << d << std::endl;
@@ -713,9 +716,9 @@ std::string peanoclaw::Patch::toString() const {
   return str.str();
 }
 
-bool peanoclaw::Patch::isValid() const {
-  return isValid(_cellDescription);
-}
+//bool peanoclaw::Patch::isValid() const {
+  //return isValid(_cellDescription);
+//}
 
 bool peanoclaw::Patch::isLeaf() const {
   if(isValid()) {
