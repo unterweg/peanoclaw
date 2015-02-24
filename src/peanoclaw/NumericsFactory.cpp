@@ -15,6 +15,7 @@
 #include "peanoclaw/interSubgridCommunication/Interpolation.h"
 #include "peanoclaw/interSubgridCommunication/DefaultInterpolation.h"
 #include "peanoclaw/interSubgridCommunication/Restriction.h"
+#include "peanoclaw/interSubgridCommunication/BathymetryRestriction.h"
 #include "peanoclaw/interSubgridCommunication/DefaultRestriction.h"
 #include "peanoclaw/interSubgridCommunication/FluxCorrection.h"
 #include "peanoclaw/interSubgridCommunication/DefaultFluxCorrection.h"
@@ -126,6 +127,7 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createFullSWOF2DNumerics(
   //Restriction Callback
   peanoclaw::interSubgridCommunication::Restriction* restriction;
   restriction = new peanoclaw::interSubgridCommunication::DefaultRestriction();
+//  restriction = new peanoclaw::interSubgridCommunication::BathymetryRestriction();
 
   //Flux Correction Callback
   peanoclaw::solver::fullswof2D::FluxCorrection* fluxCorrection;

@@ -195,9 +195,20 @@ private:
       #ifdef PEANOCLAW_EULER3D
       #elif PEANOCLAW_FULLSWOF2D
       #else
-      const double g = 1.0; //9.80665;
-      double p = 0.5 * g * unknowns[0] * unknowns[0];
-      fluxes[1 + dimension] += p;
+      if(NumberOfUnknowns == 3) {
+        //Shallow Water
+        const double g = 1.0; //9.80665;
+        double p = 0.5 * g * unknowns[0] * unknowns[0];
+        fluxes[1 + dimension] += p;
+      } else {
+        //Euler
+        const double gasConstant = 0.0; //<--
+        double p = gasConstant * unknowns[0] * 273.0; //<--
+        for(int i = 0; i < DIMENSIONS; i++) {
+          fluxes[i + 1] += p;
+        }
+        fluxes[1 + DIMENSIONS] += p * unknowns[0];
+      }
       #endif
       return fluxes;
     }
