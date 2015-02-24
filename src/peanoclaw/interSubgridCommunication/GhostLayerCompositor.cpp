@@ -54,8 +54,11 @@ double peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillGhostlaye
       *this,
       destinationSubgridIndex
     );
+    //TODO unterweg debug: Not working currently for adaptive grids
     peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<FillGhostlayerFaceFunctor>(
+//    peanoclaw::interSubgridCommunication::aspects::MinimalFaceAdjacentSubgridTraversal<FillGhostlayerFaceFunctor>(
         _patches,
+//        destinationSubgridIndex,
         faceFunctor
     );
   } else if(dimensionality == DIMENSIONS - 2) {

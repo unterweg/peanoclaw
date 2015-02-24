@@ -200,6 +200,7 @@ class peanoclaw::grid::SubgridAccessor {
     ) : _cellDescription(cellDescription),
         _isLeaf(isLeaf),
         _isVirtual(isVirtual),
+        _subdivisionFactor(cellDescription.getSubdivisionFactor()),
         _ghostlayerWidth(cellDescription.getGhostlayerWidth()),
         _u(u),
         _linearization(
