@@ -16,6 +16,7 @@
 #include "peanoclaw/native/scenarios/Gaussian.h"
 #include "peanoclaw/native/scenarios/MekkaFlood.h"
 #include "peanoclaw/native/scenarios/ShockBubble.h"
+#include "peanoclaw/native/scenarios/Storegga.h"
 
 #include "peanoclaw/Patch.h"
 #include "peanoclaw/grid/SubgridAccessor.h"
@@ -111,6 +112,8 @@ peanoclaw::native::scenarios::SWEScenario* peanoclaw::native::scenarios::SWEScen
       return new peanoclaw::native::scenarios::GaussianSWEScenario(arguments);
     } else if(scenarioName == "shockBubble") {
       return new peanoclaw::native::scenarios::ShockBubble(arguments);
+    } else if(scenarioName == "storegga") {
+      return new peanoclaw::native::scenarios::Storegga(arguments);
     } else {
       std::cerr << "Unknown scenario '" << scenarioName << "'." << std::endl;
     }

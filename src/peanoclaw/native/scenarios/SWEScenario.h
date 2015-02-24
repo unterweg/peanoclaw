@@ -61,8 +61,8 @@ public:
       peanoclaw::grid::SubgridAccessor& accessor,
       int dimension,
       bool setUpper,
-      tarch::la::Vector<DIMENSIONS,int> sourceSubcellIndex,
-      tarch::la::Vector<DIMENSIONS,int> destinationSubcellIndex
+      const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+      const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
     ) {}
 
     virtual tarch::la::Vector<DIMENSIONS,double> getDomainOffset() const = 0;
