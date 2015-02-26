@@ -32,6 +32,11 @@ class peanoclaw::native::scenarios::Storegga : public peanoclaw::native::scenari
     double                               _endTime;
     double                               _globalTimestepSize;
 
+    tarch::la::Vector<DIMENSIONS, double> _slideCenter;
+    double                                _slideRadius;
+    double                                _slideVelocity;
+    double                                _slideDepth;
+
   public:
     Storegga(
       const std::vector<std::string>& arguments

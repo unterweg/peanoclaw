@@ -6,6 +6,7 @@
  */
 #include "peanoclaw/native/scenarios/Storegga.h"
 
+#include "peanoclaw/geometry/Region.h"
 #include "peanoclaw/grid/aspects/BoundaryIterator.h"
 #include "peanoclaw/grid/boundaryConditions/ExtrapolateBoundaryCondition.h"
 
@@ -21,8 +22,14 @@ using namespace netCDF::exceptions;
 
 peanoclaw::native::scenarios::Storegga::Storegga(
   const std::vector<std::string>& arguments
-) : _gebco() {
+) : _gebco(),
+    _slideRadius(1),
+    _slideVelocity(15),
+    _slideDepth(10) {
   #ifdef Dim2
+  assignList(_slideCenter) = 3, 90;
+  _slideCenter = _gebco.mapLatitudeLongitudeToMeters(_slideCenter);
+
   if(arguments.size() != 5) {
     std::cerr << "Expected arguments for Scenario 'storegga': finestSubgridTopology coarsestSubgridTopology subdivisionFactor endTime globalTimestepSize" << std::endl
         << "\tGot " << arguments.size() << " arguments." << std::endl;
@@ -37,7 +44,7 @@ peanoclaw::native::scenarios::Storegga::Storegga(
 
   //TODO unterweg debug
   std::cout << "max: " << _maximalMeshWidth << " min: " << _minimalMeshWidth << " size: " << _gebco.getSize() << " coarsest: "
-      << coarsestSubgridTopologyPerDimension << std::endl;
+      << coarsestSubgridTopologyPerDimension << " finest: " << finestSubgridTopologyPerDimension << std::endl;
 
   _subdivisionFactor = tarch::la::Vector<DIMENSIONS,int>(atoi(arguments[2].c_str()));
 
@@ -53,19 +60,40 @@ void peanoclaw::native::scenarios::Storegga::initializePatch(peanoclaw::Patch& s
   update(subgrid);
 
   dfor(subcellIndex, subgrid.getSubdivisionFactor()) {
+    tarch::la::Vector<DIMENSIONS,double> cellPosition = subgrid.getSubcellCenter(subcellIndex- subgrid.getGhostlayerWidth());
+
+    double radius = tarch::la::norm2(cellPosition - _slideCenter);
+    double factor = std::max(0.0, (_slideRadius - radius) / _slideRadius);
+    double waterSurface = -factor * _slideDepth;
+
+
     double bathymetry = accessor.getParameterWithGhostlayer(subcellIndex, 0);
-    accessor.setValueUNew(subcellIndex, 0, bathymetry > 0.0 ? 0.0 : -bathymetry);
-    accessor.setValueUNew(subcellIndex, 0, 1);
-    accessor.setValueUNew(subcellIndex, 1, 0.0);
-    accessor.setValueUNew(subcellIndex, 2, 0.0);
+    double waterHeight = bathymetry > waterSurface ? waterSurface : waterSurface - bathymetry;
+    accessor.setValueUNew(subcellIndex, 0, waterHeight);
+    accessor.setValueUNew(subcellIndex, 1, -factor * _slideVelocity * waterHeight);
+    accessor.setValueUNew(subcellIndex, 2, factor * _slideVelocity * waterHeight);
   }
 }
 
 tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::Storegga::computeDemandedMeshWidth(
-  peanoclaw::Patch& patch,
+  peanoclaw::Patch& subgrid,
   bool isInitializing
 ) {
-  return _maximalMeshWidth;
+  double minBathymetry;
+  double maxBathymetry;
+  _gebco.getMinAndMaxBathymetry(
+    subgrid.getPosition(),
+    subgrid.getSize(),
+    minBathymetry,
+    maxBathymetry
+  );
+
+  if(minBathymetry * maxBathymetry < 0.0) {
+    //Refine along coastline
+    return _minimalMeshWidth;
+  } else {
+    return _maximalMeshWidth;
+  }
 }
 
 tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::Storegga::getDomainOffset() const {
@@ -78,10 +106,14 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::Storegga::get
 
 void peanoclaw::native::scenarios::Storegga::update(peanoclaw::Patch& subgrid) {
   peanoclaw::grid::SubgridAccessor accessor = subgrid.getAccessor();
-  dfor(subcellIndex, subgrid.getSubdivisionFactor() + 2 * subgrid.getGhostlayerWidth()) {
-    tarch::la::Vector<DIMENSIONS,double> cellPosition = subgrid.getSubcellCenter(subcellIndex - subgrid.getGhostlayerWidth());
-    //accessor.setParameterWithGhostlayer(subcellIndex - subgrid.getGhostlayerWidth(), 0, _gebco.getBathymetry(cellPosition));
-    accessor.setParameterWithGhostlayer(subcellIndex - subgrid.getGhostlayerWidth(), 0, 0);
+  dfor(localSubcellIndex, subgrid.getSubdivisionFactor() + 2 * subgrid.getGhostlayerWidth()) {
+    tarch::la::Vector<DIMENSIONS,int> subcellIndex = localSubcellIndex - tarch::la::Vector<DIMENSIONS,int>(subgrid.getGhostlayerWidth());
+    tarch::la::Vector<DIMENSIONS,double> cellPosition = subgrid.getSubcellCenter(subcellIndex);
+//    accessor.setParameterWithGhostlayer(subcellIndex, 0, _gebco.getBathymetry(cellPosition));
+
+    tarch::la::Vector<DIMENSIONS,double> cellSize = subgrid.getSubcellSize();
+    tarch::la::Vector<DIMENSIONS,double> cellOffset = cellPosition - cellSize / 2.0;
+    accessor.setParameterWithGhostlayer(subcellIndex, 0, _gebco.getAveragedBathymetry(cellOffset, cellSize));
   }
 }
 
@@ -94,7 +126,20 @@ void peanoclaw::native::scenarios::Storegga::setBoundaryCondition(
   const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
   const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
 ) {
-  for(int unknown = 0; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
+  double bathymetry = accessor.getParameterWithGhostlayer(destinationSubcellIndex, 0);
+  accessor.setParameterWithGhostlayer(destinationSubcellIndex, 0, bathymetry);
+
+  accessor.setValueUOld(destinationSubcellIndex, 0, bathymetry < 0.0 ? -bathymetry : 0.0);
+
+  for(int unknown = 1; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
+    double sourceHeight = accessor.getValueUOld(sourceSubcellIndex, 0);
+    double destinationHeight = accessor.getValueUOld(destinationSubcellIndex, 0);
+
+//    if(sourceHeight < 1) {
+//      accessor.setValueUOld(destinationSubcellIndex, unknown, 0.0);
+//    } else {
+//      accessor.setValueUOld(destinationSubcellIndex, unknown, accessor.getValueUOld(sourceSubcellIndex, unknown) * (destinationHeight/sourceHeight));
+//    }
     accessor.setValueUOld(destinationSubcellIndex, unknown, accessor.getValueUOld(sourceSubcellIndex, unknown));
   }
 }

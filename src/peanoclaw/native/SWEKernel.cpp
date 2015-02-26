@@ -9,12 +9,16 @@
 
 #include "peanoclaw/Patch.h"
 #include "peanoclaw/geometry/Region.h"
+#include "peanoclaw/grid/aspects/BoundaryIterator.h"
+#include "peanoclaw/grid/boundaryConditions/ReflectingBoundaryCondition.h"
 #include "peanoclaw/interSubgridCommunication/DefaultTransfer.h"
 #include "peanoclaw/native/SWE_WavePropagationBlock_patch.hh"
 
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/timing/Watch.h"
 #include "tarch/parallel/Node.h"
+
+using namespace peanoclaw::grid::boundaryConditions;
 
 tarch::logging::Log peanoclaw::native::SWEKernel::_log("peanoclaw::native::SWEKernel");
 
@@ -59,7 +63,7 @@ void peanoclaw::native::SWEKernel::advanceBlockInTime(
         reinterpret_cast<float*>(accessor.getUOldWithGhostLayerArray(0)),
         reinterpret_cast<float*>(accessor.getUOldWithGhostLayerArray(1)),
         reinterpret_cast<float*>(accessor.getUOldWithGhostLayerArray(2)),
-        reinterpret_cast<float*>(accessor.getParameterWithoutGhostLayerArray(0))
+        reinterpret_cast<float*>(accessor.getParameterWithGhostLayerArray(0))
       );
 
   block.computeNumericalFluxes();
@@ -173,68 +177,34 @@ tarch::la::Vector<DIMENSIONS, double> peanoclaw::native::SWEKernel::getDemandedM
 void peanoclaw::native::SWEKernel::addPatchToSolution(Patch& patch) {
 }
 
-void peanoclaw::native::SWEKernel::fillBoundaryLayer(Patch& patch, int dimension, bool setUpper) {
+void peanoclaw::native::SWEKernel::fillBoundaryLayer(Patch& subgrid, int dimension, bool setUpper) {
   logTraceInWith3Arguments("fillBoundaryLayerInPyClaw", patch, dimension, setUpper);
 
   logDebug("fillBoundaryLayerInPyClaw", "Setting left boundary for " << patch.getPosition() << ", dim=" << dimension << ", setUpper=" << setUpper);
 
-   //std::cout << "------ setUpper " << setUpper << " dimension " << dimension << std::endl;
-   //std::cout << patch << std::endl;
-   //std::cout << "++++++" << std::endl;
-   //std::cout << patch.toStringUOldWithGhostLayer() << std::endl;
-   //std::cout << "||||||" << std::endl;
+  //std::cout << "------ setUpper " << setUpper << " dimension " << dimension << std::endl;
+  //std::cout << patch << std::endl;
+  //std::cout << "++++++" << std::endl;
+  //std::cout << patch.toStringUOldWithGhostLayer() << std::endl;
+  //std::cout << "||||||" << std::endl;
 
-   // implement a wall boundary
-    tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
-    tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
+  // implement a wall boundary
+  tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
+  tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
 
-    peanoclaw::grid::SubgridAccessor& accessor = patch.getAccessor();
+  peanoclaw::grid::SubgridAccessor& accessor = subgrid.getAccessor();
 
-    if (dimension == 0) {
-        for (int yi = -1; yi < patch.getSubdivisionFactor()(1)+1; yi++) {
-            int xi = setUpper ? patch.getSubdivisionFactor()(0) : -1;
-            src_subcellIndex(0) = xi;
-            src_subcellIndex(1) = yi;
-            src_subcellIndex(dimension) += setUpper ? -1 : +1; 
+  //Fill default boundary condition
+  ReflectingBoundaryCondition reflectingBoundaryCondition;
+  peanoclaw::grid::aspects::BoundaryIterator<ReflectingBoundaryCondition> defaultBoundaryIterator(reflectingBoundaryCondition);
+  defaultBoundaryIterator.iterate(subgrid, accessor, dimension, setUpper);
 
-            dest_subcellIndex(0) = xi;
-            dest_subcellIndex(1) = yi;
-     
-            for (int unknown=0; unknown < patch.getUnknownsPerSubcell(); unknown++) {
-                double q = accessor.getValueUOld(src_subcellIndex, unknown);
+  //Fill scenario boundary condition
+  peanoclaw::grid::aspects::BoundaryIterator<peanoclaw::native::scenarios::SWEScenario> scenarioBoundaryIterator(_scenario);
+  scenarioBoundaryIterator.iterate(subgrid, accessor, dimension, setUpper);
 
-                if (unknown == dimension + 1) {
-                  accessor.setValueUOld(dest_subcellIndex, unknown, -q);
-                } else {
-                  accessor.setValueUOld(dest_subcellIndex, unknown, q);
-                }
-            }
-        }
-
-    } else {
-        for (int xi = -1; xi < patch.getSubdivisionFactor()(0)+1; xi++) {
-            int yi = setUpper ? patch.getSubdivisionFactor()(1) : -1;
-            src_subcellIndex(0) = xi;
-            src_subcellIndex(1) = yi;
-            src_subcellIndex(dimension) += setUpper ? -1 : +1; 
-
-            dest_subcellIndex(0) = xi;
-            dest_subcellIndex(1) = yi;
-     
-            for (int unknown=0; unknown < patch.getUnknownsPerSubcell(); unknown++) {
-                double q = accessor.getValueUOld(src_subcellIndex, unknown);
-
-                if (unknown == dimension + 1) {
-                  accessor.setValueUOld(dest_subcellIndex, unknown, -q);
-                } else {
-                  accessor.setValueUOld(dest_subcellIndex, unknown, q);
-                }
-            }
-        }
-    }
-
-      logTraceOut("fillBoundaryLayerInPyClaw");
-    }
+  logTraceOut("fillBoundaryLayerInPyClaw");
+}
 
 void peanoclaw::native::SWEKernel::interpolateSolution (
   const tarch::la::Vector<DIMENSIONS, int>& destinationSize,
