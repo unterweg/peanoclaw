@@ -23,11 +23,11 @@ using namespace netCDF::exceptions;
 peanoclaw::native::scenarios::Storegga::Storegga(
   const std::vector<std::string>& arguments
 ) : _gebco(),
-    _slideRadius(1),
+    _slideRadius(100),
     _slideVelocity(15),
     _slideDepth(10) {
   #ifdef Dim2
-  assignList(_slideCenter) = 3, 90;
+  assignList(_slideCenter) = -4, 63.25;
   _slideCenter = _gebco.mapLatitudeLongitudeToMeters(_slideCenter);
 
   if(arguments.size() != 5) {
@@ -44,7 +44,7 @@ peanoclaw::native::scenarios::Storegga::Storegga(
 
   //TODO unterweg debug
   std::cout << "max: " << _maximalMeshWidth << " min: " << _minimalMeshWidth << " size: " << _gebco.getSize() << " coarsest: "
-      << coarsestSubgridTopologyPerDimension << " finest: " << finestSubgridTopologyPerDimension << std::endl;
+      << coarsestSubgridTopologyPerDimension << " finest: " << finestSubgridTopologyPerDimension << " slideCenter=" << _slideCenter << std::endl;
 
   _subdivisionFactor = tarch::la::Vector<DIMENSIONS,int>(atoi(arguments[2].c_str()));
 

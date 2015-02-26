@@ -36,6 +36,7 @@ class peanoclaw::native::scenarios::GEBCO {
     static tarch::logging::Log _log;
 
     static const double EARTH_RADIUS;
+    static const double SCALING;
 
     std::vector<double>          _bathymetry;
     tarch::la::Vector<2, double> _coordinateOrigin; //Lower-left corner for latitude-longitude
@@ -59,6 +60,16 @@ class peanoclaw::native::scenarios::GEBCO {
      * Maps the given position to the cell in the GEBCO file.
      */
     tarch::la::Vector<2, int> mapToGEBCO(const tarch::la::Vector<2,double>& position) const;
+
+    /**
+     * Maps the given region to a selection of GEBCO cells.
+     */
+    void mapToGEBCO(
+      const tarch::la::Vector<2,double>& offset,
+      const tarch::la::Vector<2,double>& size,
+      tarch::la::Vector<2,int>& lowerBound,
+      tarch::la::Vector<2,int>& upperBound
+    ) const;
 
     /**
      * Returns the bathymetry for the given cell.
