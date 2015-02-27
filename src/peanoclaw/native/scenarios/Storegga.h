@@ -32,7 +32,8 @@ class peanoclaw::native::scenarios::Storegga : public peanoclaw::native::scenari
     double                               _endTime;
     double                               _globalTimestepSize;
 
-    tarch::la::Vector<DIMENSIONS, double> _slideCenter;
+    tarch::la::Vector<DIMENSIONS, double> _depressionCenter;
+    tarch::la::Vector<DIMENSIONS, double> _plumeCenter;
     double                                _slideRadius;
     double                                _slideVelocity;
     double                                _slideDepth;

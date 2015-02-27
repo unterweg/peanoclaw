@@ -12,6 +12,8 @@
 
 #include "peano/utils/Loop.h"
 
+#include <limits>
+
 using namespace peanoclaw::grid::boundaryConditions;
 
 #ifdef PEANOCLAW_USE_NETCDF
@@ -23,12 +25,14 @@ using namespace netCDF::exceptions;
 peanoclaw::native::scenarios::Storegga::Storegga(
   const std::vector<std::string>& arguments
 ) : _gebco(),
-    _slideRadius(100),
-    _slideVelocity(15),
-    _slideDepth(10) {
+    _slideRadius(150),
+    _slideVelocity(15/5),
+    _slideDepth(25) {
   #ifdef Dim2
-  assignList(_slideCenter) = -4, 63.25;
-  _slideCenter = _gebco.mapLatitudeLongitudeToMeters(_slideCenter);
+  assignList(_depressionCenter) = -3, 64.5;
+  _depressionCenter = _gebco.mapLatitudeLongitudeToMeters(_depressionCenter);
+  assignList(_plumeCenter) = -4, 65.5;
+  _plumeCenter = _gebco.mapLatitudeLongitudeToMeters(_plumeCenter);
 
   if(arguments.size() != 5) {
     std::cerr << "Expected arguments for Scenario 'storegga': finestSubgridTopology coarsestSubgridTopology subdivisionFactor endTime globalTimestepSize" << std::endl
@@ -44,7 +48,7 @@ peanoclaw::native::scenarios::Storegga::Storegga(
 
   //TODO unterweg debug
   std::cout << "max: " << _maximalMeshWidth << " min: " << _minimalMeshWidth << " size: " << _gebco.getSize() << " coarsest: "
-      << coarsestSubgridTopologyPerDimension << " finest: " << finestSubgridTopologyPerDimension << " slideCenter=" << _slideCenter << std::endl;
+      << coarsestSubgridTopologyPerDimension << " finest: " << finestSubgridTopologyPerDimension << " depressionCenter=" << _depressionCenter << std::endl;
 
   _subdivisionFactor = tarch::la::Vector<DIMENSIONS,int>(atoi(arguments[2].c_str()));
 
@@ -62,16 +66,18 @@ void peanoclaw::native::scenarios::Storegga::initializePatch(peanoclaw::Patch& s
   dfor(subcellIndex, subgrid.getSubdivisionFactor()) {
     tarch::la::Vector<DIMENSIONS,double> cellPosition = subgrid.getSubcellCenter(subcellIndex- subgrid.getGhostlayerWidth());
 
-    double radius = tarch::la::norm2(cellPosition - _slideCenter);
-    double factor = std::max(0.0, (_slideRadius - radius) / _slideRadius);
-    double waterSurface = -factor * _slideDepth;
+    double depressionRadius = tarch::la::norm2(cellPosition - _depressionCenter);
+    double plumeRadius = tarch::la::norm2(cellPosition - _plumeCenter);
+    double depressionFactor = sqrt(std::max(0.0, (_slideRadius - depressionRadius) / _slideRadius));
+    double plumeFactor = sqrt(std::max(0.0, (_slideRadius - plumeRadius) / _slideRadius));
+    double waterSurface = -depressionFactor * _slideDepth + plumeFactor * _slideDepth;
 
 
     double bathymetry = accessor.getParameterWithGhostlayer(subcellIndex, 0);
     double waterHeight = bathymetry > waterSurface ? waterSurface : waterSurface - bathymetry;
     accessor.setValueUNew(subcellIndex, 0, waterHeight);
-    accessor.setValueUNew(subcellIndex, 1, -factor * _slideVelocity * waterHeight);
-    accessor.setValueUNew(subcellIndex, 2, factor * _slideVelocity * waterHeight);
+    accessor.setValueUNew(subcellIndex, 1, -(depressionFactor + plumeFactor) * _slideVelocity * waterHeight);
+    accessor.setValueUNew(subcellIndex, 2, (depressionFactor + plumeFactor) * _slideVelocity * waterHeight);
   }
 }
 
@@ -79,6 +85,8 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::Storegga::com
   peanoclaw::Patch& subgrid,
   bool isInitializing
 ) {
+  peanoclaw::grid::SubgridAccessor accessor = subgrid.getAccessor();
+
   double minBathymetry;
   double maxBathymetry;
   _gebco.getMinAndMaxBathymetry(
@@ -88,9 +96,19 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::Storegga::com
     maxBathymetry
   );
 
-  if(minBathymetry * maxBathymetry < 0.0) {
+  double minWaterHeight = std::numeric_limits<double>::max();
+  double maxWaterHeight = -std::numeric_limits<double>::max();
+  dfor(subcellIndex, subgrid.getSubdivisionFactor()) {
+    double absoluteWaterHeight = accessor.getParameterWithGhostlayer(subcellIndex, 0) + accessor.getValueUNew(subcellIndex, 0);
+    minWaterHeight = std::min(minWaterHeight, absoluteWaterHeight);
+    maxWaterHeight = std::max(maxWaterHeight, absoluteWaterHeight);
+  }
+
+  if(minBathymetry * maxBathymetry < 0.0 || (maxWaterHeight - minWaterHeight) > 0.1) {
     //Refine along coastline
     return _minimalMeshWidth;
+  } else if (maxWaterHeight - minWaterHeight > 0.05) {
+    return subgrid.getSubcellSize();
   } else {
     return _maximalMeshWidth;
   }

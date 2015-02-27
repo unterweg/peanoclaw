@@ -166,7 +166,12 @@ double peanoclaw::native::scenarios::GEBCO::getAveragedBathymetry(
   }
 
   //TODO unterweg debug
-  std::cout << "Averaging over " << tarch::la::volume(upperBound - lowerBound) << " cells. offset=" << offset << " size=" << size << " lowerBound=" << lowerBound << " upperBound=" << upperBound << std::endl;
+//  std::cout << "Averaging over " << tarch::la::volume(upperBound - lowerBound) << " cells. offset=" << offset << " size=" << size << " lowerBound=" << lowerBound << " upperBound=" << upperBound << std::endl;
+
+  if(numberOfCells == 0) {
+//    std::cout << "Averaging over " << tarch::la::volume(upperBound - lowerBound) << " cells. offset=" << offset << " size=" << size << " lowerBound=" << lowerBound << " upperBound=" << upperBound << std::endl;
+    return 0.0;
+  }
 
   return bathymetry / numberOfCells;
   #else
