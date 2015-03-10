@@ -153,7 +153,7 @@ else:
 compiler = ARGUMENTS.get('compiler', 'gcc')  # Read command line parameter
 if compiler == 'gcc':
    if(parallel == 'parallel_no' or parallel == 'no'):
-     cxx = 'g++-4.8'
+     cxx = 'g++'
    else:
      cxx = 'mpicxx'
      cppdefines.append('MPICH_SKIP_MPICXX')
@@ -193,14 +193,13 @@ elif compiler == 'xlc':
      cxx = 'xlc++'
    else:
      cxx = 'mpixlcxx'
-     ccflags.append('-cxx=xlc++')
    if build == 'debug':
       ccflags.append('-g3')
       ccflags.append('-O0')
    elif build == 'asserts':
       ccflags.append('-qstrict')
       ccflags.append('-O2')
-      ccflags.append('-g')
+      ccflags.append('-g3')
    elif build == 'release':
       ccflags.append('-qstrict')
       ccflags.append('-O3')
@@ -407,6 +406,13 @@ if hdf5 == 'yes':
     cpppath.insert(0,'/home/unterweg/.local/include')
     libpath.append(join(os.environ['HDF5_BASE'], 'lib'))
     libpath.insert(0, '/home/unterweg/local/lib')
+    
+##### Determine NetCDF usage
+# 
+netcdf = ARGUMENTS.get('netcdf', 'no')
+if netcdf == 'yes':
+  cppdefines.append('PEANOCLAW_USE_NETCDF')
+  libs.append('netcdf_c++4')
   
 ##### Determine VTU usage
 # 
@@ -523,6 +529,7 @@ elif solver == 'fullswof2d':
      Glob(join(buildpath, 'peanoclaw/native/main.cpp')),
      Glob(join(buildpath, 'peanoclaw/native/fullswof2DMain.cpp')),
      Glob(join(buildpath, 'peanoclaw/native/scenarios/*.cpp')),
+     Glob(join(buildpath, 'peanoclaw/solver/fullswof2D/*.cpp')),
      Glob(join(buildpath, 'fullswof2d/Sources/liblimitations/*.cpp')),
      Glob(join(buildpath, 'fullswof2d/Sources/libfrictions/*.cpp')),
      Glob(join(buildpath, 'fullswof2d/Sources/libparser/*.cpp')),

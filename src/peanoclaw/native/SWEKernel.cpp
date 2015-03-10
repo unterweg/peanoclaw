@@ -8,7 +8,9 @@
 #include "peanoclaw/native/SWEKernel.h"
 
 #include "peanoclaw/Patch.h"
-#include "peanoclaw/Area.h"
+#include "peanoclaw/geometry/Region.h"
+#include "peanoclaw/grid/aspects/BoundaryIterator.h"
+#include "peanoclaw/grid/boundaryConditions/ReflectingBoundaryCondition.h"
 #include "peanoclaw/interSubgridCommunication/DefaultTransfer.h"
 #include "peanoclaw/native/SWE_WavePropagationBlock_patch.hh"
 
@@ -16,19 +18,21 @@
 #include "tarch/timing/Watch.h"
 #include "tarch/parallel/Node.h"
 
+using namespace peanoclaw::grid::boundaryConditions;
+
 tarch::logging::Log peanoclaw::native::SWEKernel::_log("peanoclaw::native::SWEKernel");
 
 void peanoclaw::native::SWEKernel::transformWaterHeight(
   peanoclaw::Patch& subgrid,
-  const Area&       area,
+  const peanoclaw::geometry::Region&       region,
   bool              modifyUOld,
   bool              absoluteToAboveSeaFloor
 ) const {
   peanoclaw::grid::SubgridAccessor accessor = subgrid.getAccessor();
   double sign = absoluteToAboveSeaFloor ? -1 : +1;
   if(modifyUOld) {
-    dfor(internalSubcellIndex, area._size) {
-      tarch::la::Vector<DIMENSIONS,int> subcellIndex = internalSubcellIndex + area._offset;
+    dfor(internalSubcellIndex, region._size) {
+      tarch::la::Vector<DIMENSIONS,int> subcellIndex = internalSubcellIndex + region._offset;
       accessor.setValueUOld(
         subcellIndex,
         0,
@@ -36,8 +40,8 @@ void peanoclaw::native::SWEKernel::transformWaterHeight(
       );
     }
   } else {
-    dfor(internalSubcellIndex, area._size) {
-      tarch::la::Vector<DIMENSIONS,int> subcellIndex = internalSubcellIndex + area._offset;
+    dfor(internalSubcellIndex, region._size) {
+      tarch::la::Vector<DIMENSIONS,int> subcellIndex = internalSubcellIndex + region._offset;
       accessor.setValueUNew(
         subcellIndex,
         0,
@@ -52,12 +56,14 @@ void peanoclaw::native::SWEKernel::advanceBlockInTime(
   peanoclaw::Patch& subgrid,
   double maximumTimestepSize
 ) {
+  peanoclaw::grid::SubgridAccessor accessor = subgrid.getAccessor();
+
   block.setArrays(
         subgrid,
-        reinterpret_cast<float*>(subgrid.getUOldWithGhostlayerArray(0)),
-        reinterpret_cast<float*>(subgrid.getUOldWithGhostlayerArray(1)),
-        reinterpret_cast<float*>(subgrid.getUOldWithGhostlayerArray(2)),
-        reinterpret_cast<float*>(subgrid.getParameterWithoutGhostlayerArray(0))
+        reinterpret_cast<float*>(accessor.getUOldWithGhostLayerArray(0)),
+        reinterpret_cast<float*>(accessor.getUOldWithGhostLayerArray(1)),
+        reinterpret_cast<float*>(accessor.getUOldWithGhostLayerArray(2)),
+        reinterpret_cast<float*>(accessor.getParameterWithGhostLayerArray(0))
       );
 
   block.computeNumericalFluxes();
@@ -109,11 +115,11 @@ peanoclaw::native::SWEKernel::~SWEKernel()
 void peanoclaw::native::SWEKernel::initializePatch(
   Patch& patch
 ) {
-  logTraceIn( "initializePatch(...)");
+  logTraceIn( "initializePatch(...)" );
 
   _scenario.initializePatch(patch);
 
-  logTraceOutWith1Argument( "initializePatch(...)", demandedMeshWidth);
+  logTraceOut( "initializePatch(...)" );
 }
 
 void peanoclaw::native::SWEKernel::update(Patch& subgrid) {
@@ -171,68 +177,34 @@ tarch::la::Vector<DIMENSIONS, double> peanoclaw::native::SWEKernel::getDemandedM
 void peanoclaw::native::SWEKernel::addPatchToSolution(Patch& patch) {
 }
 
-void peanoclaw::native::SWEKernel::fillBoundaryLayer(Patch& patch, int dimension, bool setUpper) {
+void peanoclaw::native::SWEKernel::fillBoundaryLayer(Patch& subgrid, int dimension, bool setUpper) {
   logTraceInWith3Arguments("fillBoundaryLayerInPyClaw", patch, dimension, setUpper);
 
   logDebug("fillBoundaryLayerInPyClaw", "Setting left boundary for " << patch.getPosition() << ", dim=" << dimension << ", setUpper=" << setUpper);
 
-   //std::cout << "------ setUpper " << setUpper << " dimension " << dimension << std::endl;
-   //std::cout << patch << std::endl;
-   //std::cout << "++++++" << std::endl;
-   //std::cout << patch.toStringUOldWithGhostLayer() << std::endl;
-   //std::cout << "||||||" << std::endl;
+  //std::cout << "------ setUpper " << setUpper << " dimension " << dimension << std::endl;
+  //std::cout << patch << std::endl;
+  //std::cout << "++++++" << std::endl;
+  //std::cout << patch.toStringUOldWithGhostLayer() << std::endl;
+  //std::cout << "||||||" << std::endl;
 
-   // implement a wall boundary
-    tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
-    tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
+  // implement a wall boundary
+  tarch::la::Vector<DIMENSIONS, int> src_subcellIndex;
+  tarch::la::Vector<DIMENSIONS, int> dest_subcellIndex;
 
-    peanoclaw::grid::SubgridAccessor& accessor = patch.getAccessor();
+  peanoclaw::grid::SubgridAccessor& accessor = subgrid.getAccessor();
 
-    if (dimension == 0) {
-        for (int yi = -1; yi < patch.getSubdivisionFactor()(1)+1; yi++) {
-            int xi = setUpper ? patch.getSubdivisionFactor()(0) : -1;
-            src_subcellIndex(0) = xi;
-            src_subcellIndex(1) = yi;
-            src_subcellIndex(dimension) += setUpper ? -1 : +1; 
+  //Fill default boundary condition
+  ReflectingBoundaryCondition reflectingBoundaryCondition;
+  peanoclaw::grid::aspects::BoundaryIterator<ReflectingBoundaryCondition> defaultBoundaryIterator(reflectingBoundaryCondition);
+  defaultBoundaryIterator.iterate(subgrid, accessor, dimension, setUpper);
 
-            dest_subcellIndex(0) = xi;
-            dest_subcellIndex(1) = yi;
-     
-            for (int unknown=0; unknown < patch.getUnknownsPerSubcell(); unknown++) {
-                double q = accessor.getValueUOld(src_subcellIndex, unknown);
+  //Fill scenario boundary condition
+  peanoclaw::grid::aspects::BoundaryIterator<peanoclaw::native::scenarios::SWEScenario> scenarioBoundaryIterator(_scenario);
+  scenarioBoundaryIterator.iterate(subgrid, accessor, dimension, setUpper);
 
-                if (unknown == dimension + 1) {
-                  accessor.setValueUOld(dest_subcellIndex, unknown, -q);
-                } else {
-                  accessor.setValueUOld(dest_subcellIndex, unknown, q);
-                }
-            }
-        }
-
-    } else {
-        for (int xi = -1; xi < patch.getSubdivisionFactor()(0)+1; xi++) {
-            int yi = setUpper ? patch.getSubdivisionFactor()(1) : -1;
-            src_subcellIndex(0) = xi;
-            src_subcellIndex(1) = yi;
-            src_subcellIndex(dimension) += setUpper ? -1 : +1; 
-
-            dest_subcellIndex(0) = xi;
-            dest_subcellIndex(1) = yi;
-     
-            for (int unknown=0; unknown < patch.getUnknownsPerSubcell(); unknown++) {
-                double q = accessor.getValueUOld(src_subcellIndex, unknown);
-
-                if (unknown == dimension + 1) {
-                  accessor.setValueUOld(dest_subcellIndex, unknown, -q);
-                } else {
-                  accessor.setValueUOld(dest_subcellIndex, unknown, q);
-                }
-            }
-        }
-    }
-
-      logTraceOut("fillBoundaryLayerInPyClaw");
-    }
+  logTraceOut("fillBoundaryLayerInPyClaw");
+}
 
 void peanoclaw::native::SWEKernel::interpolateSolution (
   const tarch::la::Vector<DIMENSIONS, int>& destinationSize,
@@ -247,22 +219,22 @@ void peanoclaw::native::SWEKernel::interpolateSolution (
   peanoclaw::grid::SubgridAccessor destinationAccessor = destination.getAccessor();
   tarch::la::Vector<DIMENSIONS,int> sourceSubdivisionFactor = source.getSubdivisionFactor();
 
-  Area destinationArea(destinationOffset, destinationSize);
-  Area sourceArea = destinationArea.mapToPatch(destination, source);
+  peanoclaw::geometry::Region destinationRegion(destinationOffset, destinationSize);
+  peanoclaw::geometry::Region sourceRegion = destinationRegion.mapToPatch(destination, source);
 
-  //Increase sourceArea by one cell in each direction.
+  //Increase sourceRegion by one cell in each direction.
   for(int d = 0; d < DIMENSIONS; d++) {
-    if(sourceArea._offset[d] > 0) {
-      sourceArea._offset[d] = sourceArea._offset[d]-1;
-      sourceArea._size[d] = std::min(sourceSubdivisionFactor[d], sourceArea._size[d] + 2);
+    if(sourceRegion._offset[d] > 0) {
+      sourceRegion._offset[d] = sourceRegion._offset[d]-1;
+      sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._size[d] + 2);
     } else {
-      sourceArea._size[d] = std::min(sourceSubdivisionFactor[d], sourceArea._size[d] + 1);
+      sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._size[d] + 1);
     }
   }
 
   //Source: Water Height above Sea Floor -> Absolute Water Height
-  transformWaterHeight(source, sourceArea, true, false); //UOld
-  transformWaterHeight(source, sourceArea, false, false); // UNew
+  transformWaterHeight(source, sourceRegion, true, false); //UOld
+  transformWaterHeight(source, sourceRegion, false, false); // UNew
 
   //Interpolate
   Numerics::interpolateSolution (
@@ -276,40 +248,40 @@ void peanoclaw::native::SWEKernel::interpolateSolution (
   );
 
   //Source: Absolute Water Height -> Water Height above Sea Floor
-  transformWaterHeight(source, sourceArea, true, true); //UOld
-  transformWaterHeight(source, sourceArea, false, true); // UNew
+  transformWaterHeight(source, sourceRegion, true, true); //UOld
+  transformWaterHeight(source, sourceRegion, false, true); // UNew
 
   //Destination: Absolute Water Height -> Water Height above Sea Floor
-  transformWaterHeight(destination, destinationArea, interpolateToUOld, true);
+  transformWaterHeight(destination, destinationRegion, interpolateToUOld, true);
 }
 
 void peanoclaw::native::SWEKernel::restrictSolution (
   peanoclaw::Patch& source,
   peanoclaw::Patch& destination,
-  bool              restrictOnlyOverlappedAreas
+  bool              restrictOnlyOverlappedRegions
 ) const {
 
-  Area sourceArea(tarch::la::Vector<DIMENSIONS,int>(0), source.getSubdivisionFactor());
+  peanoclaw::geometry::Region sourceRegion(tarch::la::Vector<DIMENSIONS,int>(0), source.getSubdivisionFactor());
 
-  transformWaterHeight(source, sourceArea, true, false); //UOld
-  transformWaterHeight(source, sourceArea, false, false); //UNew
+  transformWaterHeight(source, sourceRegion, true, false); //UOld
+  transformWaterHeight(source, sourceRegion, false, false); //UNew
 
   Numerics::restrictSolution(
     source,
     destination,
-    restrictOnlyOverlappedAreas
+    restrictOnlyOverlappedRegions
   );
 
-  transformWaterHeight(source, sourceArea, true, true); //UOld
-  transformWaterHeight(source, sourceArea, false, true); //UNew
+  transformWaterHeight(source, sourceRegion, true, true); //UOld
+  transformWaterHeight(source, sourceRegion, false, true); //UNew
 }
 
 void peanoclaw::native::SWEKernel::postProcessRestriction(
   peanoclaw::Patch& destination,
-  bool              restrictOnlyOverlappedAreas
+  bool              restrictOnlyOverlappedRegions
 ) const {
-  Area destinationArea(tarch::la::Vector<DIMENSIONS,int>(0), destination.getSubdivisionFactor());
-  transformWaterHeight(destination, destinationArea, true, true); //UOld
-  transformWaterHeight(destination, destinationArea, false, true); //UNew
+  peanoclaw::geometry::Region destinationRegion(tarch::la::Vector<DIMENSIONS,int>(0), destination.getSubdivisionFactor());
+  transformWaterHeight(destination, destinationRegion, true, true); //UOld
+  transformWaterHeight(destination, destinationRegion, false, true); //UNew
 }
 

@@ -55,6 +55,10 @@ void peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::processE
     addProbe(values);
   } else if(name == "numberOfThreads") {
     _numberOfThreads = getIntegerValue(values);
+  } else if(name == "neighborInducedMaximumTimesteps") {
+    _estimateNeighborInducedMaximumTimestep = getBoolValue(values);
+  } else if(name == "useDimensionalSplittingOptimization") {
+    _useDimensionalSplittingOptimization = getBoolValue(values);
   } else {
     _isValid = false;
     logError("processEntry(string,string)", "Invalid entry: '" << name << "' '" << values << "'");
@@ -82,11 +86,12 @@ peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::PeanoClawConf
   _plotSubsteps(false),
   _plotSubstepsAfterOutputTime(-1),
   _additionalLevelsForPredefinedRefinement(1),
-  _disableDimensionalSplittingOptimization(false),
+  _useDimensionalSplittingOptimization(false),
   _restrictStatistics(true),
   _fluxCorrection(false),
   _reduceReductions(false),
-  _numberOfThreads(1)
+  _numberOfThreads(1),
+  _estimateNeighborInducedMaximumTimestep(false)
   {
   std::string configFileName = "peanoclaw.config";
   std::ifstream configFile(configFileName.c_str());
@@ -134,8 +139,8 @@ int peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::plotSubst
   return _plotSubstepsAfterOutputTime;
 }
 
-bool peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::disableDimensionalSplittingOptimization() const {
-  return _disableDimensionalSplittingOptimization;
+bool peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::useDimensionalSplittingOptimization() const {
+  return _useDimensionalSplittingOptimization;
 }
 
 bool peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::restrictStatistics() const {
@@ -156,4 +161,8 @@ std::vector<peanoclaw::statistics::Probe> peanoclaw::configurations::PeanoClawCo
 
 int peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::getNumberOfThreads() const {
   return _numberOfThreads;
+}
+
+bool peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::estimateNeighborInducedMaximumTimestep() const {
+  return _estimateNeighborInducedMaximumTimestep;
 }

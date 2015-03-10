@@ -33,11 +33,13 @@ class peanoclaw::pyclaw::FluxCorrectionCallbackWrapper : public peanoclaw::inter
      * @see peanoclaw::interSubgridCommunication::FluxCorrection
      */
     void applyCorrection(
-      const Patch& finePatch,
+      Patch& finePatch,
       Patch& coarsePatch,
       int dimension,
       int direction
     ) const;
+
+    void computeFluxes(Patch& subgrid) const;
 };
 
 #endif /* PEANOCLAW_PYCLAW_FLUXCORRECTIONCALLBACKWRAPPER_H_ */

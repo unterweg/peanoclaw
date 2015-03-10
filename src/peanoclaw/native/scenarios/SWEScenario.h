@@ -61,8 +61,8 @@ public:
       peanoclaw::grid::SubgridAccessor& accessor,
       int dimension,
       bool setUpper,
-      tarch::la::Vector<DIMENSIONS,int> sourceSubcellIndex,
-      tarch::la::Vector<DIMENSIONS,int> destinationSubcellIndex
+      const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+      const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
     ) {}
 
     virtual tarch::la::Vector<DIMENSIONS,double> getDomainOffset() const = 0;
@@ -81,7 +81,7 @@ public:
     #endif
 
     #ifdef PEANOCLAW_FULLSWOF2D
-    virtual bool enableRain() const { return true; }
+    virtual bool enableRain() const { return false; }
     virtual double getFrictionCoefficient() const { return 0.0; }
     virtual FullSWOF2DBoundaryCondition getBoundaryCondition(int dimension, bool upper) const { return FullSWOF2DBoundaryCondition(2, 0, 0); }
     #endif

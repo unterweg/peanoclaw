@@ -12,6 +12,7 @@
 #include "peanoclaw/interSubgridCommunication/Extrapolation.h"
 #include "peanoclaw/interSubgridCommunication/GhostlayerCompositorFunctors.h"
 #include "peanoclaw/interSubgridCommunication/aspects/FaceAdjacentPatchTraversal.h"
+#include "peanoclaw/interSubgridCommunication/aspects/MinimalFaceAdjacentSubgridTraversal.h"
 #include "peanoclaw/interSubgridCommunication/aspects/EdgeAdjacentPatchTraversal.h"
 #include "peanoclaw/interSubgridCommunication/aspects/CornerAdjacentPatchTraversal.h"
 #include "peanoclaw/Patch.h"
@@ -53,8 +54,11 @@ double peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillGhostlaye
       *this,
       destinationSubgridIndex
     );
+    //TODO unterweg debug: Not working currently for adaptive grids
     peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<FillGhostlayerFaceFunctor>(
+//    peanoclaw::interSubgridCommunication::aspects::MinimalFaceAdjacentSubgridTraversal<FillGhostlayerFaceFunctor>(
         _patches,
+//        destinationSubgridIndex,
         faceFunctor
     );
   } else if(dimensionality == DIMENSIONS - 2) {
@@ -347,8 +351,9 @@ void peanoclaw::interSubgridCommunication::GhostLayerCompositor::applyFluxCorrec
   int sourceSubgridIndex
 ) {
   FluxCorrectionFunctor functor(_numerics, sourceSubgridIndex);
-  peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<FluxCorrectionFunctor>(
+  peanoclaw::interSubgridCommunication::aspects::MinimalFaceAdjacentSubgridTraversal<FluxCorrectionFunctor>(
     _patches,
+    sourceSubgridIndex,
     functor
   );
 }

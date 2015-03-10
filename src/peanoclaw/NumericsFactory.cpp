@@ -15,11 +15,13 @@
 #include "peanoclaw/interSubgridCommunication/Interpolation.h"
 #include "peanoclaw/interSubgridCommunication/DefaultInterpolation.h"
 #include "peanoclaw/interSubgridCommunication/Restriction.h"
+#include "peanoclaw/interSubgridCommunication/BathymetryRestriction.h"
 #include "peanoclaw/interSubgridCommunication/DefaultRestriction.h"
 #include "peanoclaw/interSubgridCommunication/FluxCorrection.h"
 #include "peanoclaw/interSubgridCommunication/DefaultFluxCorrection.h"
-#include "peanoclaw/interSubgridCommunication/VelocityFluxCorrection.h"
 #include "peanoclaw/interSubgridCommunication/DefaultTransfer.h"
+
+#include "peanoclaw/solver/fullswof2D/FluxCorrection.h"
 
 tarch::logging::Log peanoclaw::NumericsFactory::_log("peanoclaw::NumericsFactory");
 
@@ -125,18 +127,22 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createFullSWOF2DNumerics(
   //Restriction Callback
   peanoclaw::interSubgridCommunication::Restriction* restriction;
   restriction = new peanoclaw::interSubgridCommunication::DefaultRestriction();
+//  restriction = new peanoclaw::interSubgridCommunication::BathymetryRestriction();
 
   //Flux Correction Callback
-  peanoclaw::interSubgridCommunication::FluxCorrection* fluxCorrection;
-  fluxCorrection = new peanoclaw::interSubgridCommunication::VelocityFluxCorrection();
+  peanoclaw::solver::fullswof2D::FluxCorrection* fluxCorrection;
+  fluxCorrection = new peanoclaw::solver::fullswof2D::FluxCorrection();
 
-  return new peanoclaw::native::FullSWOF2D(
+  peanoclaw::native::FullSWOF2D* fullswof2D = new peanoclaw::native::FullSWOF2D(
     scenario,
     new peanoclaw::interSubgridCommunication::DefaultTransfer,
     interpolation,
     restriction,
     fluxCorrection
   );
+
+  fluxCorrection->setFullSWOF2D(fullswof2D);
+  return fullswof2D;
 }
 #endif
 

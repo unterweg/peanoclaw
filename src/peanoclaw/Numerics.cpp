@@ -62,23 +62,23 @@ void peanoclaw::Numerics::interpolateSolution (
 void peanoclaw::Numerics::restrictSolution (
   peanoclaw::Patch& source,
   peanoclaw::Patch& destination,
-  bool              restrictOnlyOverlappedAreas
+  bool              restrictOnlyOverlappedRegions
 ) const {
   _restriction->restrictSolution(
     source,
     destination,
-    restrictOnlyOverlappedAreas
+    restrictOnlyOverlappedRegions
   );
 }
 
 void peanoclaw::Numerics::postProcessRestriction(
   peanoclaw::Patch& destination,
-  bool              restrictOnlyOverlappedAreas
+  bool              restrictOnlyOverlappedRegions
 ) const {
 }
 
 void peanoclaw::Numerics::applyFluxCorrection (
-  const Patch& sourceSubgrid,
+  Patch& sourceSubgrid,
   Patch& destinationSubgrid,
   int dimension,
   int direction
@@ -89,6 +89,12 @@ void peanoclaw::Numerics::applyFluxCorrection (
     dimension,
     direction
   );
+}
+
+void peanoclaw::Numerics::computeFluxes(
+  Patch& subgrid
+) const {
+  _fluxCorrection->computeFluxes(subgrid);
 }
 
 void peanoclaw::Numerics::update (Patch& finePatch) {

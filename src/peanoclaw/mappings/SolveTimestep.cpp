@@ -9,6 +9,8 @@
 #include "tarch/parallel/Node.h"
 #include "tarch/multicore/Lock.h"
 
+#include <limits>
+
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
@@ -636,17 +638,28 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
         transfer.copyUNewToUOld(subgrid);
 
         // Filling boundary layers for the given patch...
+        if(_estimateNeighborInducedMaximumTimestep) {
+          subgrid.getTimeIntervals().setNeighborInducedMaximumTimestepSize(std::numeric_limits<double>::max());
+        }
         tarch::la::Vector<DIMENSIONS_TIMES_TWO, bool> domainBoundaryFlags = fillBoundaryLayers(subgrid, fineGridVertices,
             fineGridVerticesEnumerator);
 
-        //TODO unterweg
-//        if(tarch::la::equals(subgrid.getPosition(), tarch::la::Vector<DIMENSIONS,double>(0.0))
-//          || tarch::la::equals(subgrid.getPosition(), tarch::la::Vector<DIMENSIONS,double>(2.0/3.0))
-//        ) {
-//          std::cout << subgrid << std::endl << subgrid.toStringUOldWithGhostLayer() << std::endl;
-//        }
+        //Estimate maximum timestep size at beginning of simulation
+        if(_estimateNeighborInducedMaximumTimestep
+            && tarch::la::smaller(subgrid.getTimeIntervals().getNeighborInducedMaximumTimestepSize(), 0.0)) {
+          double timestepSize = subgrid.getTimeIntervals().getTimestepSize();
+          assertion1(tarch::la::equals(timestepSize, 0.0), subgrid);
+          _numerics->solveTimestep(subgrid, std::numeric_limits<double>::infinity(), _useDimensionalSplittingExtrapolation, domainBoundaryFlags);
+          subgrid.getTimeIntervals().setTimestepSize(timestepSize);
+          subgrid.getTimeIntervals().setNeighborInducedMaximumTimestepSize(subgrid.getTimeIntervals().getEstimatedNextTimestepSize());
+          transfer.swapUNewAndUOld(subgrid);
+          transfer.copyUNewToUOld(subgrid);
+        }
 
         // Do one timestep...
+        if(_estimateNeighborInducedMaximumTimestep) {
+          maximumTimestepDueToGlobalTimestep = std::min(maximumTimestepDueToGlobalTimestep, subgrid.getTimeIntervals().getNeighborInducedMaximumTimestepSize());
+        }
         _numerics->solveTimestep(subgrid, maximumTimestepDueToGlobalTimestep, _useDimensionalSplittingExtrapolation, domainBoundaryFlags);
         tarch::la::Vector<DIMENSIONS, double> requiredMeshWidth = _numerics->getDemandedMeshWidth(subgrid, false);
         subgrid.setDemandedMeshWidth(requiredMeshWidth);
@@ -657,8 +670,9 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
         #endif
         _sharedMemoryStatistics.addCellUpdatesForThread(subgrid);
 
-        // Coarse grid correction
+        // Flux correction
         if (_correctFluxes) {
+          _numerics->computeFluxes(subgrid);
           for (int i = 0; i < TWO_POWER_D; i++) {
             fineGridVertices[fineGridVerticesEnumerator(i)].applyFluxCorrection(*_numerics, i);
           }
@@ -826,6 +840,7 @@ void peanoclaw::mappings::SolveTimestep::beginIteration(
   _useDimensionalSplittingExtrapolation = solverState.useDimensionalSplittingExtrapolation();
   peanoclaw::statistics::SubgridStatistics subgridStatistics(solverState);
   _subgridStatistics = subgridStatistics;
+  _estimateNeighborInducedMaximumTimestep = solverState.estimateNeighborInducedMaximumTimestep();
 
 #ifdef Parallel
   LevelStatisticsHeap::getInstance().startToSendSynchronousData();
@@ -845,7 +860,6 @@ void peanoclaw::mappings::SolveTimestep::endIteration(
     peanoclaw::State& solverState
 ) {
   logTraceInWith1Argument( "endIteration(State)", solverState );
-
 #ifdef Parallel
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     _subgridStatistics.setWallclockTimeForIteration(_iterationWatch.getCalendarTime());

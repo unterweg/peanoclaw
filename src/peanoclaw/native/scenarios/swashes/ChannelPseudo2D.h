@@ -47,7 +47,7 @@ namespace peanoclaw {
  */
 class peanoclaw::native::scenarios::swashes::ChannelPseudo2D : public peanoclaw::native::scenarios::SWEScenario {
 private:
-  const double BED_HEIGHT = 22.0;
+  const double BED_HEIGHT = 9.0;
 
   tarch::la::Vector<DIMENSIONS,double>  _domainSize;
   tarch::la::Vector<DIMENSIONS,double>  _domainOffset;
@@ -64,9 +64,16 @@ private:
 
   enum ChannelType {
     Short,
-    Long
+    Long,
+    CornerTest
   };
   ChannelType _channelType;
+
+  enum Criticality {
+    Sub,
+    Super
+  };
+  Criticality _criticality;
 
 public:
   ChannelPseudo2D(
@@ -95,11 +102,12 @@ public:
     bool setUpper,
     tarch::la::Vector<DIMENSIONS,int> sourceSubcellIndex,
     tarch::la::Vector<DIMENSIONS,int> destinationSubcellIndex
-  );
+  ) {};
 
   bool enableRain() const { return false; }
 
-  double getFriction() const { return 0.03; }
+  double getFrictionCoefficient() const { return 0.03; }
+//  double getFrictionCoefficient() const { return 0.0; }
 
   FullSWOF2DBoundaryCondition getBoundaryCondition(int dimension, bool upper) const;
 };

@@ -8,6 +8,8 @@
 #ifndef PEANOCLAW_GRID_SUBGRIDACCESSOR_H_
 #define PEANOCLAW_GRID_SUBGRIDACCESSOR_H_
 
+#include "peanoclaw/geometry/Region.h"
+#include "peanoclaw/grid/SubgridFaceIterator.h"
 #include "peanoclaw/grid/Linearization.h"
 #include "peanoclaw/records/CellDescription.h"
 #include "peanoclaw/records/Data.h"
@@ -79,7 +81,7 @@ class peanoclaw::grid::SubgridIterator {
   public:
     /**
      * Create a new accessor for the given subgrid and
-     * restrict the access to the area defined by
+     * restrict the access to the region defined by
      * offset and size. This defines a rectangular
      * part of the subgrid.
      */
@@ -181,14 +183,13 @@ class peanoclaw::grid::SubgridAccessor {
     tarch::la::Vector<DIMENSIONS,int> _subdivisionFactor;
     int _ghostlayerWidth;
     std::vector<Data>* _u;
-    int _uOldWithGhostlayerArrayIndex;
-    int _parameterWithoutGhostlayerArrayIndex;
-    int _parameterWithGhostlayerArrayIndex;
     Linearization      _linearization;
+    bool _isInitialized;
 
   public:
     SubgridAccessor()
-      : _u(0) {
+      : _u(0),
+        _isInitialized(false) {
     }
 
     SubgridAccessor(
@@ -199,24 +200,17 @@ class peanoclaw::grid::SubgridAccessor {
     ) : _cellDescription(cellDescription),
         _isLeaf(isLeaf),
         _isVirtual(isVirtual),
+        _subdivisionFactor(cellDescription.getSubdivisionFactor()),
+        _ghostlayerWidth(cellDescription.getGhostlayerWidth()),
         _u(u),
-        _uOldWithGhostlayerArrayIndex(-1),
-        _parameterWithoutGhostlayerArrayIndex(-1),
-        _parameterWithGhostlayerArrayIndex(-1),
         _linearization(
             cellDescription.getSubdivisionFactor(),
             cellDescription.getUnknownsPerSubcell(),
             cellDescription.getNumberOfParametersWithoutGhostlayerPerSubcell(),
             cellDescription.getNumberOfParametersWithGhostlayerPerSubcell(),
             cellDescription.getGhostlayerWidth()
-    ) {
-
-      int volumeNew = tarch::la::volume(cellDescription.getSubdivisionFactor());
-      int volumeOld = tarch::la::volume(cellDescription.getSubdivisionFactor() + 2*cellDescription.getGhostlayerWidth());
-
-      _uOldWithGhostlayerArrayIndex = volumeNew * cellDescription.getUnknownsPerSubcell();
-      _parameterWithoutGhostlayerArrayIndex = _uOldWithGhostlayerArrayIndex + volumeOld * cellDescription.getUnknownsPerSubcell();
-      _parameterWithGhostlayerArrayIndex = _parameterWithoutGhostlayerArrayIndex + volumeNew * cellDescription.getNumberOfParametersWithoutGhostlayerPerSubcell();
+        ),
+        _isInitialized(true) {
     }
 
     template<int NumberOfUnknowns>
@@ -224,6 +218,23 @@ class peanoclaw::grid::SubgridAccessor {
       const tarch::la::Vector<DIMENSIONS, int> offset,
       const tarch::la::Vector<DIMENSIONS, int> size
     );
+
+    template<int NumberOfUnknowns>
+    peanoclaw::grid::SubgridFaceIterator<NumberOfUnknowns> getSubgridFaceIterator(
+      int dimension,
+      int direction
+    );
+
+    /**
+     * Returns the uNew double array.
+     */
+    double* getUNewArray() const;
+
+    double* getUOldWithGhostLayerArray(int unknown) const;
+
+    double* getParameterWithoutGhostLayerArray(int parameter) const;
+
+    double* getParameterWithGhostLayerArray(int parameter) const;
 
     /**
      * Returns the value for the given cell index
@@ -274,14 +285,32 @@ class peanoclaw::grid::SubgridAccessor {
     double getParameterWithGhostlayer(const tarch::la::Vector<DIMENSIONS, int>& subcellIndex, int parameter) const;
     void setParameterWithGhostlayer(const tarch::la::Vector<DIMENSIONS, int>& subcellIndex, int parameter, double value);
 
+    double getFlux(
+      const tarch::la::Vector<DIMENSIONS_MINUS_ONE,int>& subcellIndex,
+      int unknown,
+      int dimension,
+      int direction
+    ) const;
+    void setFlux(
+      const tarch::la::Vector<DIMENSIONS_MINUS_ONE,int>& subcellIndex,
+      int unknown,
+      int dimension,
+      int direction,
+      double value
+    );
+
     /**
      * Sets the specified region of the subgrid to zero.
      */
     void clearRegion(
-      tarch::la::Vector<DIMENSIONS, int> offset,
-      tarch::la::Vector<DIMENSIONS, int> size,
+      const peanoclaw::geometry::Region& region,
       bool clearUOld
     );
+
+    /**
+     * Returns, whether this accessor has been initialized.
+     */
+    bool isInitialized() const;
 };
 
 #include "peanoclaw/grid/SubgridAccessor.cpph"

@@ -1,0 +1,172 @@
+/*
+ * VelocityFluxCorrection.cpph
+ *
+ *  Created on: Dec 16, 2014
+ *      Author: kristof
+ */
+
+#ifdef PEANOCLAW_FULLSWOF2D
+#include "misc.hpp"
+#endif
+
+template<int NumberOfUnknowns>
+double peanoclaw::solver::fullswof2D::FluxCorrectionTemplate<NumberOfUnknowns>::calculateOverlappingRegion(
+    tarch::la::Vector<DIMENSIONS, double> position1,
+    tarch::la::Vector<DIMENSIONS_MINUS_ONE, int> cellIndex1,
+    tarch::la::Vector<DIMENSIONS, double> size1,
+    tarch::la::Vector<DIMENSIONS, double> position2,
+    tarch::la::Vector<DIMENSIONS_MINUS_ONE, int> cellIndex2,
+    tarch::la::Vector<DIMENSIONS, double> size2,
+    int projectionAxis
+) const {
+  double region = 1.0;
+
+  int projectedDimension = 0;
+  for(int d = 0; d < DIMENSIONS; d++) {
+    if(d != projectionAxis) {
+      double overlappingInterval =
+          std::min(position1(d)+(cellIndex1[projectedDimension] + 1.0) * size1(d), position2(d)+(cellIndex2[projectedDimension] + 1.0) * size2(d))
+      - std::max(position1(d) + cellIndex1[projectedDimension] * size1[d], position2(d) + cellIndex2[projectedDimension] * size2[d]);
+      region *= overlappingInterval;
+
+      if(region < 0.0) {
+        region = 0.0;
+      }
+      projectedDimension++;
+    }
+  }
+
+  return region;
+}
+
+#ifdef PEANOCLAW_FULLSWOF2D
+template<int NumberOfUnknowns>
+void peanoclaw::solver::fullswof2D::FluxCorrectionTemplate<NumberOfUnknowns>::computeFluxes(
+  Patch& subgrid,
+  peanoclaw::native::FullSWOF2D& fullswof2D
+) const {
+
+  TAB& f0 = fullswof2D.getScheme()->getFluxXQ0();
+//  TAB& f1 = scheme.getFluxXQ1();
+//  TAB& f2 = scheme.getFluxXQ2();
+//  TAB& g0 = scheme.getFluxYQ0();
+//  TAB& g1 = scheme.getFluxYQ1();
+//  TAB& g2 = scheme.getFluxYQ2();
+
+  for(int dimension = 0; dimension < DIMENSIONS; dimension++) {
+    double deltaTDeltaX = subgrid.getTimeIntervals().getTimestepSize() / (2 * subgrid.getSubcellSize()[dimension]);
+
+    for(int direction = -1; direction < 2; direction += 2) {
+      peanoclaw::grid::SubgridFaceIterator<NumberOfUnknowns> faceIterator
+        = subgrid.getAccessor().getSubgridFaceIterator<NumberOfUnknowns>(dimension, direction);
+
+      while(faceIterator.moveToNextInterfaceCell()) {
+        faceIterator.moveToNextGhostCell(); //Move to first cell
+        faceIterator.moveToNextGhostCell(); //Move to second cell
+
+        tarch::la::Vector<NumberOfUnknowns,double> outerUnknowns = faceIterator.getGhostUnknowns();
+        tarch::la::Vector<NumberOfUnknowns,double> outerFluxes = outerUnknowns * outerUnknowns[1 + dimension] / outerUnknowns[0];
+        if(tarch::la::smallerEquals(outerUnknowns[0], 0.0)) {
+          outerFluxes = tarch::la::Vector<NumberOfUnknowns,double>(0.0);
+        }
+        tarch::la::Vector<NumberOfUnknowns,double> innerUnknowns = faceIterator.getUnknownsUOld();
+        tarch::la::Vector<NumberOfUnknowns,double> innerFluxes = innerUnknowns * innerUnknowns[1 + dimension] / innerUnknowns[0];
+        if(tarch::la::smallerEquals(innerUnknowns[0], 0.0)) {
+          innerFluxes = tarch::la::Vector<NumberOfUnknowns,double>(0.0);
+        }
+
+        tarch::la::Vector<NumberOfUnknowns,double> fluxes = 0.5 * (outerFluxes + innerFluxes)
+                + direction * deltaTDeltaX * (innerUnknowns - outerUnknowns);
+        faceIterator.setFluxes(fluxes);
+
+        //TODO unterweg debug
+//        std::cout << "interfaceCell " << faceIterator.getSubcellIndex() << std::endl;
+//        std::cout << "outerUnknowns=" << outerUnknowns << " outerFluxes=" << outerFluxes << std::endl
+//                  << "innerUnknowns=" << innerUnknowns << " innerFluxes=" << innerFluxes << std::endl
+//                  << "fluxes=" << fluxes << std::endl;
+
+        faceIterator.skipRemainingGhostCells();
+      }
+    }
+  }
+}
+#endif
+
+template<int NumberOfUnknowns>
+void peanoclaw::solver::fullswof2D::FluxCorrectionTemplate<NumberOfUnknowns>::applyCorrection(
+    Patch& sourceSubgrid,
+    Patch& destinationSubgrid,
+    int dimension,
+    int direction
+) const {
+  logTraceInWith4Arguments("applyCoarseGridCorrection", sourceSubgrid.toString(), destinationSubgrid.toString(), dimension, direction);
+
+  double lowerTimeIntervalBound = std::max(sourceSubgrid.getTimeIntervals().getCurrentTime(), destinationSubgrid.getTimeIntervals().getCurrentTime());
+  double upperTimeIntervalBound = std::min(sourceSubgrid.getTimeIntervals().getCurrentTime() + sourceSubgrid.getTimeIntervals().getTimestepSize(),
+                                           destinationSubgrid.getTimeIntervals().getCurrentTime() + destinationSubgrid.getTimeIntervals().getTimestepSize());
+  double timeOverlap = upperTimeIntervalBound - lowerTimeIntervalBound;
+  //TODO unterweg debug
+//  std::cout << "Correcting flux dimension " << dimension << " direction=" << direction << " timeOverlap=" << timeOverlap << std::endl;
+
+  peanoclaw::geometry::HyperplaneRegion sourceRegion = peanoclaw::geometry::HyperplaneRegion::getInterfaceRegion(
+    sourceSubgrid,
+    destinationSubgrid
+  );
+
+  tarch::la::Vector<DIMENSIONS,double> sourceSubcellSize = sourceSubgrid.getSubcellSize();
+  tarch::la::Vector<DIMENSIONS,double> destinationSubcellSize = destinationSubgrid.getSubcellSize();
+  double destinationSubcellVolume = tarch::la::volume(destinationSubcellSize);
+
+  peanoclaw::grid::SubgridFaceIterator<NumberOfUnknowns> sourceIterator
+    = sourceSubgrid.getAccessor().getSubgridFaceIterator<NumberOfUnknowns>(dimension, direction);
+  peanoclaw::grid::SubgridFaceIterator<NumberOfUnknowns> destinationIterator
+    = destinationSubgrid.getAccessor().getSubgridFaceIterator<NumberOfUnknowns>(dimension, -direction);
+
+  //TODO unterweg debug
+//  std::cout << "sourceRegion=" << sourceRegion << std::endl;
+
+  while(sourceIterator.moveToNextInterfaceCell()) {
+    sourceIterator.moveToNextGhostCell();
+    peanoclaw::geometry::HyperplaneRegion destinationRegion = peanoclaw::geometry::HyperplaneRegion::getInterfaceRegionForSubcell(
+      destinationSubgrid,
+      sourceSubgrid,
+      sourceIterator.getSubcellIndex(),
+      sourceRegion._dimension,
+      sourceRegion._direction
+    );
+
+    tarch::la::Vector<NumberOfUnknowns, double> sourceFluxes = sourceIterator.getFluxes();
+
+    //TODO unterweg debug
+//    std::cout << "destinationRegion=" << destinationRegion << std::endl;
+
+    destinationIterator.restart(destinationRegion);
+
+    while(destinationIterator.moveToNextInterfaceCell()) {
+      destinationIterator.moveToNextGhostCell();
+      //TODO unterweg debug
+//      std::cout << "sourceCell=" << sourceIterator.getSubcellIndex() << " destinationCell=" << destinationIterator.getSubcellIndex() << std::endl;
+
+      tarch::la::Vector<NumberOfUnknowns, double> destinationFluxes = destinationIterator.getFluxes();
+
+      //Get interface region
+      double interfaceRegion = calculateOverlappingRegion(
+          sourceSubgrid.getPosition(),
+          sourceIterator.getSubcellIndex(),
+          sourceSubcellSize,
+          destinationSubgrid.getPosition(),
+          destinationIterator.getSubcellIndex(),
+          destinationSubcellSize,
+          dimension
+      );
+
+      destinationIterator.setUnknownsUNew(
+        destinationIterator.getUnknownsUNew() + (sourceFluxes - destinationFluxes) * timeOverlap * interfaceRegion / destinationSubcellVolume
+      );
+      destinationIterator.skipRemainingGhostCells();
+    }
+    sourceIterator.skipRemainingGhostCells();
+  }
+
+  logTraceOut("applyCoarseGridCorrection");
+}

@@ -92,7 +92,7 @@ private:
     virtual void restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch& destination,
-      bool              restrictOnlyOverlappedAreas
+      bool              restrictOnlyOverlappedRegions
     ) const;
 
     /**
@@ -102,7 +102,7 @@ private:
      */
     virtual void postProcessRestriction(
       peanoclaw::Patch& destination,
-      bool              restrictOnlyOverlappedAreas
+      bool              restrictOnlyOverlappedRegions
     ) const;
 
     /**
@@ -111,11 +111,13 @@ private:
      * method can only be called if providesRestriction() returns <tt>true</tt>.
      */
     virtual void applyFluxCorrection (
-      const Patch& sourceSubgrid,
+      Patch& sourceSubgrid,
       Patch& destinationSubgrid,
       int dimension,
       int direction
     ) const;
+
+    virtual void computeFluxes(Patch& subgrid) const;
 
     /**
      * Fills the specified boundary layer.
@@ -179,6 +181,37 @@ private:
      * Returns the ghostlayer width in cells that is required for the applied solver.
      */
     virtual int getGhostlayerWidth() const = 0;
+
+    //Default Implementations for fluxes
+    template<int NumberOfUnknowns>
+    static tarch::la::Vector<NumberOfUnknowns,double> computeFlux(
+      int dimension,
+      const tarch::la::Vector<NumberOfUnknowns,double>& unknowns
+    ) {
+      tarch::la::Vector<NumberOfUnknowns,double> fluxes(unknowns * unknowns[1 + dimension]);
+      for(int i = 0; i < DIMENSIONS; i++) {
+        fluxes[i + 1] *= unknowns[0];
+      }
+      #ifdef PEANOCLAW_EULER3D
+      #elif PEANOCLAW_FULLSWOF2D
+      #else
+      if(NumberOfUnknowns == 3) {
+        //Shallow Water
+        const double g = 1.0; //9.80665;
+        double p = 0.5 * g * unknowns[0] * unknowns[0];
+        fluxes[1 + dimension] += p;
+      } else {
+        //Euler
+        const double gasConstant = 0.0; //<--
+        double p = gasConstant * unknowns[0] * 273.0; //<--
+        for(int i = 0; i < DIMENSIONS; i++) {
+          fluxes[i + 1] += p;
+        }
+        fluxes[1 + DIMENSIONS] += p * unknowns[0];
+      }
+      #endif
+      return fluxes;
+    }
 };
 
 

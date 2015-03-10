@@ -24,10 +24,10 @@
 
 #include "peanoclaw/native/MekkaFlood_solver.h"
 
+#ifdef PEANOCLAW_FULLSWOF2D
 #include "parameters.hpp"
-
-#if !defined(SCHEME_HPP)
 #include "scheme.hpp"
+#include "choice_scheme.hpp"
 #endif
 
 namespace peanoclaw {
@@ -50,6 +50,27 @@ private:
   double _totalSolverCallbackTime;
 
   peanoclaw::native::scenarios::SWEScenario& _scenario;
+
+  #ifdef PEANOCLAW_FULLSWOF2D
+  Choice_scheme* _wrapperScheme;
+  #endif
+
+  /**
+   * Transforms the water height in the given subgrid from relative
+   * height above ground to absolute water height.
+   * Also it transforms velocities to momenta.
+   */
+  void transformToAbsoluteWaterHeightAndMomenta(
+    peanoclaw::Patch&                  subgrid,
+    const peanoclaw::geometry::Region& region,
+    bool                               modifyUOld
+  ) const;
+
+  void transformToRelativeWaterHeightAndVelocities(
+    peanoclaw::Patch&                  subgrid,
+    const peanoclaw::geometry::Region& region,
+    bool                               modifyUOld
+  ) const;
 
 public:
   FullSWOF2D(
@@ -118,7 +139,7 @@ public:
 //  void restrict (
 //    const peanoclaw::Patch& source,
 //    peanoclaw::Patch&       destination,
-//    bool restrictOnlyOverlappedAreas
+//    bool restrictOnlyOverlappedRegions
 //  ) const;
 
   /**
@@ -140,11 +161,13 @@ public:
 
   void update(Patch& finePatch);
 
+  #ifdef PEANOCLAW_FULLSWOF2D
   void copyPatchToScheme(Patch& patch, Scheme* scheme, tarch::la::Vector<DIMENSIONS_TIMES_TWO, int> margin);
   void copySchemeToPatch(Scheme* scheme, Patch& patch, tarch::la::Vector<DIMENSIONS_TIMES_TWO, int> margin);
+  #endif
 
-  void copyPatchToSet(Patch& patch, unsigned int *strideinfo, MekkaFlood_solver::InputArrays& input, MekkaFlood_solver::TempArrays& temp);
-  void copySetToPatch(unsigned int *strideinfo, MekkaFlood_solver::InputArrays& input, MekkaFlood_solver::TempArrays& temp, Patch& patch);
+//  void copyPatchToSet(Patch& patch, unsigned int *strideinfo, MekkaFlood_solver::InputArrays& input, MekkaFlood_solver::TempArrays& temp);
+//  void copySetToPatch(unsigned int *strideinfo, MekkaFlood_solver::InputArrays& input, MekkaFlood_solver::TempArrays& temp, Patch& patch);
 
   /*
    * @see peanoclaw::Numerics
@@ -164,9 +187,48 @@ public:
   /*
    * @see peanoclaw::Numerics
    */
-  int getGhostlayerWidth() const { return 2; }
+  int getGhostlayerWidth() const { return 3; }
+
+  #ifdef PEANOCLAW_FULLSWOF2D
+  Scheme* getScheme() const { return _wrapperScheme->getInternalScheme(); };
+  #endif
+
+  /*
+   * Modifies the source subgrid so that not the water height above
+   * the seafloor is interpolated but the absolute water height. Also,
+   * the velocities are transformed to momenta.
+   */
+  virtual void interpolateSolution (
+    const tarch::la::Vector<DIMENSIONS, int>&    destinationSize,
+    const tarch::la::Vector<DIMENSIONS, int>&    destinationOffset,
+    peanoclaw::Patch& source,
+    peanoclaw::Patch&        destination,
+    bool interpolateToUOld,
+    bool interpolateToCurrentTime,
+    bool useTimeUNewOrTimeUOld
+  ) const;
+
+  /*
+   * Modifies the source subgrid so that not the water height above
+   * the seafloor is restricted but the absolute water height.
+   */
+  virtual void restrictSolution (
+    peanoclaw::Patch& source,
+    peanoclaw::Patch& destination,
+    bool              restrictOnlyOverlappedRegions
+  ) const;
+
+  /**
+   * Transforms the destination subgrid from absolute water height
+   * to water height above seafloor.
+   */
+  virtual void postProcessRestriction(
+    peanoclaw::Patch& destination,
+    bool              restrictOnlyOverlappedRegions
+  ) const;
 };
 
+#ifdef PEANOCLAW_FULLSWOF2D
 class peanoclaw::native::FullSWOF2D_Parameters : public Parameters {
     private:
         double _endTime;
@@ -194,6 +256,6 @@ class peanoclaw::native::FullSWOF2D_Parameters : public Parameters {
 
         double get_T() const;
 };
-
+#endif
 
 #endif /* PEANOCLAW_SWEKERNEL_NATIVE_H_ */

@@ -8,9 +8,14 @@
 #ifndef PEANOCLAW_GRID_LINEARIZATION_H_
 #define PEANOCLAW_GRID_LINEARIZATION_H_
 
+#include "peanoclaw/geometry/HyperplaneRegion.h"
+
 #include "peano/utils/Dimensions.h"
+#include "peano/utils/Globals.h"
 
 #include "tarch/la/Vector.h"
+
+#define DIMENSIONS_TIMES_DIMENSIONS_MINUS_ONE (DIMENSIONS*(DIMENSIONS-1))
 
 namespace peanoclaw {
   namespace grid {
@@ -30,6 +35,40 @@ namespace peanoclaw {
 
 class peanoclaw::grid::Linearization {
 
+public:
+  /**
+   * Maps a projected dimension of a face of a subgrid to the corresponding
+   * dimension in global space.
+   */
+  static int getGlobalDimension(int projectedDimension, int projectionDimension) {
+    #if defined(Dim2)
+    if(projectionDimension == 0) {
+      return 1;
+    } else {
+      return 0;
+    }
+    #elif defined(Dim3)
+    if(projectionDimension == 0) {
+      switch(projectedDimension) {
+        case 0: return 1;
+        case 1: return 2;
+      }
+    } else if (projectionDimension == 1) {
+      switch(projectedDimension) {
+        case 0: return 0;
+        case 1: return 2;
+      }
+    } else {
+      switch(projectedDimension) {
+        case 0: return 0;
+        case 1: return 1;
+      }
+    }
+    #else
+      #error "Not implemented, yet."
+    #endif
+  }
+
 private:
   int _qStrideUNew;
   tarch::la::Vector<DIMENSIONS,int> _cellStrideUNew;
@@ -40,6 +79,29 @@ private:
   tarch::la::Vector<DIMENSIONS,int> _cellStrideParameterWithoutGhostlayer;
   int _qStrideParameterWithGhostlayer;
   tarch::la::Vector<DIMENSIONS,int> _cellStrideParameterWithGhostlayer;
+  int _uOldWithGhostlayerArrayIndex;
+  int _parameterWithoutGhostlayerArrayIndex;
+  int _parameterWithGhostlayerArrayIndex;
+  int _fluxArrayIndex;
+
+  /**
+   * Holds the stride for the flux values when advancing to the next unknown
+   * within one cell.
+   */
+  tarch::la::Vector<DIMENSIONS,int> _qStrideFlux;
+  /**
+   * Holds the stride for the flux values when advancing to the next cell
+   * within one face.
+   * The first d-1 entries hold the strides for the dimensions of
+   * faces perpendicular to dimension 0. The second d-1 entries hold
+   * the strides for the dimensions of faces perpendicular to dimension 1,
+   * and so on.
+   */
+  tarch::la::Vector<DIMENSIONS_TIMES_DIMENSIONS_MINUS_ONE,int> _cellStrideFlux;
+  /**
+   * Holds the offset within the flux array for each of the 2d faces.
+   */
+  tarch::la::Vector<DIMENSIONS_TIMES_TWO,int> _faceOffset;
 
 public:
 
@@ -47,7 +109,7 @@ public:
   }
 
   inline Linearization(
-      const tarch::la::Vector<DIMENSIONS, int> subdivisionFactor,
+      const tarch::la::Vector<DIMENSIONS, int>& subdivisionFactor,
       int numberOfUnknowns,
       int numberOfParameterFieldsWithoutGhostlayer,
       int numberOfParameterFieldsWithGhostlayer,
@@ -113,6 +175,25 @@ public:
     return index;
   }
 
+  int linearizeFlux(
+    int unknown,
+    const tarch::la::Vector<DIMENSIONS_MINUS_ONE, int> subcellIndex,
+    int dimension,
+    int direction
+  ) const {
+    int index = _faceOffset[2 * dimension + (1 + direction) / 2];
+    int subgridDimension = 0;
+    for(int faceDimension = 0; faceDimension < DIMENSIONS-1; faceDimension++) {
+      if(faceDimension == dimension) {
+        subgridDimension++;
+      }
+      index += subcellIndex[faceDimension] * _cellStrideFlux[DIMENSIONS_MINUS_ONE * dimension + subgridDimension];
+      subgridDimension++;
+    }
+    index += unknown * _qStrideFlux[dimension];
+    return index;
+  }
+
   /**
    * Returns the index shift required to go from one unknown in
    * a given cell to the next unknown in the same cell in the
@@ -139,6 +220,10 @@ public:
     return _qStrideParameterWithGhostlayer;
   }
 
+  inline int getQStrideFlux(int projectionDimension) const {
+    return _qStrideFlux[projectionDimension];
+  }
+
   /**
    * Returns the index shift required to go from one cell in
    * uNew to the next cell in uNew.
@@ -163,6 +248,14 @@ public:
     return _cellStrideParameterWithGhostlayer[dimension];
   }
 
+  inline int getCellStrideFlux(int projectionDimension, int dimension) const {
+    return _cellStrideFlux[DIMENSIONS_MINUS_ONE * projectionDimension + dimension];
+  }
+
+  inline int getFaceOffsetFlux(int dimension, int direction) const {
+    return _faceOffset[2 * dimension + (1 + direction) / 2];
+  }
+
   /**
    * Returns the offset that is applied when starting an iterator for a subgrid.
    * I.e., this refers to one cell before the iterated part of the subgrid to
@@ -179,6 +272,11 @@ public:
    *
    */
   inline tarch::la::Vector<DIMENSIONS,int> getInitialOffsetForIterator() const;
+
+  int getUOldWithGhostlayerArrayIndex() const { return _uOldWithGhostlayerArrayIndex; }
+  int getParameterWithoutGhostlayerArrayIndex() const { return _parameterWithoutGhostlayerArrayIndex; }
+  int getParameterWithGhostlayerArrayIndex() const { return _parameterWithGhostlayerArrayIndex; }
+  int getFluxArrayIndex() const { return _fluxArrayIndex; }
 };
 
 #if defined(PEANOCLAW_PYCLAW) || defined(PEANOCLAW_FULLSWOF2D) || defined(PEANOCLAW_SWE)

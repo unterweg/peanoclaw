@@ -21,10 +21,52 @@
 namespace peanoclaw {
   namespace interSubgridCommunication {
     class DefaultFluxCorrection;
+
+    template<int NumberOfUnknowns>
+    class DefaultFluxCorrectionTemplate;
   }
 
   class Patch;
 }
+
+template<int NumberOfUnknowns>
+class peanoclaw::interSubgridCommunication::DefaultFluxCorrectionTemplate {
+
+  private:
+    /**
+     * Logging device.
+     */
+    static tarch::logging::Log _log;
+
+    /**
+     * Returns the region of the region where the two given
+     * patches overlap.
+     * This overload projects the patches along the given projection axis
+     * and just calculates the overlap in this projection.
+     *
+     * In 2d this refers to a projection to one-dimensional intervals and
+     * the intersection between these intervals.
+     */
+    double calculateOverlappingRegion(
+      tarch::la::Vector<DIMENSIONS, double> position1,
+      tarch::la::Vector<DIMENSIONS_MINUS_ONE, int> cellIndex1,
+      tarch::la::Vector<DIMENSIONS, double> subcellSize1,
+      tarch::la::Vector<DIMENSIONS, double> position2,
+      tarch::la::Vector<DIMENSIONS_MINUS_ONE, int> cellIndex2,
+      tarch::la::Vector<DIMENSIONS, double> subcellSize2,
+      int projectionAxis
+    ) const;
+
+  public:
+    void computeFluxes(Patch& subgrid) const;
+
+    void applyCorrection(
+      Patch& sourceSubgrid,
+      Patch& destinationSubgrid,
+      int dimension,
+      int direction
+    ) const;
+};
 
 class peanoclaw::interSubgridCommunication::DefaultFluxCorrection
     : public peanoclaw::interSubgridCommunication::FluxCorrection {
@@ -36,23 +78,6 @@ class peanoclaw::interSubgridCommunication::DefaultFluxCorrection
     static tarch::logging::Log  _log;
 
     friend class peanoclaw::tests::GridLevelTransferTest;
-
-    /**
-     * Returns the area of the region where the two given
-     * patches overlap.
-     * This overload projects the patches along the given projection axis
-     * and just calculates the overlap in this projection.
-     *
-     * In 2d this refers to a projection to one-dimensional intervals and
-     * the intersection between these intervals.
-     */
-    double calculateOverlappingArea(
-      tarch::la::Vector<DIMENSIONS, double> position1,
-      tarch::la::Vector<DIMENSIONS, double> size1,
-      tarch::la::Vector<DIMENSIONS, double> position2,
-      tarch::la::Vector<DIMENSIONS, double> size2,
-      int projectionAxis
-    ) const;
 
     void correctFluxBetweenCells(
       int dimension,
@@ -81,11 +106,15 @@ class peanoclaw::interSubgridCommunication::DefaultFluxCorrection
      * Applying the default flux correction on the coarse patch.
      */
     void applyCorrection(
-      const Patch& sourcePatch,
+      Patch& sourcePatch,
       Patch& destinationPatch,
       int dimension,
       int direction
     ) const;
+
+    void computeFluxes(Patch& subgrid) const;
 };
+
+#include "peanoclaw/interSubgridCommunication/DefaultFluxCorrection.cpph"
 
 #endif /* PEANOCLAW_INTERSUBGRIDCOMMUNICATION_DEFAULTFLUXCORRECTION_H_ */

@@ -33,7 +33,7 @@ namespace peanoclaw {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   15/10/2014 11:14
+    * @date   27/12/2014 01:03
     */
    class peanoclaw::records::CellDescription { 
       
@@ -64,6 +64,8 @@ namespace peanoclaw {
             double _timestepSize;
             double _maximumFineGridTime;
             double _minimumFineGridTimestep;
+            double _minimumFineGridTime;
+            double _maximumFineGridTimestep;
             bool _synchronizeFineGrids;
             bool _willCoarsen;
             double _minimalNeighborTimeConstraint;
@@ -72,6 +74,7 @@ namespace peanoclaw {
             double _minimalNeighborTime;
             double _maximalNeighborTimestep;
             double _estimatedNextTimestepSize;
+            double _neighborInducedMaximumTimestepSize;
             int _skipGridIterations;
             int _ageInGridIterations;
             tarch::la::Vector<DIMENSIONS,double> _demandedMeshWidth;
@@ -87,7 +90,7 @@ namespace peanoclaw {
             /**
              * Generated
              */
-            PersistentRecords(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const bool& isRemote, const bool& isPaddingSubgrid, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfTransfersToBeSkipped, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfSharedAdjacentVertices, const bool& currentStateWasSent, const bool& markStateAsSentInNextIteration, const bool& adjacentRanksChanged, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& adjacentRanks, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& overlapByRemoteGhostlayer, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
+            PersistentRecords(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const bool& isRemote, const bool& isPaddingSubgrid, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfTransfersToBeSkipped, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfSharedAdjacentVertices, const bool& currentStateWasSent, const bool& markStateAsSentInNextIteration, const bool& adjacentRanksChanged, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& adjacentRanks, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& overlapByRemoteGhostlayer, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const double& minimumFineGridTime, const double& maximumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const double& neighborInducedMaximumTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
             
             
             inline tarch::la::Vector<DIMENSIONS,int> getSubdivisionFactor() const 
@@ -530,6 +533,46 @@ namespace peanoclaw {
             
             
             
+            inline double getMinimumFineGridTime() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               return _minimumFineGridTime;
+            }
+            
+            
+            
+            inline void setMinimumFineGridTime(const double& minimumFineGridTime) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               _minimumFineGridTime = minimumFineGridTime;
+            }
+            
+            
+            
+            inline double getMaximumFineGridTimestep() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               return _maximumFineGridTimestep;
+            }
+            
+            
+            
+            inline void setMaximumFineGridTimestep(const double& maximumFineGridTimestep) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               _maximumFineGridTimestep = maximumFineGridTimestep;
+            }
+            
+            
+            
             inline bool getSynchronizeFineGrids() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -686,6 +729,26 @@ namespace peanoclaw {
  #endif 
  {
                _estimatedNextTimestepSize = estimatedNextTimestepSize;
+            }
+            
+            
+            
+            inline double getNeighborInducedMaximumTimestepSize() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               return _neighborInducedMaximumTimestepSize;
+            }
+            
+            
+            
+            inline void setNeighborInducedMaximumTimestepSize(const double& neighborInducedMaximumTimestepSize) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               _neighborInducedMaximumTimestepSize = neighborInducedMaximumTimestepSize;
             }
             
             
@@ -849,7 +912,7 @@ namespace peanoclaw {
          /**
           * Generated
           */
-         CellDescription(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const bool& isRemote, const bool& isPaddingSubgrid, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfTransfersToBeSkipped, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfSharedAdjacentVertices, const bool& currentStateWasSent, const bool& markStateAsSentInNextIteration, const bool& adjacentRanksChanged, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& adjacentRanks, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& overlapByRemoteGhostlayer, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
+         CellDescription(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const bool& isRemote, const bool& isPaddingSubgrid, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfTransfersToBeSkipped, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfSharedAdjacentVertices, const bool& currentStateWasSent, const bool& markStateAsSentInNextIteration, const bool& adjacentRanksChanged, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& adjacentRanks, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& overlapByRemoteGhostlayer, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const double& minimumFineGridTime, const double& maximumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const double& neighborInducedMaximumTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
          
          /**
           * Generated
@@ -1479,6 +1542,46 @@ namespace peanoclaw {
          
          
          
+         inline double getMinimumFineGridTime() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _persistentRecords._minimumFineGridTime;
+         }
+         
+         
+         
+         inline void setMinimumFineGridTime(const double& minimumFineGridTime) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _persistentRecords._minimumFineGridTime = minimumFineGridTime;
+         }
+         
+         
+         
+         inline double getMaximumFineGridTimestep() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _persistentRecords._maximumFineGridTimestep;
+         }
+         
+         
+         
+         inline void setMaximumFineGridTimestep(const double& maximumFineGridTimestep) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _persistentRecords._maximumFineGridTimestep = maximumFineGridTimestep;
+         }
+         
+         
+         
          inline bool getSynchronizeFineGrids() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -1635,6 +1738,26 @@ namespace peanoclaw {
  #endif 
  {
             _persistentRecords._estimatedNextTimestepSize = estimatedNextTimestepSize;
+         }
+         
+         
+         
+         inline double getNeighborInducedMaximumTimestepSize() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _persistentRecords._neighborInducedMaximumTimestepSize;
+         }
+         
+         
+         
+         inline void setNeighborInducedMaximumTimestepSize(const double& neighborInducedMaximumTimestepSize) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _persistentRecords._neighborInducedMaximumTimestepSize = neighborInducedMaximumTimestepSize;
          }
          
          
@@ -1914,7 +2037,7 @@ namespace peanoclaw {
              *
              * 		   build date: 09-02-2014 14:40
              *
-             * @date   15/10/2014 11:14
+             * @date   27/12/2014 01:03
              */
             class peanoclaw::records::CellDescriptionPacked { 
                
@@ -1932,12 +2055,15 @@ namespace peanoclaw {
                      double _timestepSize;
                      double _maximumFineGridTime;
                      double _minimumFineGridTimestep;
+                     double _minimumFineGridTime;
+                     double _maximumFineGridTimestep;
                      double _minimalNeighborTimeConstraint;
                      int _constrainingNeighborIndex;
                      double _minimalLeafNeighborTimeConstraint;
                      double _minimalNeighborTime;
                      double _maximalNeighborTimestep;
                      double _estimatedNextTimestepSize;
+                     double _neighborInducedMaximumTimestepSize;
                      int _ageInGridIterations;
                      tarch::la::Vector<DIMENSIONS,double> _demandedMeshWidth;
                      tarch::la::Vector<DIMENSIONS,double> _restrictionLowerBounds;
@@ -1972,7 +2098,7 @@ namespace peanoclaw {
                      /**
                       * Generated
                       */
-                     PersistentRecords(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const bool& isRemote, const bool& isPaddingSubgrid, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfTransfersToBeSkipped, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfSharedAdjacentVertices, const bool& currentStateWasSent, const bool& markStateAsSentInNextIteration, const bool& adjacentRanksChanged, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& adjacentRanks, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& overlapByRemoteGhostlayer, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
+                     PersistentRecords(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const bool& isRemote, const bool& isPaddingSubgrid, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfTransfersToBeSkipped, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfSharedAdjacentVertices, const bool& currentStateWasSent, const bool& markStateAsSentInNextIteration, const bool& adjacentRanksChanged, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& adjacentRanks, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& overlapByRemoteGhostlayer, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const double& minimumFineGridTime, const double& maximumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const double& neighborInducedMaximumTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
                      
                      
                      inline tarch::la::Vector<DIMENSIONS,int> getSubdivisionFactor() const 
@@ -2478,6 +2604,46 @@ namespace peanoclaw {
                      
                      
                      
+                     inline double getMinimumFineGridTime() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _minimumFineGridTime;
+                     }
+                     
+                     
+                     
+                     inline void setMinimumFineGridTime(const double& minimumFineGridTime) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _minimumFineGridTime = minimumFineGridTime;
+                     }
+                     
+                     
+                     
+                     inline double getMaximumFineGridTimestep() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _maximumFineGridTimestep;
+                     }
+                     
+                     
+                     
+                     inline void setMaximumFineGridTimestep(const double& maximumFineGridTimestep) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _maximumFineGridTimestep = maximumFineGridTimestep;
+                     }
+                     
+                     
+                     
                      inline bool getSynchronizeFineGrids() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -2640,6 +2806,26 @@ namespace peanoclaw {
  #endif 
  {
                         _estimatedNextTimestepSize = estimatedNextTimestepSize;
+                     }
+                     
+                     
+                     
+                     inline double getNeighborInducedMaximumTimestepSize() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        return _neighborInducedMaximumTimestepSize;
+                     }
+                     
+                     
+                     
+                     inline void setNeighborInducedMaximumTimestepSize(const double& neighborInducedMaximumTimestepSize) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        _neighborInducedMaximumTimestepSize = neighborInducedMaximumTimestepSize;
                      }
                      
                      
@@ -2812,7 +2998,7 @@ namespace peanoclaw {
                   /**
                    * Generated
                    */
-                  CellDescriptionPacked(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const bool& isRemote, const bool& isPaddingSubgrid, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfTransfersToBeSkipped, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfSharedAdjacentVertices, const bool& currentStateWasSent, const bool& markStateAsSentInNextIteration, const bool& adjacentRanksChanged, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& adjacentRanks, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& overlapByRemoteGhostlayer, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
+                  CellDescriptionPacked(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const bool& isRemote, const bool& isPaddingSubgrid, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfTransfersToBeSkipped, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& numberOfSharedAdjacentVertices, const bool& currentStateWasSent, const bool& markStateAsSentInNextIteration, const bool& adjacentRanksChanged, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& adjacentRanks, const tarch::la::Vector<THREE_POWER_D_MINUS_ONE,int>& overlapByRemoteGhostlayer, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const double& minimumFineGridTime, const double& maximumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const double& neighborInducedMaximumTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
                   
                   /**
                    * Generated
@@ -3505,6 +3691,46 @@ namespace peanoclaw {
                   
                   
                   
+                  inline double getMinimumFineGridTime() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _persistentRecords._minimumFineGridTime;
+                  }
+                  
+                  
+                  
+                  inline void setMinimumFineGridTime(const double& minimumFineGridTime) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _persistentRecords._minimumFineGridTime = minimumFineGridTime;
+                  }
+                  
+                  
+                  
+                  inline double getMaximumFineGridTimestep() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _persistentRecords._maximumFineGridTimestep;
+                  }
+                  
+                  
+                  
+                  inline void setMaximumFineGridTimestep(const double& maximumFineGridTimestep) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _persistentRecords._maximumFineGridTimestep = maximumFineGridTimestep;
+                  }
+                  
+                  
+                  
                   inline bool getSynchronizeFineGrids() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -3667,6 +3893,26 @@ namespace peanoclaw {
  #endif 
  {
                      _persistentRecords._estimatedNextTimestepSize = estimatedNextTimestepSize;
+                  }
+                  
+                  
+                  
+                  inline double getNeighborInducedMaximumTimestepSize() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _persistentRecords._neighborInducedMaximumTimestepSize;
+                  }
+                  
+                  
+                  
+                  inline void setNeighborInducedMaximumTimestepSize(const double& neighborInducedMaximumTimestepSize) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _persistentRecords._neighborInducedMaximumTimestepSize = neighborInducedMaximumTimestepSize;
                   }
                   
                   
@@ -3957,7 +4203,7 @@ namespace peanoclaw {
                       *
                       * 		   build date: 09-02-2014 14:40
                       *
-                      * @date   15/10/2014 11:14
+                      * @date   27/12/2014 01:03
                       */
                      class peanoclaw::records::CellDescription { 
                         
@@ -3979,6 +4225,8 @@ namespace peanoclaw {
                               double _timestepSize;
                               double _maximumFineGridTime;
                               double _minimumFineGridTimestep;
+                              double _minimumFineGridTime;
+                              double _maximumFineGridTimestep;
                               bool _synchronizeFineGrids;
                               bool _willCoarsen;
                               double _minimalNeighborTimeConstraint;
@@ -3987,6 +4235,7 @@ namespace peanoclaw {
                               double _minimalNeighborTime;
                               double _maximalNeighborTimestep;
                               double _estimatedNextTimestepSize;
+                              double _neighborInducedMaximumTimestepSize;
                               int _skipGridIterations;
                               int _ageInGridIterations;
                               tarch::la::Vector<DIMENSIONS,double> _demandedMeshWidth;
@@ -4002,7 +4251,7 @@ namespace peanoclaw {
                               /**
                                * Generated
                                */
-                              PersistentRecords(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
+                              PersistentRecords(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const double& minimumFineGridTime, const double& maximumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const double& neighborInducedMaximumTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
                               
                               
                               inline tarch::la::Vector<DIMENSIONS,int> getSubdivisionFactor() const 
@@ -4265,6 +4514,46 @@ namespace peanoclaw {
                               
                               
                               
+                              inline double getMinimumFineGridTime() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                 return _minimumFineGridTime;
+                              }
+                              
+                              
+                              
+                              inline void setMinimumFineGridTime(const double& minimumFineGridTime) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                 _minimumFineGridTime = minimumFineGridTime;
+                              }
+                              
+                              
+                              
+                              inline double getMaximumFineGridTimestep() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                 return _maximumFineGridTimestep;
+                              }
+                              
+                              
+                              
+                              inline void setMaximumFineGridTimestep(const double& maximumFineGridTimestep) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                 _maximumFineGridTimestep = maximumFineGridTimestep;
+                              }
+                              
+                              
+                              
                               inline bool getSynchronizeFineGrids() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -4421,6 +4710,26 @@ namespace peanoclaw {
  #endif 
  {
                                  _estimatedNextTimestepSize = estimatedNextTimestepSize;
+                              }
+                              
+                              
+                              
+                              inline double getNeighborInducedMaximumTimestepSize() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                 return _neighborInducedMaximumTimestepSize;
+                              }
+                              
+                              
+                              
+                              inline void setNeighborInducedMaximumTimestepSize(const double& neighborInducedMaximumTimestepSize) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                 _neighborInducedMaximumTimestepSize = neighborInducedMaximumTimestepSize;
                               }
                               
                               
@@ -4584,7 +4893,7 @@ namespace peanoclaw {
                            /**
                             * Generated
                             */
-                           CellDescription(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
+                           CellDescription(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const double& minimumFineGridTime, const double& maximumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const double& neighborInducedMaximumTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
                            
                            /**
                             * Generated
@@ -4930,6 +5239,46 @@ namespace peanoclaw {
                            
                            
                            
+                           inline double getMinimumFineGridTime() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              return _persistentRecords._minimumFineGridTime;
+                           }
+                           
+                           
+                           
+                           inline void setMinimumFineGridTime(const double& minimumFineGridTime) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              _persistentRecords._minimumFineGridTime = minimumFineGridTime;
+                           }
+                           
+                           
+                           
+                           inline double getMaximumFineGridTimestep() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              return _persistentRecords._maximumFineGridTimestep;
+                           }
+                           
+                           
+                           
+                           inline void setMaximumFineGridTimestep(const double& maximumFineGridTimestep) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              _persistentRecords._maximumFineGridTimestep = maximumFineGridTimestep;
+                           }
+                           
+                           
+                           
                            inline bool getSynchronizeFineGrids() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -5086,6 +5435,26 @@ namespace peanoclaw {
  #endif 
  {
                               _persistentRecords._estimatedNextTimestepSize = estimatedNextTimestepSize;
+                           }
+                           
+                           
+                           
+                           inline double getNeighborInducedMaximumTimestepSize() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              return _persistentRecords._neighborInducedMaximumTimestepSize;
+                           }
+                           
+                           
+                           
+                           inline void setNeighborInducedMaximumTimestepSize(const double& neighborInducedMaximumTimestepSize) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                              _persistentRecords._neighborInducedMaximumTimestepSize = neighborInducedMaximumTimestepSize;
                            }
                            
                            
@@ -5365,7 +5734,7 @@ namespace peanoclaw {
                                *
                                * 		   build date: 09-02-2014 14:40
                                *
-                               * @date   15/10/2014 11:14
+                               * @date   27/12/2014 01:03
                                */
                               class peanoclaw::records::CellDescriptionPacked { 
                                  
@@ -5379,12 +5748,15 @@ namespace peanoclaw {
                                        double _timestepSize;
                                        double _maximumFineGridTime;
                                        double _minimumFineGridTimestep;
+                                       double _minimumFineGridTime;
+                                       double _maximumFineGridTimestep;
                                        double _minimalNeighborTimeConstraint;
                                        int _constrainingNeighborIndex;
                                        double _minimalLeafNeighborTimeConstraint;
                                        double _minimalNeighborTime;
                                        double _maximalNeighborTimestep;
                                        double _estimatedNextTimestepSize;
+                                       double _neighborInducedMaximumTimestepSize;
                                        int _ageInGridIterations;
                                        tarch::la::Vector<DIMENSIONS,double> _demandedMeshWidth;
                                        tarch::la::Vector<DIMENSIONS,double> _restrictionLowerBounds;
@@ -5414,7 +5786,7 @@ namespace peanoclaw {
                                        /**
                                         * Generated
                                         */
-                                       PersistentRecords(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
+                                       PersistentRecords(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const double& minimumFineGridTime, const double& maximumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const double& neighborInducedMaximumTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
                                        
                                        
                                        inline tarch::la::Vector<DIMENSIONS,int> getSubdivisionFactor() const 
@@ -5725,6 +6097,46 @@ namespace peanoclaw {
                                        
                                        
                                        
+                                       inline double getMinimumFineGridTime() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                          return _minimumFineGridTime;
+                                       }
+                                       
+                                       
+                                       
+                                       inline void setMinimumFineGridTime(const double& minimumFineGridTime) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                          _minimumFineGridTime = minimumFineGridTime;
+                                       }
+                                       
+                                       
+                                       
+                                       inline double getMaximumFineGridTimestep() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                          return _maximumFineGridTimestep;
+                                       }
+                                       
+                                       
+                                       
+                                       inline void setMaximumFineGridTimestep(const double& maximumFineGridTimestep) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                          _maximumFineGridTimestep = maximumFineGridTimestep;
+                                       }
+                                       
+                                       
+                                       
                                        inline bool getSynchronizeFineGrids() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -5887,6 +6299,26 @@ namespace peanoclaw {
  #endif 
  {
                                           _estimatedNextTimestepSize = estimatedNextTimestepSize;
+                                       }
+                                       
+                                       
+                                       
+                                       inline double getNeighborInducedMaximumTimestepSize() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                          return _neighborInducedMaximumTimestepSize;
+                                       }
+                                       
+                                       
+                                       
+                                       inline void setNeighborInducedMaximumTimestepSize(const double& neighborInducedMaximumTimestepSize) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                          _neighborInducedMaximumTimestepSize = neighborInducedMaximumTimestepSize;
                                        }
                                        
                                        
@@ -6059,7 +6491,7 @@ namespace peanoclaw {
                                     /**
                                      * Generated
                                      */
-                                    CellDescriptionPacked(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
+                                    CellDescriptionPacked(const tarch::la::Vector<DIMENSIONS,int>& subdivisionFactor, const int& ghostlayerWidth, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const int& level, const bool& isVirtual, const tarch::la::Vector<DIMENSIONS,double>& position, const tarch::la::Vector<DIMENSIONS,double>& size, const double& time, const double& timestepSize, const double& maximumFineGridTime, const double& minimumFineGridTimestep, const double& minimumFineGridTime, const double& maximumFineGridTimestep, const bool& synchronizeFineGrids, const bool& willCoarsen, const double& minimalNeighborTimeConstraint, const int& constrainingNeighborIndex, const double& minimalLeafNeighborTimeConstraint, const double& minimalNeighborTime, const double& maximalNeighborTimestep, const double& estimatedNextTimestepSize, const double& neighborInducedMaximumTimestepSize, const int& skipGridIterations, const int& ageInGridIterations, const tarch::la::Vector<DIMENSIONS,double>& demandedMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& restrictionLowerBounds, const tarch::la::Vector<DIMENSIONS,double>& restrictionUpperBounds, const int& cellDescriptionIndex, const int& uIndex);
                                     
                                     /**
                                      * Generated
@@ -6453,6 +6885,46 @@ namespace peanoclaw {
                                     
                                     
                                     
+                                    inline double getMinimumFineGridTime() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                       return _persistentRecords._minimumFineGridTime;
+                                    }
+                                    
+                                    
+                                    
+                                    inline void setMinimumFineGridTime(const double& minimumFineGridTime) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                       _persistentRecords._minimumFineGridTime = minimumFineGridTime;
+                                    }
+                                    
+                                    
+                                    
+                                    inline double getMaximumFineGridTimestep() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                       return _persistentRecords._maximumFineGridTimestep;
+                                    }
+                                    
+                                    
+                                    
+                                    inline void setMaximumFineGridTimestep(const double& maximumFineGridTimestep) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                       _persistentRecords._maximumFineGridTimestep = maximumFineGridTimestep;
+                                    }
+                                    
+                                    
+                                    
                                     inline bool getSynchronizeFineGrids() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -6615,6 +7087,26 @@ namespace peanoclaw {
  #endif 
  {
                                        _persistentRecords._estimatedNextTimestepSize = estimatedNextTimestepSize;
+                                    }
+                                    
+                                    
+                                    
+                                    inline double getNeighborInducedMaximumTimestepSize() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                       return _persistentRecords._neighborInducedMaximumTimestepSize;
+                                    }
+                                    
+                                    
+                                    
+                                    inline void setNeighborInducedMaximumTimestepSize(const double& neighborInducedMaximumTimestepSize) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                                       _persistentRecords._neighborInducedMaximumTimestepSize = neighborInducedMaximumTimestepSize;
                                     }
                                     
                                     

@@ -66,6 +66,12 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment(
   #if defined(Parallel)
 //  tarch::parallel::Node::getInstance().setTimeOutWarning(4500);
 //  tarch::parallel::Node::getInstance().setDeadlockTimeOut(9000);
+  peanoclaw::records::Data::initDatatype();
+  peanoclaw::records::CellDescription::initDatatype();
+  peanoclaw::records::VertexDescription::initDatatype();
+  peanoclaw::records::Data::Packed::initDatatype();
+  peanoclaw::records::CellDescription::Packed::initDatatype();
+  peanoclaw::records::VertexDescription::Packed::initDatatype();
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 //    tarch::parallel::NodePool::getInstance().setStrategy( new tarch::parallel::FCFSNodePoolStrategy() );
@@ -136,18 +142,17 @@ void peanoclaw::runners::PeanoClawLibraryRunner::iteratePlot() {
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::iterateSolveTimestep(bool plotSubsteps) {
-  if(plotSubsteps) {
-    _repository->getState().setPlotNumber(_plotNumber);
-    if(_validateGrid) {
-      _repository->switchToSolveTimestepAndPlotAndValidateGrid();
-    } else {
-      _repository->switchToSolveTimestepAndPlot();
-    }
-
-    updateOracle();
-    _repository->iterate();
-    _plotNumber++;
-  } else {
+//  if(plotSubsteps) {
+//    _repository->getState().setPlotNumber(_plotNumber);
+//    if(_validateGrid) {
+//      _repository->switchToSolveTimestepAndPlotAndValidateGrid();
+//    } else {
+//      _repository->switchToSolveTimestepAndPlot();
+//    }
+//    updateOracle();
+//    _repository->iterate();
+//    _plotNumber++;
+//  } else {
     if(_validateGrid) {
       _repository->switchToSolveTimestepAndValidateGrid();
     } else {
@@ -155,6 +160,18 @@ void peanoclaw::runners::PeanoClawLibraryRunner::iterateSolveTimestep(bool plotS
     }
     updateOracle();
     _repository->iterate();
+//  }
+
+  if(plotSubsteps) {
+    _repository->getState().setPlotNumber(_plotNumber);
+    if(_validateGrid) {
+      _repository->switchToPlotAndValidateGrid();
+    } else {
+      _repository->switchToPlot();
+    }
+    updateOracle();
+    _repository->iterate();
+    _plotNumber++;
   }
 }
 
@@ -231,12 +248,13 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   state.setNumerics(numerics);
   state.setInitialTimestepSize(initialTimestepSize);
   state.setDomain(domainOffset, domainSize);
-  state.setUseDimensionalSplittingExtrapolation(useDimensionalSplittingExtrapolation && !_configuration.disableDimensionalSplittingOptimization());
+  state.setUseDimensionalSplittingExtrapolation(useDimensionalSplittingExtrapolation || _configuration.useDimensionalSplittingOptimization());
   state.setReduceReductions(reduceReductions || _configuration.shouldReduceReductions());
   state.enableFluxCorrection(configuration.enableFluxCorrection());
   state.setRestrictStatistics(configuration.restrictStatistics());
   state.setPlotName(plotName);
   state.setProbeList(configuration.getProbeList());
+  state.shouldEstimateNeighborInducedMaximumTimestep(configuration.estimateNeighborInducedMaximumTimestep());
 
   //Initialise Grid (two iterations needed to set the initial ghostlayers of patches neighboring refined patches)
   state.setIsInitializing(true);
@@ -353,6 +371,13 @@ peanoclaw::runners::PeanoClawLibraryRunner::~PeanoClawLibraryRunner()
 
   #ifdef Parallel
   tarch::parallel::NodePool::getInstance().terminate();
+
+  peanoclaw::records::Data::shutdownDatatype();
+  peanoclaw::records::Data::Packed::shutdownDatatype();
+  peanoclaw::records::CellDescription::shutdownDatatype();
+  peanoclaw::records::CellDescription::Packed::shutdownDatatype();
+  peanoclaw::records::VertexDescription::shutdownDatatype();
+  peanoclaw::records::VertexDescription::Packed::shutdownDatatype();
   #endif
   peano::shutdownParallelEnvironment();
   peano::shutdownSharedMemoryEnvironment();

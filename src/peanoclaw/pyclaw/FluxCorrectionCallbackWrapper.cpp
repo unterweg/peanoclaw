@@ -18,7 +18,7 @@ peanoclaw::pyclaw::FluxCorrectionCallbackWrapper::~FluxCorrectionCallbackWrapper
 }
 
 void peanoclaw::pyclaw::FluxCorrectionCallbackWrapper::applyCorrection(
-  const Patch& finePatch,
+  Patch& finePatch,
   Patch& coarsePatch,
   int dimension,
   int direction
@@ -83,6 +83,10 @@ void peanoclaw::pyclaw::FluxCorrectionCallbackWrapper::applyCorrection(
     finePatch.getUnknownsPerSubcell(),
     finePatch.getNumberOfParametersWithoutGhostlayerPerSubcell()
   );
+}
+
+void peanoclaw::pyclaw::FluxCorrectionCallbackWrapper::computeFluxes(Patch& subgrid) const {
+
 }
 
 

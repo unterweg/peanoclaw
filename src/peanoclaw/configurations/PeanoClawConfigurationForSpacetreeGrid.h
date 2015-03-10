@@ -36,7 +36,7 @@ class peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid {
 
     int _additionalLevelsForPredefinedRefinement;
 
-    bool _disableDimensionalSplittingOptimization;
+    bool _useDimensionalSplittingOptimization;
 
     bool _restrictStatistics;
 
@@ -47,6 +47,8 @@ class peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid {
     std::vector<peanoclaw::statistics::Probe> _probes;
 
     int _numberOfThreads;
+
+    double _estimateNeighborInducedMaximumTimestep;
 
     //Utilities
     bool getBoolValue(std::stringstream& s);
@@ -88,7 +90,7 @@ class peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid {
 
     int getAdditionalLevelsForPredefinedRefinement() const;
 
-    bool disableDimensionalSplittingOptimization() const;
+    bool useDimensionalSplittingOptimization() const;
 
     /**
      * Indicates, whether statistics should be restricted in a parallel run.
@@ -114,6 +116,12 @@ class peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid {
      * Returns the number of threads that should be used for shared memory parallelization.
      */
     int getNumberOfThreads() const;
+
+    /**
+     * Returns, whether PeanoClaw should estimate the maximum timestep for a subgrid based
+     * on the neighboring subgrids.
+     */
+    bool estimateNeighborInducedMaximumTimestep() const;
 };
 
 
