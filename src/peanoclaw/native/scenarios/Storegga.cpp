@@ -104,10 +104,10 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::Storegga::com
     maxWaterHeight = std::max(maxWaterHeight, absoluteWaterHeight);
   }
 
-  if(minBathymetry * maxBathymetry < 0.0 || (maxWaterHeight - minWaterHeight) > 0.1) {
+  if(minBathymetry * maxBathymetry < 0.0 || (maxWaterHeight - minWaterHeight) > 0.5) {
     //Refine along coastline
     return _minimalMeshWidth;
-  } else if (maxWaterHeight - minWaterHeight > 0.05) {
+  } else if (maxWaterHeight - minWaterHeight > 0.15) {
     return subgrid.getSubcellSize();
   } else {
     return _maximalMeshWidth;
