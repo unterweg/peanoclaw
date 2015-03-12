@@ -59,6 +59,9 @@ peanoclaw::pyclaw::PyClawState::PyClawState(const Patch& subgrid) {
 }
 
 peanoclaw::pyclaw::PyClawState::~PyClawState() {
+  Py_DECREF(_aux);
+  Py_DECREF(_qbc);
+  Py_DECREF(_q);
 }
 
 
