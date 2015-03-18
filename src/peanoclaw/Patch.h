@@ -402,7 +402,9 @@ public:
    * data. Invalid patches are patches that do not exist in the grid, i.e. lie
    * outside of the domain.
    */
-  bool isValid() const;
+  bool isValid() const {
+    return _cellDescription != 0;
+  }
 
   /**
    * This method returns, wether this patch is a leaf patch, i.e. if it holds

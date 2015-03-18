@@ -12,7 +12,6 @@ namespace peanoclaw {
   namespace solver {
     namespace euler3d {
       class Euler3DKernel;
-      class ExtrapolateBoundaryCondition;
     }
   }
 }
@@ -109,21 +108,7 @@ class peanoclaw::solver::euler3d::Euler3DKernel : public peanoclaw::Numerics {
 
     double computeTimestep(
       double dt,
-      peanoclaw::Patch& subgrid//,
-//      std::vector<peanoclaw::solver::euler3d::Cell>& cellsUNew,
-//      std::vector<peanoclaw::solver::euler3d::Cell>& cellsUOld
-    );
-};
-
-class peanoclaw::solver::euler3d::ExtrapolateBoundaryCondition {
-  public:
-    void setBoundaryCondition(
-      peanoclaw::Patch& subgrid,
-      peanoclaw::grid::SubgridAccessor& accessor,
-      int dimension,
-      bool setUpper,
-      tarch::la::Vector<DIMENSIONS,int> sourceSubcellIndex,
-      tarch::la::Vector<DIMENSIONS,int> destinationSubcellIndex
+      peanoclaw::Patch& subgrid
     );
 };
 

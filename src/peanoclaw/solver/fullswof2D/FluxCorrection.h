@@ -67,6 +67,8 @@ class peanoclaw::solver::fullswof2D::FluxCorrectionTemplate {
       int projectionAxis
     ) const;
 
+    tarch::la::Vector<NumberOfUnknowns,double> computeShallowWaterFlux(const tarch::la::Vector<NumberOfUnknowns,double>& unknowns);
+
   public:
     /**
      * Applying the default flux correction on the coarse patch.

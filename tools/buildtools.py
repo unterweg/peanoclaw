@@ -297,6 +297,7 @@ def getPeanoClawSources(Glob, buildpath):
     Glob(join(buildpath, 'peanoclaw/configurations/*.cpp')),
     Glob(join(buildpath, 'peanoclaw/geometry/*.cpp')),
     Glob(join(buildpath, 'peanoclaw/grid/*.cpp')),
+    Glob(join(buildpath, 'peanoclaw/grid/boundaryConditions/*.cpp')),
     Glob(join(buildpath, 'peanoclaw/grid/plotter/*.cpp')),
     Glob(join(buildpath, 'peanoclaw/interSubgridCommunication/*.cpp')),
     Glob(join(buildpath, 'peanoclaw/interSubgridCommunication/aspects/*.cpp')),

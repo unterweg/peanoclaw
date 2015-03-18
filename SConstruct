@@ -406,6 +406,13 @@ if hdf5 == 'yes':
     cpppath.insert(0,'/home/unterweg/.local/include')
     libpath.append(join(os.environ['HDF5_BASE'], 'lib'))
     libpath.insert(0, '/home/unterweg/local/lib')
+    
+##### Determine NetCDF usage
+# 
+netcdf = ARGUMENTS.get('netcdf', 'no')
+if netcdf == 'yes':
+  cppdefines.append('PEANOCLAW_USE_NETCDF')
+  libs.append('netcdf_c++4')
   
 ##### Determine VTU usage
 # 

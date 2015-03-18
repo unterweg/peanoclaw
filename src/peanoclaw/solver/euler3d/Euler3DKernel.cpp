@@ -7,6 +7,7 @@
 #include "peanoclaw/solver/euler3d/Euler3DKernel.h"
 
 #include "peanoclaw/grid/aspects/BoundaryIterator.h"
+#include "peanoclaw/grid/boundaryConditions/ExtrapolateBoundaryCondition.h"
 #include "peanoclaw/solver/euler3d/Cell.h"
 #include "peanoclaw/solver/euler3d/SchemeExecutor.h"
 #include "peanoclaw/grid/SubgridAccessor.h"
@@ -20,6 +21,8 @@
 #include <tbb/parallel_reduce.h>
 #include <tbb/blocked_range.h>
 #endif
+
+using namespace peanoclaw::grid::boundaryConditions;
 
 tarch::logging::Log peanoclaw::solver::euler3d::Euler3DKernel::_log("peanoclaw::solver::euler3d::Euler3DKernel");
 
@@ -167,21 +170,6 @@ void peanoclaw::solver::euler3d::Euler3DKernel::fillBoundaryLayer(Patch& subgrid
   //Fill scenario boundary condition
   peanoclaw::grid::aspects::BoundaryIterator<peanoclaw::native::scenarios::SWEScenario> scenarioBoundaryIterator(_scenario);
   scenarioBoundaryIterator.iterate(subgrid, accessor, dimension, setUpper);
-}
-
-
-void peanoclaw::solver::euler3d::ExtrapolateBoundaryCondition::setBoundaryCondition(
-    peanoclaw::Patch& subgrid,
-    peanoclaw::grid::SubgridAccessor& accessor,
-    int dimension,
-    bool setUpper,
-    tarch::la::Vector<DIMENSIONS,int> sourceSubcellIndex,
-    tarch::la::Vector<DIMENSIONS,int> destinationSubcellIndex
-) {
-   //Copy
-   for(int unknown = 0; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
-     accessor.setValueUOld(destinationSubcellIndex, unknown, accessor.getValueUOld(sourceSubcellIndex, unknown));
-   }
 }
 
 

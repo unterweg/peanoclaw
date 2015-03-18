@@ -33,8 +33,8 @@ peanoclaw::geometry::HyperplaneRegion peanoclaw::geometry::HyperplaneRegion::get
   tarch::la::Vector<DIMENSIONS,double> neighborPosition = neighboringSubgrid.getPosition();
   tarch::la::Vector<DIMENSIONS,double> neighborSize = neighboringSubgrid.getSize();
 
-  int dimension;
-  int direction;
+  int dimension = -1;
+  int direction = 0;
 
   for(int d = 0; d < DIMENSIONS; d++) {
     if(tarch::la::smaller(position[d], neighborPosition[d])) {
