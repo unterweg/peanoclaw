@@ -18,6 +18,12 @@ namespace peanoclaw {
  
 class peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid {
 
+  public:
+    enum NodePoolStrategy {
+      LevelAware,
+      TreeAware
+    };
+
   private:
     /**
      * Logging device.
@@ -49,6 +55,10 @@ class peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid {
     int _numberOfThreads;
 
     double _estimateNeighborInducedMaximumTimestep;
+
+    bool _useTreeAwareNodePoolStrategy;
+
+    NodePoolStrategy _nodePoolStrategy;
 
     //Utilities
     bool getBoolValue(std::stringstream& s);
@@ -122,6 +132,11 @@ class peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid {
      * on the neighboring subgrids.
      */
     bool estimateNeighborInducedMaximumTimestep() const;
+
+    /**
+     * Returns the node pool strategy that should be used.
+     */
+    NodePoolStrategy getNodePoolStrategy() const;
 };
 
 

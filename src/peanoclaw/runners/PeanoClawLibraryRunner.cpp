@@ -26,6 +26,7 @@
 
 #if defined(Parallel)
 #include "peanoclaw/parallel/LevelAwareRoundRobinNodePoolStrategy.h"
+#include "peanoclaw/parallel/TreeAwareNodePoolStrategy.h"
 
 #include "tarch/parallel/NodePool.h"
 #include "peano/parallel/SendReceiveBufferPool.h"
@@ -60,7 +61,8 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializePeano(
 }
 
 void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment(
-  int numberOfThreads
+  int numberOfThreads,
+  const peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid& configuration
 ) {
   //Distributed Memory
   #if defined(Parallel)
@@ -75,7 +77,11 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment(
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 //    tarch::parallel::NodePool::getInstance().setStrategy( new tarch::parallel::FCFSNodePoolStrategy() );
-    tarch::parallel::NodePool::getInstance().setStrategy( new peanoclaw::parallel::LevelAwareRoundRobinNodePoolStrategy() );
+    if(configuration.getNodePoolStrategy() == peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::LevelAware) {
+      tarch::parallel::NodePool::getInstance().setStrategy( new peanoclaw::parallel::LevelAwareRoundRobinNodePoolStrategy() );
+    } else if (configuration.getNodePoolStrategy() == peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::TreeAware) {
+      tarch::parallel::NodePool::getInstance().setStrategy( new peanoclaw::parallel::TreeAwareNodePoolStrategy() );
+    }
   }
   tarch::parallel::NodePool::getInstance().restart();
 
@@ -217,7 +223,7 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   userInterface.writeHeader();
 
   initializePeano(domainOffset, domainSize);
-  initializeParallelEnvironment(numberOfThreads > 0 ? numberOfThreads : _configuration.getNumberOfThreads());
+  initializeParallelEnvironment(numberOfThreads > 0 ? numberOfThreads : _configuration.getNumberOfThreads(), configuration);
 
   //Initialize pseudo geometry (Has to be done after initializeParallelEnvironment()
   _geometry =

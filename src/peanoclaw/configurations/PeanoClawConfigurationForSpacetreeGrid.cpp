@@ -59,6 +59,14 @@ void peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::processE
     _estimateNeighborInducedMaximumTimestep = getBoolValue(values);
   } else if(name == "useDimensionalSplittingOptimization") {
     _useDimensionalSplittingOptimization = getBoolValue(values);
+  } else if(name == "nodePoolStrategy") {
+    std::string strategyName;
+    values >> strategyName;
+    if(strategyName == "levelAware") {
+      _nodePoolStrategy = LevelAware;
+    } else if (strategyName == "treeAware") {
+      _nodePoolStrategy = TreeAware;
+    }
   } else {
     _isValid = false;
     logError("processEntry(string,string)", "Invalid entry: '" << name << "' '" << values << "'");
@@ -91,7 +99,8 @@ peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::PeanoClawConf
   _fluxCorrection(false),
   _reduceReductions(false),
   _numberOfThreads(1),
-  _estimateNeighborInducedMaximumTimestep(false)
+  _estimateNeighborInducedMaximumTimestep(false),
+  _nodePoolStrategy(LevelAware)
   {
   std::string configFileName = "peanoclaw.config";
   std::ifstream configFile(configFileName.c_str());
@@ -165,4 +174,9 @@ int peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::getNumber
 
 bool peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::estimateNeighborInducedMaximumTimestep() const {
   return _estimateNeighborInducedMaximumTimestep;
+}
+
+peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::NodePoolStrategy
+peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::getNodePoolStrategy() const {
+  return _nodePoolStrategy;
 }
