@@ -78,9 +78,14 @@ void peanoclaw::runners::PeanoClawLibraryRunner::initializeParallelEnvironment(
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
 //    tarch::parallel::NodePool::getInstance().setStrategy( new tarch::parallel::FCFSNodePoolStrategy() );
     if(configuration.getNodePoolStrategy() == peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::LevelAware) {
+      logInfo("initializeParallelEnvironment", "Using level-aware node-pool strategy");
       tarch::parallel::NodePool::getInstance().setStrategy( new peanoclaw::parallel::LevelAwareRoundRobinNodePoolStrategy() );
     } else if (configuration.getNodePoolStrategy() == peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::TreeAware) {
+      logInfo("initializeParallelEnvironment", "Using tree-aware node-pool strategy");
       tarch::parallel::NodePool::getInstance().setStrategy( new peanoclaw::parallel::TreeAwareNodePoolStrategy() );
+    } else {
+      logError("initializeParallelEnvironment", "No node-pool strategy defined!");
+      throw "";
     }
   }
   tarch::parallel::NodePool::getInstance().restart();
