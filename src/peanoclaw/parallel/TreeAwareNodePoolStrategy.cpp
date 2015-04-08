@@ -27,8 +27,6 @@ peanoclaw::parallel::TreeAwareNodePoolStrategy::Node::Node(int rank)
     _rank(rank),
     _level(-100)
 {
-  //TODO unterweg debug
-  std::cout << "Constructor" << std::endl;
 }
 
 bool peanoclaw::parallel::TreeAwareNodePoolStrategy::Node::isIdle() const {
@@ -52,8 +50,6 @@ void peanoclaw::parallel::TreeAwareNodePoolStrategy::Node::setWorking() {
 }
 
 void peanoclaw::parallel::TreeAwareNodePoolStrategy::Node::setRegistered() {
-  //TODO unterweg debug
-  std::cout << "Setting registered" << std::endl;
   _state = Registered;
 }
 
@@ -84,7 +80,7 @@ int peanoclaw::parallel::TreeAwareNodePoolStrategy::getRanksPerSubTree(int level
     workerInSubtree = 1;
   }
   //TODO unterweg debug
-  std::cout << "masterInSubtree=" << workerInSubtree << " wPMOLL=" << _workerPerMasterOnLastLevel << " level=" << level << " workerInSubtree=" << workerInSubtree << std::endl;
+//  std::cout << "masterInSubtree=" << workerInSubtree << " wPMOLL=" << _workerPerMasterOnLastLevel << " level=" << level << " workerInSubtree=" << workerInSubtree << std::endl;
   return workerInSubtree;
 }
 
@@ -97,8 +93,8 @@ int peanoclaw::parallel::TreeAwareNodePoolStrategy::getWorkerRankForMaster(int m
 
     for(int i = 0; i < THREE_POWER_D; i++) {
       //TODO unterweg debug
-      std::cout << "worker=" << workerRank << " workerInSubtree=" << workerInSubtree << " masterLevel=" << masterLevel << " nodes.size=" << _nodes.size()
-          << " isIdle=" << _nodes[workerRank].isIdle() << " isRegistered=" << _nodes[workerRank].isRegistered() << " isWorking=" << _nodes[workerRank].isWorking() << std::endl;
+//      std::cout << "worker=" << workerRank << " workerInSubtree=" << workerInSubtree << " masterLevel=" << masterLevel << " nodes.size=" << _nodes.size()
+//          << " isIdle=" << _nodes[workerRank].isIdle() << " isRegistered=" << _nodes[workerRank].isRegistered() << " isWorking=" << _nodes[workerRank].isWorking() << std::endl;
       if(workerRank < int(_nodes.size()) && _nodes[workerRank].isIdle()) {
         assertion2(workerRank >= 0 && workerRank < int(_nodes.size()), workerRank, _nodes.size());
         return workerRank;
@@ -210,11 +206,11 @@ void peanoclaw::parallel::TreeAwareNodePoolStrategy::setNodeIdle( int rank ) {
   _nodes[rank].setIdle();
 
   //TODO unterweg debug
-  std::cout << " this=" << this << std::endl;
-  for(int i = 0; i < _nodes.size(); i++) {
-    std::cout << _nodes[i].isIdle() << " ";
-  }
-  std::cout << std::endl;
+//  std::cout << " this=" << this << std::endl;
+//  for(int i = 0; i < _nodes.size(); i++) {
+//    std::cout << _nodes[i].isIdle() << " ";
+//  }
+//  std::cout << std::endl;
 
   assertion(_nodes[rank].isIdle());
 }
@@ -227,7 +223,7 @@ int peanoclaw::parallel::TreeAwareNodePoolStrategy::reserveNode(int forMaster) {
   int workerRank = getWorkerRankForMaster(forMaster, masterLevel);
 
   //TODO unterweg debug
-  std::cout << "Reserving worker " << workerRank << " for master " << forMaster << std::endl;
+//  std::cout << "Reserving worker " << workerRank << " for master " << forMaster << std::endl;
 
   if(workerRank == -1) {
     return -1;
@@ -278,11 +274,11 @@ bool peanoclaw::parallel::TreeAwareNodePoolStrategy::hasIdleNode(int forMaster) 
     int masterLevel = _nodes[forMaster].getLevel();
 
     //TODO unterweg debug
-    std::cout << "Idle worker " << getWorkerRankForMaster(forMaster, masterLevel) << " for master " << forMaster << " this=" << this << std::endl;
-    for(int i = 0; i < _nodes.size(); i++) {
-      std::cout << _nodes[i].isIdle() << " ";
-    }
-    std::cout << std::endl;
+//    std::cout << "Idle worker " << getWorkerRankForMaster(forMaster, masterLevel) << " for master " << forMaster << " this=" << this << std::endl;
+//    for(int i = 0; i < _nodes.size(); i++) {
+//      std::cout << _nodes[i].isIdle() << " ";
+//    }
+//    std::cout << std::endl;
 
     return getWorkerRankForMaster(forMaster, masterLevel) != -1;
   }

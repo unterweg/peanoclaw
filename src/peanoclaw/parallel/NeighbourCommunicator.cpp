@@ -253,9 +253,9 @@ peanoclaw::parallel::NeighbourCommunicator::NeighbourCommunicator(
     _remoteSubgridMap(remoteSubgridMap),
     _statistics(statistics),
     //En-/Disable optimizations
-    _avoidMultipleTransferOfSubgridsIfPossible(false),
-    _onlySendSubgridsAfterChange(false),
-    _onlySendOverlappedCells(false),
+    _avoidMultipleTransferOfSubgridsIfPossible(true),
+    _onlySendSubgridsAfterChange(true),
+    _onlySendOverlappedCells(true),
     _packCommunication(true),
     _subgridCommunicator(remoteRank, position, level, peano::heap::NeighbourCommunication, _onlySendOverlappedCells, _packCommunication) {
   logTraceInWith3Arguments("NeighbourCommunicator", remoteRank, position, level);
