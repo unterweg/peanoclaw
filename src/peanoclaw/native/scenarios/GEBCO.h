@@ -77,11 +77,13 @@ class peanoclaw::native::scenarios::GEBCO {
     double getBathymetry(const tarch::la::Vector<2,int>& cellIndex) const;
 
   public:
-    GEBCO();
+    GEBCO(const std::string& bathymetryFileName = "bathymetry.nc");
 
     tarch::la::Vector<2, double> getOffset() const;
 
     tarch::la::Vector<2, double> getSize() const;
+
+    tarch::la::Vector<2, int>    getNumberOfCells() const;
 
     double getBathymetry(const tarch::la::Vector<DIMENSIONS, double>& position) const;
 
@@ -107,6 +109,14 @@ class peanoclaw::native::scenarios::GEBCO {
     void getMinAndMaxBathymetry(
       const tarch::la::Vector<DIMENSIONS,double>& offset,
       const tarch::la::Vector<DIMENSIONS,double>& size,
+      double& minBathymetry,
+      double& maxBathymetry
+    ) const;
+
+    /**
+     * Returns the global minimal and maximal bathymetry.
+     */
+    void getMinAndMaxBathymetry(
       double& minBathymetry,
       double& maxBathymetry
     ) const;

@@ -76,13 +76,12 @@ double peanoclaw::native::scenarios::GEBCO::getBathymetry(const tarch::la::Vecto
   return _bathymetry[cellIndex[0] + (_numberOfCells[1] - 1 - cellIndex[1]) * _numberOfCells[0]];
 }
 
-peanoclaw::native::scenarios::GEBCO::GEBCO()
+peanoclaw::native::scenarios::GEBCO::GEBCO(const std::string& bathymetryFileName)
   : _minBathymetry(-1),
     _maxBathymetry(-1)
 {
   #ifdef PEANOCLAW_USE_NETCDF
   try {
-    std::string bathymetryFileName("bathymetry.nc");
     NcFile ncFile(bathymetryFileName, NcFile::read);
 
     double xRange[2];
@@ -134,6 +133,10 @@ tarch::la::Vector<2, double> peanoclaw::native::scenarios::GEBCO::getOffset() co
 
 tarch::la::Vector<2, double> peanoclaw::native::scenarios::GEBCO::getSize() const {
   return _size;
+}
+
+tarch::la::Vector<2, int> peanoclaw::native::scenarios::GEBCO::getNumberOfCells() const {
+  return _numberOfCells;
 }
 
 double peanoclaw::native::scenarios::GEBCO::getBathymetry(
@@ -208,6 +211,15 @@ void peanoclaw::native::scenarios::GEBCO::getMinAndMaxBathymetry(
     maxBathymetry = std::max(maxBathymetry, bathymetry);
   }
 }
+
+void peanoclaw::native::scenarios::GEBCO::getMinAndMaxBathymetry(
+  double& minBathymetry,
+  double& maxBathymetry
+) const {
+  minBathymetry = _minBathymetry;
+  maxBathymetry = _maxBathymetry;
+}
+
 
 tarch::la::Vector<2, double> peanoclaw::native::scenarios::GEBCO::mapLatitudeLongitudeToMeters(
   const tarch::la::Vector<2,double>& coordinates

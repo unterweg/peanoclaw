@@ -77,7 +77,8 @@ private:
    * Initializes the MPI environment
    */
   void initializeParallelEnvironment(
-      int numberOfThreads
+    int numberOfThreads,
+    const peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid& configuration
   );
  
   void iterateRemesh();
