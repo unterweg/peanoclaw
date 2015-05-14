@@ -4,7 +4,9 @@
  *  Created on: Apr 1, 2015
  *      Author: kristof
  */
+#ifdef Parallel
 #include <mpi.h>
+#endif
 
 #include "peanoclaw/parallel/TreeAwareNodePoolStrategy.h"
 
@@ -85,6 +87,10 @@ int peanoclaw::parallel::TreeAwareNodePoolStrategy::getRanksPerSubTree(int level
 }
 
 int peanoclaw::parallel::TreeAwareNodePoolStrategy::getWorkerRankForMaster(int masterRank, int masterLevel) const {
+//  if(masterLevel >= _numberOfLevels - 1) {
+//    return -1;
+//  }
+
   if(masterRank == 0) {
     return _nodes.size() > 1 ? 1 : -1;
   } else {
@@ -112,7 +118,11 @@ peanoclaw::parallel::TreeAwareNodePoolStrategy::TreeAwareNodePoolStrategy()
     _nodes()
 {
   int numberOfRanks;
+  #ifdef Parallel
   MPI_Comm_size (MPI_COMM_WORLD, &numberOfRanks);
+  #else
+  numberOfRanks = 1;
+  #endif
   _nodes.reserve(numberOfRanks);
   for(int i = 0; i < numberOfRanks; i++) {
     _nodes.push_back(Node(i));

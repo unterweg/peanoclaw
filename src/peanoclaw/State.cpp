@@ -20,6 +20,7 @@ peanoclaw::State::State():
   _stateData.setHasErased(false);
   _stateData.setHasTriggeredRefinementForNextIteration(false);
   _stateData.setHasTriggeredEraseForNextIteration(false);
+  _stateData.setAllPatchesEvolvedToGlobalTimestep(false);
   #ifdef Parallel
   _stateData.setCouldNotEraseDueToDecompositionFlag(false);
   _stateData.setSubWorkerIsInvolvedInJoinOrFork(false);

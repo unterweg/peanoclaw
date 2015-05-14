@@ -268,6 +268,7 @@ peanoclaw::Patch::Patch(const tarch::la::Vector<DIMENSIONS, double>& position,
   cellDescription.setNumberOfTransfersToBeSkipped(0);
   cellDescription.setCurrentStateWasSent(false);
   cellDescription.setMarkStateAsSentInNextIteration(false);
+  cellDescription.setAdjacentRanksChanged(false);
 #endif
 
   cellDescriptions.push_back(cellDescription);
@@ -477,15 +478,15 @@ std::string peanoclaw::Patch::toStringUNew() const {
         assignList(subcellIndex) = x, y;
         str << PATCH_VALUE_FORMAT << _accessor.getValueUNew(subcellIndex, 0) << " ";
       }
-//      if (_cellDescription->getUnknownsPerSubcell() > 1) {
-//        str << "\t";
-//        for (int x = 0; x < getSubdivisionFactor()(0); x++) {
-//          tarch::la::Vector<DIMENSIONS, int> subcellIndex;
-//          assignList(subcellIndex) = x, y;
-//          str << PATCH_VALUE_FORMAT << _accessor.getValueUNew(subcellIndex, 1) << ","
-//              << PATCH_VALUE_FORMAT << _accessor.getValueUNew(subcellIndex, 2) << " ";
-//        }
-//      }
+      if (_cellDescription->getUnknownsPerSubcell() > 1) {
+        str << "\t";
+        for (int x = 0; x < getSubdivisionFactor()(0); x++) {
+          tarch::la::Vector<DIMENSIONS, int> subcellIndex;
+          assignList(subcellIndex) = x, y;
+          str << PATCH_VALUE_FORMAT << _accessor.getValueUNew(subcellIndex, 1) << ","
+              << PATCH_VALUE_FORMAT << _accessor.getValueUNew(subcellIndex, 2) << " ";
+        }
+      }
       str << std::endl;
     }
     str << std::endl;
@@ -545,8 +546,8 @@ std::string peanoclaw::Patch::toStringUOldWithGhostLayer() const {
     str << "q2:" << std::endl;
     printUnknownWithGhostLayer(str, 2);
 
-//      str << "bathymetry:" << std::endl;
-//      printUnknownWithGhostLayer(str, 6);
+//    str << "bathymetry:" << std::endl;
+//    printUnknownWithGhostLayer(str, 3);
 
     //Fluxes
     for(int d = 0; d < DIMENSIONS; d++) {

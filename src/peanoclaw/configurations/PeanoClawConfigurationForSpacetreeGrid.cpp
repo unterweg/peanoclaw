@@ -92,6 +92,7 @@ peanoclaw::configurations::PeanoClawConfigurationForSpacetreeGrid::PeanoClawConf
   _isValid(true),
   _plotAtOutputTimes(false),
   _plotSubsteps(false),
+  _plotAtEndTime(false),
   _plotSubstepsAfterOutputTime(-1),
   _additionalLevelsForPredefinedRefinement(1),
   _useDimensionalSplittingOptimization(false),

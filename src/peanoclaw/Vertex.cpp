@@ -18,10 +18,8 @@ peanoclaw::Vertex::Vertex():
   for(int i = 0; i < TWO_POWER_D; i++) {
     _vertexData.setAdjacentSubcellsEraseVeto(i, false);
   }
-  #ifdef Parallel
   _vertexData.setAdjacentRanksChanged(false);
   _vertexData.setAdjacentRanksInFormerIteration(-1);
-  #endif
 
 //  for(int i = 0; i < TWO_POWER_D; i++) {
 //    _adjacentSubgrids[i] = 0;
@@ -94,14 +92,14 @@ void peanoclaw::Vertex::fillAdjacentGhostLayers(
   #ifdef Asserts
   bool plotVertex = false;
 //  plotVertex =
-//      tarch::la::equals(position(0), 200.0/9.0)
-//      && tarch::la::equals(position(1), 1.0/9.0)
+//      tarch::la::equals(position(0), 424, 15)
+//      && tarch::la::equals(position(1), 2798, 15)
 //        && tarch::la::equals(position(1), -1.59826, 1e-4)
 //        && isHangingNode()
 //      //&& tarch::la::equals(position(2), 1.0/9.0)
 //      && level == 3
-//  ;
-//  plotVertex = true;
+  ;
+  plotVertex = true;
 
   if(plotVertex) {
     std::cerr << "Filling vertex ("
