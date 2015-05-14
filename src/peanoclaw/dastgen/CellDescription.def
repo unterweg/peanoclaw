@@ -49,7 +49,7 @@ class peanoclaw::records::CellDescription {
    * Indicates, whether the adjacent ranks changed, i.e. the parallel topology
    * of the grid changed.
    */
-  persistent packed bool adjacentRanksChanged;
+  persistent parallelise packed bool adjacentRanksChanged;
   
   /**
    * Holds for every adajcent subgrid on the same level to which rank it
