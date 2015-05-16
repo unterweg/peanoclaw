@@ -29,7 +29,7 @@ std::vector<peanoclaw::records::CellDescription> peanoclaw::parallel::SubgridCom
 
     Serialization::Block block = recvbuffer.nextBlock();
 
-    assertion1(block.size() >= 1, "cell description block is tool small");
+    assertion2(block.size() >= 1, "cell description block is too small", block.size());
 
     unsigned char BlockType;
     block >> BlockType;
@@ -139,6 +139,7 @@ void peanoclaw::parallel::SubgridCommunicator::sendCellDescription(int cellDescr
       std::vector<CellDescription>& localCellDescriptionVector = CellDescriptionHeap::getInstance().getData(cellDescriptionIndex);
 
       size_t numberOfCellDescriptions = localCellDescriptionVector.size();
+      assertionEquals(numberOfCellDescriptions, 1);
       int cellDescriptionSize = sizeof(CellDescription::Packed);
       Serialization::Block block = sendbuffer.reserveBlock(1+cellDescriptionSize*numberOfCellDescriptions);
       unsigned char CellDescriptionType = 0x10;
