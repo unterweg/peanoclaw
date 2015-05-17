@@ -80,6 +80,7 @@ bool Serialization::SendBuffer::verifyBlocks() const {
       //TODO unterweg debug
 //      std::cout << "pos=" << pos << " storage.size=" << storage.size() << std::endl;
       size_t blockSize = *(reinterpret_cast<const size_t*>(storage.data() + pos - sizeof(size_t)));
+      assertion3(blockSize > 0, blockSize, pos, size());
 //      std::cout << "\tblockSize=" << blockSize << std::endl;
       pos -= (blockSize + sizeof(size_t));
     }
@@ -154,6 +155,7 @@ bool Serialization::ReceiveBuffer::verifyBlocks() const {
       //TODO unterweg debug
 //      std::cout << "pos=" << pos << " storage.size=" << storage.size() << std::endl;
       size_t blockSize = *(reinterpret_cast<const size_t*>(storage.data() + pos - sizeof(size_t)));
+      assertion3(blockSize > 0, blockSize, pos, size());
 //      std::cout << "\tblockSize=" << blockSize << std::endl;
       pos -= (blockSize + sizeof(size_t));
     }
