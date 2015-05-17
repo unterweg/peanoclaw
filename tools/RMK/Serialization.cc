@@ -76,11 +76,11 @@ void Serialization::SendBuffer::reset() {
 bool Serialization::SendBuffer::verifyBlocks() const {
   if(stack) {
     size_t pos = position;
-    while(pos > 0) {
+    while(pos > sizeof(size_t)) {
       //TODO unterweg debug
 //      std::cout << "pos=" << pos << " storage.size=" << storage.size() << std::endl;
+      assertion3(pos <= position, pos, position, size());
       size_t blockSize = *(reinterpret_cast<const size_t*>(storage.data() + pos - sizeof(size_t)));
-      assertion3(blockSize > 0, blockSize, pos, size());
 //      std::cout << "\tblockSize=" << blockSize << std::endl;
       pos -= (blockSize + sizeof(size_t));
     }
@@ -150,10 +150,11 @@ void Serialization::ReceiveBuffer::reset(size_t storageSize) {
 
 bool Serialization::ReceiveBuffer::verifyBlocks() const {
   if(stack) {
-    size_t pos = storage.size();
-    while(pos > 0) {
+    size_t pos = size();
+    while(pos > sizeof(size_t)) {
       //TODO unterweg debug
 //      std::cout << "pos=" << pos << " storage.size=" << storage.size() << std::endl;
+      assertion2(pos <= size(), pos, size());
       size_t blockSize = *(reinterpret_cast<const size_t*>(storage.data() + pos - sizeof(size_t)));
       assertion3(blockSize > 0, blockSize, pos, size());
 //      std::cout << "\tblockSize=" << blockSize << std::endl;
