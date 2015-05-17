@@ -29,7 +29,8 @@ std::vector<peanoclaw::records::CellDescription> peanoclaw::parallel::SubgridCom
 
     Serialization::Block block = recvbuffer.nextBlock();
 
-    assertion2(block.size() >= 1, "cell description block is too small", block.size());
+    assertion4(block.size() >= 1, "cell description block is too small",
+        block.size(), tarch::parallel::Node::getInstance().getRank(), _remoteRank);
 
     unsigned char BlockType;
     block >> BlockType;
@@ -150,6 +151,7 @@ void peanoclaw::parallel::SubgridCommunicator::sendCellDescription(int cellDescr
       for (size_t i=0; i < numberOfCellDescriptions; i++) {
           CellDescription::Packed packed = localCellDescriptionVector[i].convert();
           MPI_Pack(&packed, 1, CellDescription::Packed::Datatype, block.data(), block.size(), &block_position, MPI_COMM_WORLD );
+          assertionEquals(block_position, 1+cellDescriptionSize*numberOfCellDescriptions);
       }
       #endif
     } else {
