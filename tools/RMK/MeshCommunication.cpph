@@ -389,13 +389,14 @@ void MeshCommunication::sendStateDataToWorker(
 
 #if defined(PackedCommunication)
    
-    int sendsize = sizeof(loadBalancingMessage) + sizeof(typename State::MPIDatatypeContainer);
+//    int sendsize = sizeof(loadBalancingMessage) + sizeof(typename State::MPIDatatypeContainer);
     int loadBalancingMessagePackSize;
     int result = MPI_Pack_size(1, peano::parallel::messages::LoadBalancingMessage::Datatype, MPI_COMM_WORLD, &loadBalancingMessagePackSize);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
     int statePackSize;
     result = MPI_Pack_size(1, State::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &statePackSize);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int sendsize = loadBalancingMessagePackSize + statePackSize;
     assertionEquals(sendsize, loadBalancingMessagePackSize + statePackSize);
     int position = 0;
     char *sendbuffer = new char[sendsize];
@@ -440,13 +441,14 @@ void MeshCommunication::receiveStateDataFromMaster(
 
 #if defined(PackedCommunication)
  
-    int recvsize = sizeof(loadBalancingMessage) + sizeof(typename State::MPIDatatypeContainer);
+//    int recvsize = sizeof(loadBalancingMessage) + sizeof(typename State::MPIDatatypeContainer);
     int loadBalancingMessagePackSize;
     int result = MPI_Pack_size(1, peano::parallel::messages::LoadBalancingMessage::Datatype, MPI_COMM_WORLD, &loadBalancingMessagePackSize);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
     int statePackSize;
     result = MPI_Pack_size(1, State::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &statePackSize);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int recvsize = loadBalancingMessagePackSize + statePackSize;
     assertionEquals(recvsize, loadBalancingMessagePackSize + statePackSize);
     int position = 0;
     char *recvbuffer = new char[recvsize];
