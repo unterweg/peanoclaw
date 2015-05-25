@@ -187,13 +187,14 @@ void MeshCommunication::sendMeshDataToMaster(
 #if defined(PackedCommunication)
 
     //DataExchangeAscend<typename Vertex::MPIDatatypeContainer, typename Cell::MPIDatatypeContainer> helpStruct;
-    int sendsize = sizeof(typename Cell::MPIDatatypeContainer) + TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+//    int sendsize = sizeof(typename Cell::MPIDatatypeContainer) + TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
     int packSizeCell;
     int result = MPI_Pack_size(1, Cell::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeCell);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
     int packSizeVertex;
     result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeVertex);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int sendsize = packSizeCell + TWO_POWER_D * packSizeVertex;
     assertionEquals(sendsize, packSizeCell + TWO_POWER_D * packSizeVertex);
 
     int position = 0;
