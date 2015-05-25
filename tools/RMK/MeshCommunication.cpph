@@ -502,10 +502,11 @@ void MeshCommunication::receiveVertexFromNeighbour(
      
         assertion1(recvbuffer.isBlockAvailable(), "cannot read vertex from Serialization Buffer - not enough blocks"); 
 
-        int vertexsize = sizeof(typename Vertex::MPIDatatypeContainer);
+//        int vertexsize = sizeof(typename Vertex::MPIDatatypeContainer);
         int vertexSizePacked;
         int result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &vertexSizePacked);
         assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+        int vertexsize = vertexSizePacked;
         assertionEquals(vertexsize, vertexSizePacked);
         Serialization::Block block = recvbuffer.nextBlock();
         
