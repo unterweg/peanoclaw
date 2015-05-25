@@ -144,6 +144,14 @@ void MeshCommunication::receiveMeshDataFromWorker(
 
     //DataExchangeAscend<typename Vertex::MPIDatatypeContainer, typename Cell::MPIDatatypeContainer> helpStruct;
     int recvsize = sizeof(typename Cell::MPIDatatypeContainer) + TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+    int packSizeCell;
+    int result = MPI_Pack_size(1, Cell::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeCell);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int packSizeVertices;
+    result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeVertices);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    assertionEquals(recvsize, packSizeCell + TWO_POWER_D * packSizeVertices);
+
     int position = 0;
     char *recvbuffer = new char[recvsize];
    
@@ -179,6 +187,14 @@ void MeshCommunication::sendMeshDataToMaster(
 
     //DataExchangeAscend<typename Vertex::MPIDatatypeContainer, typename Cell::MPIDatatypeContainer> helpStruct;
     int sendsize = sizeof(typename Cell::MPIDatatypeContainer) + TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+    int packSizeCell;
+    int result = MPI_Pack_size(1, Cell::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeCell);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int packSizeVertex;
+    result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeVertex);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    assertionEquals(sendsize, packSizeCell + TWO_POWER_D * packSizeVertex);
+
     int position = 0;
     char *sendbuffer = new char[sendsize];
   
@@ -219,6 +235,13 @@ void MeshCommunication::sendMeshDataToWorker(
 #if defined(PackedCommunication)
 
     int sendsize = 2*sizeof(typename Cell::MPIDatatypeContainer) + 2*TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+    int packSizeCell;
+    int result = MPI_Pack_size(1, Cell::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeCell);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int packSizeVertex;
+    result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeVertex);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    assertionEquals(sendsize, 2 * packSizeCell + 2 * TWO_POWER_D * packSizeVertex);
     int position = 0;
     char *sendbuffer = new char[sendsize];
  
@@ -367,6 +390,13 @@ void MeshCommunication::sendStateDataToWorker(
 #if defined(PackedCommunication)
    
     int sendsize = sizeof(loadBalancingMessage) + sizeof(typename State::MPIDatatypeContainer);
+    int loadBalancingMessagePackSize;
+    int result = MPI_Pack_size(1, peano::parallel::messages::LoadBalancingMessage::Datatype, MPI_COMM_WORLD, &loadBalancingMessagePackSize);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int statePackSize;
+    result = MPI_Pack_size(1, State::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &statePackSize);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    assertionEquals(sendsize, loadBalancingMessagePackSize + statePackSize);
     int position = 0;
     char *sendbuffer = new char[sendsize];
  
@@ -411,6 +441,13 @@ void MeshCommunication::receiveStateDataFromMaster(
 #if defined(PackedCommunication)
  
     int recvsize = sizeof(loadBalancingMessage) + sizeof(typename State::MPIDatatypeContainer);
+    int loadBalancingMessagePackSize;
+    int result = MPI_Pack_size(1, peano::parallel::messages::LoadBalancingMessage::Datatype, MPI_COMM_WORLD, &loadBalancingMessagePackSize);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int statePackSize;
+    result = MPI_Pack_size(1, State::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &statePackSize);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    assertionEquals(recvsize, loadBalancingMessagePackSize + statePackSize);
     int position = 0;
     char *recvbuffer = new char[recvsize];
 
@@ -462,6 +499,10 @@ void MeshCommunication::receiveVertexFromNeighbour(
         assertion1(recvbuffer.isBlockAvailable(), "cannot read vertex from Serialization Buffer - not enough blocks"); 
 
         int vertexsize = sizeof(typename Vertex::MPIDatatypeContainer);
+        int vertexSizePacked;
+        int result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &vertexSizePacked);
+        assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+        assertionEquals(vertexsize, vertexSizePacked);
         Serialization::Block block = recvbuffer.nextBlock();
         
         assertion1(block.size() == vertexsize, "current block does not seem to be a vertex block");
@@ -487,6 +528,10 @@ void MeshCommunication::sendVertexToNeighbour(
         Serialization::SendBuffer& sendbuffer = peano::parallel::SerializationMap::getInstance().getSendBuffer(neighbourRank)[0];
      
         int vertexsize = sizeof(typename Vertex::MPIDatatypeContainer);
+        int vertexSizePacked;
+        int result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &vertexSizePacked);
+        assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+        assertionEquals(vertexsize, vertexSizePacked);
         Serialization::Block block = sendbuffer.reserveBlock(vertexsize);
 
         int position = 0;
