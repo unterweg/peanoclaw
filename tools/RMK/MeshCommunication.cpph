@@ -234,13 +234,14 @@ void MeshCommunication::sendMeshDataToWorker(
 
 #if defined(PackedCommunication)
 
-    int sendsize = 2*sizeof(typename Cell::MPIDatatypeContainer) + 2*TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+//    int sendsize = 2*sizeof(typename Cell::MPIDatatypeContainer) + 2*TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
     int packSizeCell;
     int result = MPI_Pack_size(1, Cell::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeCell);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
     int packSizeVertex;
     result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeVertex);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int sendsize = 2 * packSizeCell + 2 * TWO_POWER_D * packSizeVertex;
     assertionEquals(sendsize, 2 * packSizeCell + 2 * TWO_POWER_D * packSizeVertex);
     int position = 0;
     char *sendbuffer = new char[sendsize];
@@ -295,12 +296,13 @@ void MeshCommunication::receiveMeshDataFromMaster(
     int result;
     int recvsize = 2*sizeof(typename Cell::MPIDatatypeContainer) + 2*TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
     int packSizeCells;
-    result = MPI_Pack_size(2, Cell::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeCells);
+    result = MPI_Pack_size(1, Cell::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeCells);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
     int packSizeVertices;
-    result = MPI_Pack_size(2*TWO_POWER_D, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeVertices);
+    result = MPI_Pack_size(1, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeVertices);
     assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
-    assertionEquals(recvsize, packSizeCells + packSizeVertices);
+    recvsize = 2 * packSizeCells + 2*TWO_POWER_D * packSizeVertices;
+    assertionEquals(recvsize, 2 * packSizeCells + 2*TWO_POWER_D * packSizeVertices);
     int position = 0;
     char *recvbuffer = new char[recvsize];
 
