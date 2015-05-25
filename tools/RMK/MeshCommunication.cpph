@@ -1,0 +1,516 @@
+  #include "peano/utils/Loop.h"
+
+#include "peano/parallel/SendReceiveBufferPool.h"
+#include "peano/parallel/JoinDataBufferPool.h"
+
+#include "SerializationMap.h"
+
+#include "tarch/logging/Log.h"
+
+// TODO: this collides with additional worker/job requests during fork attempts, 
+// but asynchronous send/receive works for now
+#define PackedCommunication
+
+// put vertices into the Serialization buffers instead of SendReceiveBufferPool
+#define SERIALIZE_VERTICES
+
+template<typename Vertex, typename Cell>
+#if defined(Debug)
+int 
+#else
+void
+#endif
+MeshCommunication::receiveInitialMeshDataFromMaster(
+   std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT>& adjacencyBitset,
+   Cell& receivedCell,
+   Vertex* receivedVertices) 
+{
+    //MasterWorkerForkJoin<typename Vertex::MPIDatatypeContainer, typename Cell::MPIDatatypeContainer> helpStruct;
+    //receivedCell.setMPIData(helpStruct._cellData);
+
+    receivedCell = peano::parallel::JoinDataBufferPool::getInstance().getCellFromStream<Cell>(tarch::parallel::NodePool::getInstance().getMasterRank());
+    peano::parallel::JoinDataBufferPool::getInstance().removeCellFromStream(tarch::parallel::NodePool::getInstance().getMasterRank());
+
+    // receives adjacencyBitset -> TODO: maybe this should be part from getCellFromStream
+    adjacencyBitset = peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(tarch::parallel::NodePool::getInstance().getMasterRank());
+#if defined(Debug)
+    int CellLevelFromStream = peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(tarch::parallel::NodePool::getInstance().getMasterRank());
+#endif
+    peano::parallel::JoinDataBufferPool::getInstance().removeCellMarkerFromStream(tarch::parallel::NodePool::getInstance().getMasterRank(),false);
+
+    dfor2(k)
+    if (adjacencyBitset[kScalar]) {
+      //receivedVertices[kScalar].setMPIData(helpStruct._vertexData);
+      receivedVertices[kScalar] = peano::parallel::JoinDataBufferPool::getInstance().getVertexFromStream<Vertex>(tarch::parallel::NodePool::getInstance().getMasterRank());
+      peano::parallel::JoinDataBufferPool::getInstance().removeVertexFromStream(tarch::parallel::NodePool::getInstance().getMasterRank());
+    }
+    enddforx
+
+    #if defined(Debug)
+        return CellLevelFromStream;
+    #endif
+}
+
+template<typename Vertex, typename Cell> 
+void MeshCommunication::sendInitialMeshDataToWorker(
+  int currentWorker,
+  const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT>& adjacencyBitset, 
+  Cell& fineGridCell, 
+  Vertex* fineGridVertices,
+  const peano::grid::SingleLevelEnumerator&              fineGridVerticesEnumerator
+) {
+    //MasterWorkerForkJoin<typename Vertex::MPIDatatypeContainer, typename Cell::MPIDatatypeContainer> helpStruct;
+    //helpStruct._cellData = fineGridCell.getMPIData();
+
+    // TODO: sendCell also sends encoded adjacencyBitset -> TODO: maybe this should be refactored out, depending on receive counter part
+    peano::parallel::JoinDataBufferPool::getInstance().sendCell(fineGridCell,adjacencyBitset,currentWorker);
+
+    dfor2(k)
+      if (adjacencyBitset[kScalar]) {
+        peano::parallel::JoinDataBufferPool::getInstance().sendVertex(fineGridVertices[fineGridVerticesEnumerator(k)],currentWorker);
+        //helpStruct._vertexData[kScalar] = fineGridVertices[fineGridVerticesEnumerator(k)].getMPIData();
+
+        //logDebug( "updateCellsParallelStateAfterLoadIfStateIsForking()", "due to fork sent vertex " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() << " to rank " << *p );
+        
+        // any destruction of a vertex due to a fork is done in StoreVertexLoopBody
+        // as it should be destructed after 'all' forked nodes have received it, not
+        // earlier
+      }
+    enddforx
+}
+
+template<typename Vertex, typename Cell>
+#if defined(Debug)
+int 
+#else
+void
+#endif
+MeshCommunication::receiveFinalMeshDataFromWorker(
+  int currentWorker,
+  std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT>& adjacencyBitset, 
+  Cell& receivedCell, 
+  Vertex* receivedVertices
+) {
+    receivedCell = peano::parallel::JoinDataBufferPool::getInstance().getCellFromStream<Cell>(currentWorker);
+    peano::parallel::JoinDataBufferPool::getInstance().removeCellFromStream(currentWorker);
+ 
+    adjacencyBitset = peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(currentWorker);
+#if defined(Debug)
+    int CellLevelFromStream = peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(currentWorker);
+#endif
+    peano::parallel::JoinDataBufferPool::getInstance().removeCellMarkerFromStream(currentWorker,true);
+
+    dfor2(k)
+      if (adjacencyBitset[kScalar]) {
+        receivedVertices[kScalar] = peano::parallel::JoinDataBufferPool::getInstance().getVertexFromStream<Vertex>(currentWorker);
+        peano::parallel::JoinDataBufferPool::getInstance().removeVertexFromStream(currentWorker);
+      }
+    enddforx
+
+    #if defined(Debug)
+        return CellLevelFromStream;
+    #endif
+}
+
+template<typename Vertex, typename Cell> 
+void MeshCommunication::sendFinalMeshDataToMaster(
+  const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT>& adjacencyBitset, 
+  Cell& fineGridCell, 
+  Vertex* fineGridVertices,
+  const peano::grid::SingleLevelEnumerator&              fineGridVerticesEnumerator
+) {
+      // TODO: sendCell also sends encoded adjacencyBitset -> TODO: maybe this should be refactored out, depending on receive counter part
+      peano::parallel::JoinDataBufferPool::getInstance().sendCell(fineGridCell,adjacencyBitset,tarch::parallel::NodePool::getInstance().getMasterRank());
+
+      dfor2(k)
+        if (adjacencyBitset[kScalar]) {
+          peano::parallel::JoinDataBufferPool::getInstance().sendVertex(fineGridVertices[fineGridVerticesEnumerator(k)],tarch::parallel::NodePool::getInstance().getMasterRank());
+          //logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithMaster()", "due to join sent vertex " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() << " to rank " << tarch::parallel::NodePool::getInstance().getMasterRank() );
+        }
+      enddforx
+}
+
+template<typename Vertex, typename Cell>
+void MeshCommunication::receiveMeshDataFromWorker(
+   int currentWorker,
+   Cell& receivedCell,
+   Vertex* receivedVertices) 
+{
+  const bool exchangeDataBlocking = !tarch::parallel::Node::getInstance().isGlobalMaster();
+  //const bool exchangeDataBlocking = true;
+
+#if defined(PackedCommunication)
+
+
+    //DataExchangeAscend<typename Vertex::MPIDatatypeContainer, typename Cell::MPIDatatypeContainer> helpStruct;
+    int recvsize = sizeof(typename Cell::MPIDatatypeContainer) + TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+    int position = 0;
+    char *recvbuffer = new char[recvsize];
+   
+    //MPI_Recv(recvbuffer, recvsize, MPI_PACKED, currentWorker, peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    receiveAsynchronousAndBlocking(recvbuffer, recvsize, MPI_PACKED, currentWorker, peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), exchangeDataBlocking);
+
+    receivedCell.unpack(recvbuffer, recvsize, &position, true);
+    for (int i=0; i<TWO_POWER_D; i++) {
+        receivedVertices[i].unpack(recvbuffer, recvsize, &position, true);
+    }
+  
+    delete[] recvbuffer;
+
+#else
+      receivedCell.receive(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true, exchangeDataBlocking);
+      for (int i=0; i<TWO_POWER_D; i++) {
+        receivedVertices[i].receive(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true, exchangeDataBlocking);
+      }
+
+#endif
+
+}
+
+template<typename Vertex, typename Cell>
+void MeshCommunication::sendMeshDataToMaster(
+   Cell& fineGridCell,
+   Vertex* fineGridVertices,
+   const peano::grid::SingleLevelEnumerator&              fineGridVerticesEnumerator
+) {
+    const bool exchangeDataBlocking = true;
+
+#if defined(PackedCommunication)
+
+    //DataExchangeAscend<typename Vertex::MPIDatatypeContainer, typename Cell::MPIDatatypeContainer> helpStruct;
+    int sendsize = sizeof(typename Cell::MPIDatatypeContainer) + TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+    int position = 0;
+    char *sendbuffer = new char[sendsize];
+  
+    fineGridCell.pack(sendbuffer, sendsize, &position, true);
+    dfor2(k)
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].pack(sendbuffer, sendsize, &position, true);
+    enddforx
+    //MPI_Send(sendbuffer, sendsize, MPI_PACKED, tarch::parallel::NodePool::getInstance().getMasterRank(), peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), MPI_COMM_WORLD);
+    sendAsynchronousAndBlocking(sendbuffer, sendsize, MPI_PACKED, tarch::parallel::NodePool::getInstance().getMasterRank(), peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), exchangeDataBlocking);
+
+    delete[] sendbuffer;
+
+#else
+    //TODO unterweg debug
+//    std::cout << "sendMeshDataToMaster from " << tarch::parallel::Node::getInstance().getRank() << " to " << tarch::parallel::NodePool::getInstance().getMasterRank() << std::endl;
+    //logDebug( "sendCellAndVerticesToMaster(...)", "send cell " << centralFineGridCell.toString() << " to master" );
+    fineGridCell.send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true, exchangeDataBlocking);
+
+    dfor2(k)
+      //logDebug( "sendCellAndVerticesToMaster(...)", "send vertex " << fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString() << " to master" );
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true, exchangeDataBlocking);
+    enddforx
+
+#endif
+}
+
+template<typename Vertex, typename Cell>
+void MeshCommunication::sendMeshDataToWorker(
+   int currentWorker,
+   Cell& coarseGridCell,
+   Vertex* coarseGridVertices,
+   const peano::grid::SingleLevelEnumerator&              coarseGridVerticesEnumerator,
+   Cell& fineGridCell,
+   Vertex* fineGridVertices,
+   const peano::grid::SingleLevelEnumerator&              fineGridVerticesEnumerator
+) {
+
+#if defined(PackedCommunication)
+
+    int sendsize = 2*sizeof(typename Cell::MPIDatatypeContainer) + 2*TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+    int position = 0;
+    char *sendbuffer = new char[sendsize];
+ 
+    coarseGridCell.pack(sendbuffer, sendsize, &position, true);
+    dfor2(k)
+      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].pack(sendbuffer, sendsize, &position, true);
+    enddforx
+ 
+    fineGridCell.pack(sendbuffer, sendsize, &position, true);
+    dfor2(k)
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].pack(sendbuffer, sendsize, &position, true);
+    enddforx
+
+    //TODO unterweg debug
+//    std::cout << "sendMeshDataToWorker from " << tarch::parallel::Node::getInstance().getRank() << " to " << currentWorker << std::endl;
+  
+    sendAsynchronousAndBlocking(sendbuffer, sendsize, MPI_PACKED, currentWorker, peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), SendMasterWorkerMessagesBlocking);
+
+    delete[] sendbuffer;
+
+#else
+
+    //TODO unterweg debug
+//    std::cout << "sendMeshDataToWorker from " << tarch::parallel::Node::getInstance().getRank() << " to " << currentWorker << std::endl;
+
+    //logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send cell " << fineGridCell.toString() << " to rank " << currentWorker );
+    coarseGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true, SendMasterWorkerMessagesBlocking);
+    dfor2(k)
+      //logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
+      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true, SendMasterWorkerMessagesBlocking);
+    enddforx
+
+    fineGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true, SendMasterWorkerMessagesBlocking);
+    dfor2(k)
+      //logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true, SendMasterWorkerMessagesBlocking);
+    enddforx
+
+#endif
+}
+
+template<typename Vertex, typename Cell>
+void MeshCommunication::receiveMeshDataFromMaster(
+   Cell& coarseGridCell,
+   Vertex* coarseGridVertices,
+   Cell& fineGridCell,
+   Vertex* fineGridVertices
+) {
+
+#if defined(PackedCommunication)
+    int result;
+    int recvsize = 2*sizeof(typename Cell::MPIDatatypeContainer) + 2*TWO_POWER_D*sizeof(typename Vertex::MPIDatatypeContainer);
+    int packSizeCells;
+    result = MPI_Pack_size(2, Cell::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeCells);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    int packSizeVertices;
+    result = MPI_Pack_size(2*TWO_POWER_D, Vertex::MPIDatatypeContainer::Datatype, MPI_COMM_WORLD, &packSizeVertices);
+    assertionEquals1(result, MPI_SUCCESS, tarch::parallel::MPIReturnValueToString(result));
+    assertionEquals(recvsize, packSizeCells + packSizeVertices);
+    int position = 0;
+    char *recvbuffer = new char[recvsize];
+
+    //TODO unterweg debug
+//    std::cout << "receiveMeshDataFromMaster on " << tarch::parallel::Node::getInstance().getRank() << " from " << tarch::parallel::NodePool::getInstance().getMasterRank() << std::endl;
+   
+    receiveAsynchronousAndBlocking(recvbuffer, recvsize, MPI_PACKED, tarch::parallel::NodePool::getInstance().getMasterRank(), peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), ReceiveMasterMessagesBlocking);
+
+    coarseGridCell.unpack(recvbuffer, recvsize, &position, true);
+    dfor2(i)
+        coarseGridVertices[iScalar].unpack(recvbuffer, recvsize, &position, true);
+    enddforx
+ 
+    fineGridCell.unpack(recvbuffer, recvsize, &position, true);
+    dfor2(i)
+        fineGridVertices[iScalar].unpack(recvbuffer, recvsize, &position, true);
+    enddforx
+  
+    delete[] recvbuffer;
+
+#else
+
+    //TODO unterweg debug
+//    std::cout << "receiveMeshDataFromMaster on " << tarch::parallel::Node::getInstance().getRank() << " from " << tarch::parallel::NodePool::getInstance().getMasterRank() << std::endl;
+
+    coarseGridCell.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true,ReceiveMasterMessagesBlocking);
+    //logDebug( "receiveCellAndVerticesFromMaster(...)", "received cell " << coarseGridCellFromMaster.toString() << " from master" );
+    dfor2(i)
+      coarseGridVertices[iScalar].receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true,ReceiveMasterMessagesBlocking);
+      /*logDebug(
+        "receiveCellAndVerticesFromMaster(...)",
+        "received vertex " << coarseVertexFromMaster[iScalar].toString() << " from master and stored it in coarseVertexFromMaster " << iScalar
+      );*/
+    }
+ 
+    fineGridCell.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true,ReceiveMasterMessagesBlocking);
+    //logDebug( "receiveCellAndVerticesFromMaster(...)", "received cell " << _masterCell.toString() << " from master" );
+    dfor2(i)
+      fineGridVertices[iScalar].receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true,ReceiveMasterMessagesBlocking);
+      /*logDebug(
+        "receiveCellAndVerticesFromMaster(...)",
+        "received vertex " << _masterVertices[iScalar].toString() << " from master and stored it in _masterVertex " << iScalar
+      );*/
+    enddforx
+
+#endif
+}
+
+template<typename State>
+void MeshCommunication::receiveStateDataFromWorker(
+   int currentWorker,
+   State& workerState
+) {
+    const bool exchangeDataBlocking = false;
+
+    //TODO unterweg debug
+//    std::cout << "receiveStateDataFromWorker on " << tarch::parallel::Node::getInstance().getRank() << " from " << currentWorker << std::endl;
+
+      // TODO: implement upload of load balancing information
+      workerState.receive(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), exchangeDataBlocking);
+}
+
+template<typename State>
+void MeshCommunication::sendStateDataToMaster(
+   State& state
+) {
+
+  //TODO unterweg debug
+//  std::cout << "sendStateDataToMaster from " << tarch::parallel::Node::getInstance().getRank() << " to " << tarch::parallel::NodePool::getInstance().getMasterRank() << std::endl;
+
+  state.send(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      SendWorkerMasterMessagesBlocking
+    );
+    logDebug( "sendStateToMaster()", "sent state " << state.toString() );
+}
+
+
+template<typename State>
+void MeshCommunication::sendStateDataToWorker(
+   int currentWorker,
+   peano::parallel::messages::LoadBalancingMessage& loadBalancingMessage, // TODO: needs to be const, but LoadBalancingMessage class is not prepared for this
+   State& state
+) {
+
+#if defined(PackedCommunication)
+   
+    int sendsize = sizeof(loadBalancingMessage) + sizeof(typename State::MPIDatatypeContainer);
+    int position = 0;
+    char *sendbuffer = new char[sendsize];
+ 
+    MPI_Pack(&loadBalancingMessage, 1, peano::parallel::messages::LoadBalancingMessage::Datatype, sendbuffer, sendsize, &position, MPI_COMM_WORLD);
+    
+    state.pack(sendbuffer, sendsize, &position, true);
+
+    //TODO unterweg debug
+//    std::cout << "sendStateDataToWorker from " << tarch::parallel::Node::getInstance().getRank() << " to " << currentWorker << std::endl;
+ 
+    sendAsynchronousAndBlocking(sendbuffer, sendsize, MPI_PACKED, currentWorker, peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), SendMasterWorkerMessagesBlocking);
+
+    delete[] sendbuffer;
+
+#else
+
+    //TODO unterweg debug
+//    std::cout << "sendStateDataToWorker from " << tarch::parallel::Node::getInstance().getRank() << " to " << currentWorker << std::endl;
+
+    loadBalancingMessage.send(
+      currentWorker,
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      true,
+      SendMasterWorkerMessagesBlocking
+    );
+  
+    state.send(
+      currentWorker,
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      SendMasterWorkerMessagesBlocking
+    );
+
+#endif
+}
+
+template<typename State>
+void MeshCommunication::receiveStateDataFromMaster(
+   peano::parallel::messages::LoadBalancingMessage& loadBalancingMessage,
+   State& state
+) {
+
+#if defined(PackedCommunication)
+ 
+    int recvsize = sizeof(loadBalancingMessage) + sizeof(typename State::MPIDatatypeContainer);
+    int position = 0;
+    char *recvbuffer = new char[recvsize];
+
+    //TODO unterweg debug
+//    std::cout << "receiveStateDataFromMaster on " << tarch::parallel::Node::getInstance().getRank() << " from " << tarch::parallel::NodePool::getInstance().getMasterRank() << std::endl;
+  
+    receiveAsynchronousAndBlocking(recvbuffer, recvsize, MPI_PACKED, tarch::parallel::NodePool::getInstance().getMasterRank(), peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), ReceiveMasterMessagesBlocking);
+
+    MPI_Unpack(recvbuffer, recvsize, &position, &loadBalancingMessage, 1, peano::parallel::messages::LoadBalancingMessage::Datatype, MPI_COMM_WORLD);
+
+    state.unpack(recvbuffer, recvsize, &position, true);
+
+    delete[] recvbuffer;
+
+#else
+
+    //TODO unterweg debug
+//    std::cout << "receiveStateDataFromMaster on " << tarch::parallel::Node::getInstance().getRank() << " from " << tarch::parallel::NodePool::getInstance().getMasterRank() << std::endl;
+
+    loadBalancingMessage.receive(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      true,
+      ReceiveMasterMessagesBlocking
+    );
+ 
+    state.receive(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      ReceiveMasterMessagesBlocking
+    );
+
+#endif
+}
+
+template<typename Vertex>
+void MeshCommunication::receiveVertexFromNeighbour(
+    int neighbourRank,
+    Vertex& vertex
+) {
+#if !defined(SERIALIZE_VERTICES)
+    
+    vertex = peano::parallel::SendReceiveBufferPool::getInstance().getVertex<Vertex>(neighbourRank);
+
+#else
+    {
+        Serialization::ReceiveBuffer& recvbuffer = peano::parallel::SerializationMap::getInstance().getReceiveBuffer(neighbourRank)[0];
+     
+        assertion1(recvbuffer.isBlockAvailable(), "cannot read vertex from Serialization Buffer - not enough blocks"); 
+
+        int vertexsize = sizeof(typename Vertex::MPIDatatypeContainer);
+        Serialization::Block block = recvbuffer.nextBlock();
+        
+        assertion1(block.size() == vertexsize, "current block does not seem to be a vertex block");
+
+        int position = 0;
+        vertex.unpack(reinterpret_cast<char*>(block.data()), vertexsize, &position, true);
+    }
+#endif
+
+}
+
+template<typename Vertex>
+void MeshCommunication::sendVertexToNeighbour(
+    int neighbourRank,
+    const Vertex& vertex
+) {
+#if !defined(SERIALIZE_VERTICES)
+
+    peano::parallel::SendReceiveBufferPool::getInstance().sendVertex(vertex,neighbourRank,peano::parallel::SendReceiveBufferPool::LIFO);
+
+#else
+    {
+        Serialization::SendBuffer& sendbuffer = peano::parallel::SerializationMap::getInstance().getSendBuffer(neighbourRank)[0];
+     
+        int vertexsize = sizeof(typename Vertex::MPIDatatypeContainer);
+        Serialization::Block block = sendbuffer.reserveBlock(vertexsize);
+
+        int position = 0;
+        vertex.pack(reinterpret_cast<char*>(block.data()), vertexsize, &position, true);
+    }
+#endif
+}
+
+template <typename Data>
+void MeshCommunication::sendAsynchronousAndBlocking(Data& data, int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool exchangeDataBlocking) {
+  if (exchangeOnlyAttributesMarkedWithParallelise) {
+    sendAsynchronousAndBlocking(&data, 1, Data::Datatype, destination, tag, exchangeDataBlocking);
+  }
+  else {
+    sendAsynchronousAndBlocking(&data, 1, Data::FullDatatype, destination, tag, exchangeDataBlocking);
+  }
+}
+
+template <typename Data>
+void MeshCommunication::receiveAsynchronousAndBlocking(Data& data, int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool exchangeDataBlocking) {
+  if (exchangeOnlyAttributesMarkedWithParallelise) {
+    receiveAsynchronousAndBlocking(&data, 1, Data::Datatype, source, tag, exchangeDataBlocking);
+  }
+  else {
+    receiveAsynchronousAndBlocking(&data, 1, Data::FullDatatype, source, tag, exchangeDataBlocking);
+  }
+}
