@@ -42,7 +42,8 @@ bool peanoclaw::interSubgridCommunication::aspects::AdjacentVertices::refineIfNe
   } else if(tarch::la::oneGreater(patch.getSubcellSize() * 3.0, tarch::la::Vector<DIMENSIONS, double>(maximalMeshWidth))) {
     for(int i = 0; i < TWO_POWER_D; i++) {
       if(_vertices[_verticesEnumerator(i)].isHangingNode()
-                  && !_coarseVertices[_coarseVerticesEnumerator(i)].isHangingNode()) {
+                  && !_coarseVertices[_coarseVerticesEnumerator(i)].isHangingNode()
+                  && _coarseVertices[_coarseVerticesEnumerator(i)].getRefinementControl() == peanoclaw::Vertex::Records::Unrefined) {
         _coarseVertices[_coarseVerticesEnumerator(i)].refine();
       }
     }

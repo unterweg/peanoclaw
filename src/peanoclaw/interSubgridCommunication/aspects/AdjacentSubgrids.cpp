@@ -333,7 +333,7 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::refineOnPa
       CornerAdjacentPatchTraversal<CheckIntersectingParallelAndAdaptiveBoundaryFunctor>(patches, functor);
     #endif
 
-    if(functor.doesParallelBoundaryCoincideWithAdaptiveBoundaryCorner()) {
+    if(functor.doesParallelBoundaryCoincideWithAdaptiveBoundaryCorner() && _vertex.getRefinementControl() == peanoclaw::Vertex::Records::Unrefined) {
       _vertex.refine();
     }
   }
