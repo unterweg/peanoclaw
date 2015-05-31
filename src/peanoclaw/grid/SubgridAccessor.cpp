@@ -105,14 +105,6 @@ void peanoclaw::grid::SubgridAccessor::setValueUNew(int linearIndex, int unknown
 #endif
 }
 
-void peanoclaw::grid::SubgridAccessor::setValueUNewAndResize(int linearIndex, int unknown, double value) {
-  size_t index = linearIndex + _linearization.getQStrideUNew() * unknown;
-  if(index + 1 > _u->size()) {
-    _u->resize(index + 1);
-  }
-  _u->at(index) = value;
-}
-
 double peanoclaw::grid::SubgridAccessor::getValueUOld(int linearIndex, int unknown) const {
   int index = linearIndex + _linearization.getQStrideUOld() * unknown;
 #ifdef PATCH_DISABLE_RANGE_CHECK

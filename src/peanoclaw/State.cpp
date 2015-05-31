@@ -239,17 +239,6 @@ void peanoclaw::State::setSubgridStatisticsForLastGridIteration (
   peanoclaw::statistics::SubgridStatistics& subgridStatistics
 ) {
   _subgridStatisticsHistory.push_back(subgridStatistics);
-
-  //TODO unterweg debug
-//  std::cout << std::endl << _subgridStatisticsHistory.back()._processStatisticsIndex << " statistics for last iteration: ";
-//  for(std::vector<peanoclaw::statistics::ProcessStatisticsEntry>::iterator own = _subgridStatisticsHistory.back()._processStatistics->begin(); own != _subgridStatisticsHistory.back()._processStatistics->end(); own++) {
-//    std::cout << own->getRank() << " ";
-//  }
-//  std::cout << std::endl;
-//  for(std::vector<peanoclaw::statistics::ProcessStatisticsEntry>::iterator own = subgridStatistics._processStatistics->begin(); own != subgridStatistics._processStatistics->end(); own++) {
-//    std::cout << own->getRank() << " ";
-//  }
-//  std::cout << std::endl;
 }
 
 std::list<peanoclaw::statistics::SubgridStatistics> peanoclaw::State::getSubgridStatisticsHistory() const {

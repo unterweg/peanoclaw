@@ -263,12 +263,6 @@ class peanoclaw::grid::SubgridAccessor {
 
     void setValueUNew(int linearIndex, int unknown, double value);
 
-    /**
-     * Sets the given value in the appropriate cell in the uNew array. If necessary
-     * the array is resized to contain the specified cell.
-     */
-    void setValueUNewAndResize(int linearIndex, int unknown, double value);
-
     double getValueUOld(int linearIndex, int unknown) const;
 
     void setValueUOld(int linearIndex, int unknown, double value);

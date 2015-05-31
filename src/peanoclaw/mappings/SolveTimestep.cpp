@@ -4,6 +4,7 @@
 #include "peanoclaw/ParallelSubgrid.h"
 #include "peanoclaw/Patch.h"
 #include "peanoclaw/interSubgridCommunication/DefaultTransfer.h"
+#include "peanoclaw/statistics/MemoryInformation.h"
 
 #include "peano/grid/aspects/VertexStateAnalysis.h"
 #include "tarch/parallel/Node.h"
@@ -388,8 +389,6 @@ bool peanoclaw::mappings::SolveTimestep::prepareSendToWorker(
     _estimatedRemainingIterationsUntilGlobalTimestep[worker] = 1;
   }
 
-  logTraceOut( "prepareSendToWorker(...)" );
-
   //TODO unterweg debug
 //  if(_estimatedRemainingIterationsUntilGlobalTimestep[worker] == 0) {
 //    logInfo("", "Worker Finished");
@@ -403,9 +402,10 @@ bool peanoclaw::mappings::SolveTimestep::prepareSendToWorker(
 //  logInfo("prepareSendToWorker", "Estimated iterations for worker " << worker << ": " << _estimatedRemainingIterationsUntilGlobalTimestep[worker]);
 //  return true;
 
+  bool requireReductionFromWorker = true;
   if(_reduceReductions) {
     if (_estimatedRemainingIterationsUntilGlobalTimestep[worker] == 0) {
-      return false;
+      requireReductionFromWorker = false;
     } else {
       assertion(_estimatedRemainingIterationsUntilGlobalTimestep[worker] > 0);
 
@@ -417,11 +417,15 @@ bool peanoclaw::mappings::SolveTimestep::prepareSendToWorker(
       }
 
       _estimatedRemainingIterationsUntilGlobalTimestep[worker]--;
-      return reduceStateFromWorker;
+      requireReductionFromWorker = reduceStateFromWorker;
     }
   } else {
-    return true;
+    requireReductionFromWorker = true;
   }
+
+  assertion(requireReductionFromWorker);
+  logTraceOut( "prepareSendToWorker(...)" );
+  return requireReductionFromWorker;
 }
 
 void peanoclaw::mappings::SolveTimestep::prepareSendToMaster(

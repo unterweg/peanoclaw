@@ -37,7 +37,11 @@ std::vector<peanoclaw::records::CellDescription> peanoclaw::parallel::SubgridCom
 
     assertion2(BlockType == 0x10, "expected cell description but got something else", BlockType);
 
-    size_t numberOfCellDescriptions = (block.size() - 1) / sizeof(CellDescription::Packed);
+    int cellDescriptionSize;
+    MPI_Pack_size(1, CellDescription::Packed::Datatype, MPI_COMM_WORLD, &cellDescriptionSize);
+
+    size_t numberOfCellDescriptions = (block.size() - 1) / cellDescriptionSize;
+    assertion1(block.size() - 1 == 0 || block.size() - 1 == cellDescriptionSize, block.size());
 
     //assertion1(numberOfCellDescriptions > 0, "no cell descriptions, huh? we always send one");
 
@@ -132,31 +136,28 @@ void peanoclaw::parallel::SubgridCommunicator::sendCellDescription(int cellDescr
   assertion1(!cellDescription.getIsPaddingSubgrid(), cellDescription.toString());
   #endif
 
-  if(_packCommunication) {
-    if (_messageType == peano::heap::NeighbourCommunication) {
-      #if defined(Parallel) && defined(UseBlockedMeshCommunication)
-      Serialization::SendBuffer& sendbuffer = peano::parallel::SerializationMap::getInstance().getSendBuffer(_remoteRank)[1];
+  if(_packCommunication && _messageType == peano::heap::NeighbourCommunication) {
+    #if defined(Parallel) && defined(UseBlockedMeshCommunication)
+    Serialization::SendBuffer& sendbuffer = peano::parallel::SerializationMap::getInstance().getSendBuffer(_remoteRank)[1];
 
-      std::vector<CellDescription>& localCellDescriptionVector = CellDescriptionHeap::getInstance().getData(cellDescriptionIndex);
+    std::vector<CellDescription>& localCellDescriptionVector = CellDescriptionHeap::getInstance().getData(cellDescriptionIndex);
 
-      size_t numberOfCellDescriptions = localCellDescriptionVector.size();
-      assertionEquals(numberOfCellDescriptions, 1);
-      int cellDescriptionSize = sizeof(CellDescription::Packed);
-      Serialization::Block block = sendbuffer.reserveBlock(1+cellDescriptionSize*numberOfCellDescriptions);
-      unsigned char CellDescriptionType = 0x10;
-      block << CellDescriptionType;
+    size_t numberOfCellDescriptions = localCellDescriptionVector.size();
+    assertionEquals(numberOfCellDescriptions, 1);
+    int cellDescriptionSize;// = sizeof(CellDescription::Packed);
+    MPI_Pack_size(1, CellDescription::Packed::Datatype, MPI_COMM_WORLD, &cellDescriptionSize);
+    Serialization::Block block = sendbuffer.reserveBlock(1+cellDescriptionSize*numberOfCellDescriptions);
+    unsigned char CellDescriptionType = 0x10;
+    block << CellDescriptionType;
 
-      int block_position = 1;
-      //std::cout << " ||||||| packing " << numberOfCellDescriptions << " cell descriptions " << std::endl;
-      for (size_t i=0; i < numberOfCellDescriptions; i++) {
-          CellDescription::Packed packed = localCellDescriptionVector[i].convert();
-          MPI_Pack(&packed, 1, CellDescription::Packed::Datatype, block.data(), block.size(), &block_position, MPI_COMM_WORLD );
-          assertionEquals(block_position, 1+cellDescriptionSize*numberOfCellDescriptions);
-      }
-      #endif
-    } else {
-        CellDescriptionHeap::getInstance().sendData(cellDescriptionIndex, _remoteRank, _position, _level, _messageType);
+    int block_position = 1;
+    //std::cout << " ||||||| packing " << numberOfCellDescriptions << " cell descriptions " << std::endl;
+    for (size_t i=0; i < numberOfCellDescriptions; i++) {
+        CellDescription::Packed packed = localCellDescriptionVector[i].convert();
+        MPI_Pack(&packed, 1, CellDescription::Packed::Datatype, block.data(), block.size(), &block_position, MPI_COMM_WORLD );
+        assertionEquals(block_position, 1+cellDescriptionSize*numberOfCellDescriptions);
     }
+    #endif
   } else {
     CellDescriptionHeap::getInstance().sendData(cellDescriptionIndex, _remoteRank, _position, _level, _messageType);
   }
@@ -169,29 +170,13 @@ void peanoclaw::parallel::SubgridCommunicator::sendPaddingCellDescription() {
 
   if(_packCommunication && _messageType == peano::heap::NeighbourCommunication) {
     #if defined(Parallel) && defined(UseBlockedMeshCommunication)
-    //std::vector<CellDescription>& localCellDescriptionVector = CellDescriptionHeap::getInstance().getData(cellDescriptionIndex);
-
     Serialization::SendBuffer& sendbuffer = peano::parallel::SerializationMap::getInstance().getSendBuffer(_remoteRank)[1];
-
-    //    size_t numberOfCellDescriptions = 1;
-    //    int cellDescriptionSize = sizeof(CellDescription::Packed);
     Serialization::Block block = sendbuffer.reserveBlock(1);
     unsigned char CellDescriptionType = 0x10;
     block << CellDescriptionType;
-
-    //    int block_position = 0;
-    //std::cout << " ||||||| packing " << numberOfCellDescriptions << " padded cell descriptions " << std::endl;
-    //    for (size_t i=0; i < numberOfCellDescriptions; i++) {
-    //        CellDescription::Packed packed; // padding patch
-    //        MPI_Pack(&packed, 1, CellDescription::Packed::Datatype, block.data(), block.size(), &block_position, MPI_COMM_WORLD );
-    //    }
-
-    //CellDescriptionHeap::getInstance().sendData(cellDescriptionIndex, _remoteRank, _position, _level, _messageType);
     #endif
   } else {
-
     CellDescriptionHeap::getInstance().sendData(cellDescriptionIndex, _remoteRank, _position, _level, _messageType);
-
   }
 
   CellDescriptionHeap::getInstance().deleteData(cellDescriptionIndex);
@@ -320,7 +305,8 @@ void peanoclaw::parallel::SubgridCommunicator::receivePaddingSubgrid() {
   assertionEquals4(remoteCellDescriptionVector.size(), 0, _position, _level, _remoteRank, remoteCellDescriptionVector[0].toString());
 
   //UNew
-  receiveDataArray();
+  receivePaddingDataArray();
+
   #endif
   logTraceOut("receivePaddingSubgrid()");
 }
@@ -366,6 +352,11 @@ int peanoclaw::parallel::SubgridCommunicator::receiveDataArray() {
 
   logTraceOut("receiveDataArray");
   return localIndex;
+}
+
+void peanoclaw::parallel::SubgridCommunicator::receivePaddingDataArray() {
+  int paddingArrayIndex = receiveDataArray();
+  DataHeap::getInstance().deleteData(paddingArrayIndex);
 }
 
 void peanoclaw::parallel::SubgridCommunicator::receiveOverlappedCells(
@@ -443,22 +434,24 @@ void peanoclaw::parallel::SubgridCommunicator::receiveOverlappedCells(
     dfor(subcellIndex, region._size) {
       int linearIndex = subgridAccessor.getLinearIndexUNew(region._offset + subcellIndex);
       for(int unknown = 0; unknown < remoteCellDescription.getUnknownsPerSubcell(); unknown++) {
-        subgridAccessor.setValueUNewAndResize(linearIndex, unknown, remoteData[entry++].getU());
+        subgridAccessor.setValueUNew(linearIndex, unknown, remoteData[entry++].getU());
       }
-
-      //TODO unterweg debug
-//      std::cout << "Setting cell " << (region._offset + subcellIndex) << std::endl;
 
       #if defined(AssertForPositiveValues) && defined(Asserts)
       if(subgrid.isLeaf()) {
-        assertion6(
+        std::stringstream s;
+        for(size_t i = 0; i < remoteData.size(); i++) s << remoteData[i].getU() << " ";
+        assertion9(
           tarch::la::greater(subgrid.getAccessor().getValueUNew(linearIndex, 0), 0.0),
           subgrid,
           subcellIndex,
           region._offset,
           region._size,
           subgrid.getAccessor().getValueUNew(linearIndex, 0),
-          subgrid.toStringUNew()
+          subgrid.toStringUNew(),
+          entry,
+          s.str(),
+          tarch::parallel::Node::getInstance().getRank()
         );
       }
       #endif
@@ -468,7 +461,8 @@ void peanoclaw::parallel::SubgridCommunicator::receiveOverlappedCells(
     dfor(subcellIndex, region._size) {
       int linearIndex = subgridAccessor.getLinearIndexUOld(region._offset + subcellIndex);
       for(int unknown = 0; unknown < remoteCellDescription.getUnknownsPerSubcell(); unknown++) {
-        subgridAccessor.setValueUOldAndResize(linearIndex, unknown, remoteData[entry++].getU());
+//        subgridAccessor.setValueUOldAndResize(linearIndex, unknown, remoteData[entry++].getU());
+        subgridAccessor.setValueUOld(linearIndex, unknown, remoteData[entry++].getU());
       }
 
       #if defined(AssertForPositiveValues) && defined(Asserts)

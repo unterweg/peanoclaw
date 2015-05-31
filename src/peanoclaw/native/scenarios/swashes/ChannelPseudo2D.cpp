@@ -102,7 +102,7 @@ void peanoclaw::native::scenarios::swashes::ChannelPseudo2D::initializePatch(pea
         double waterheight = _criticality == Sub ? _swashesChannel->getInitialWaterHeight(position) : 0.0;
 
         //TODO unterweg debug
-//        waterheight = std::max(0.1, waterheight);
+//        waterheight = std::max(1e-5, waterheight);
 
         if(accessor.getParameterWithGhostlayer(subcellIndex, 0) >= BED_HEIGHT) {
           waterheight = 0;
@@ -155,6 +155,12 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::swashes::Chan
   } else {
     return _maximalMeshWidth;
   }
+//  if(tarch::la::greaterEquals(patch.getPosition()[1] - _domainOffset[1], _domainSize[1] * 2.0 / 3.0)
+//     || !tarch::la::greater(patch.getPosition()[1] + patch.getSize()[1] - _domainOffset[1], _domainSize[1] / 3.0)) {
+//    return _minimalMeshWidth;
+//  } else {
+//    return patch.getDemandedMeshWidth();
+//  }
 }
 
 void peanoclaw::native::scenarios::swashes::ChannelPseudo2D::update(peanoclaw::Patch& subgrid) {
@@ -227,6 +233,7 @@ peanoclaw::native::scenarios::swashes::ChannelPseudo2D::getBoundaryCondition(int
     } else if (_criticality == Super) {
       if(dimension == 0 && !upper) {
         return FullSWOF2DBoundaryCondition(1, 20, 0.503369); //Implied height
+//        return FullSWOF2DBoundaryCondition(2, 0, 0); //Wall
       }
 
       if(dimension == 0 && upper) {
