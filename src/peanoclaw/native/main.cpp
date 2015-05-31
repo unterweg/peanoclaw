@@ -140,7 +140,7 @@ void runSimulation(
     scenario.getInitialTimestepSize(),
     useCornerExtrapolation,
     numberOfThreads,
-    true, //Reduce reductions
+    false, //Reduce reductions
     1, //Fork level increment
     plotName
   );

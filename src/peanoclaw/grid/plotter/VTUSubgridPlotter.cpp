@@ -16,7 +16,7 @@ peanoclaw::grid::plotter::VTUSubgridPlotter::VTUSubgridPlotter(
   std::set<int> plotQ = std::set<int>(),
   std::set<int> plotParameterWithoutGhostlayer = std::set<int>(),
   std::set<int> plotParameterWithGhostlayer = std::set<int>(),
-  bool plotMetainformation = true
+  bool plotMetainformation
 ) : _fileName(fileName),
     _vtuWriter(),
 //    _gap(0.015),

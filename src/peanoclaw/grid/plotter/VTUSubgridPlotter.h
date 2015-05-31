@@ -137,7 +137,7 @@ public:
     std::set<int> plotQ,
     std::set<int> plotParameterWithoutGhostlayer,
     std::set<int> plotParameterWithGhostlayer,
-    bool plotMetainformation
+    bool plotMetainformation = true
   );
 
   virtual ~VTUSubgridPlotter();

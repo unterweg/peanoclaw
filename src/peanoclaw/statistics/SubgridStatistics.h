@@ -120,6 +120,11 @@ class peanoclaw::statistics::SubgridStatistics {
     void copy(const SubgridStatistics& other);
 
     /**
+     * Deletes data arrays.
+     */
+    void deleteData();
+
+    /**
      * Computes a simple hash of the machine's name.
      */
     int computeProcessorHashCode();
@@ -240,6 +245,11 @@ class peanoclaw::statistics::SubgridStatistics {
      * over the whole simulation time.
      */
     void averageTotalSimulationValues(int numberOfEntries);
+
+    /**
+     * Returns the time of the minimal subgrid.
+     */
+    double getMinimalSubgridTime() const;
 
     #ifdef Parallel
     /**

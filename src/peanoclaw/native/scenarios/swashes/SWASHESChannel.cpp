@@ -104,7 +104,9 @@ double peanoclaw::native::scenarios::swashes::SWASHESShortChannel::getExpectedWa
 }
 
 void peanoclaw::native::scenarios::swashes::SWASHESShortChannel::initialize() {
+  #ifdef PEANOCLAW_SWASHES
   compute();
+  #endif
 }
 
 double peanoclaw::native::scenarios::swashes::SWASHESShortChannel::getOutflowHeight() const {
@@ -118,7 +120,9 @@ double peanoclaw::native::scenarios::swashes::SWASHESLongChannel::getBedWidth(do
 }
 
 void peanoclaw::native::scenarios::swashes::SWASHESLongChannel::initialize() {
+  #ifdef PEANOCLAW_SWASHES
   compute();
+  #endif
 }
 
 double peanoclaw::native::scenarios::swashes::SWASHESLongChannel::getOutflowHeight() const {

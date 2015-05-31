@@ -12,6 +12,7 @@
 #include "SWASHES/parameters.hpp"
 #endif
 
+#include <string>
 #include <vector>
 
 namespace peanoclaw {

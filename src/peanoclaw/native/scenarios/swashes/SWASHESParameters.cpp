@@ -6,6 +6,8 @@
  */
 #include "peanoclaw/native/scenarios/swashes/SWASHESParameters.h"
 
+#include <sstream>
+
 char** peanoclaw::native::scenarios::swashes::SWASHESParameters::getFilledParameterStrings(int numberOfCellsX, int choice) {
   _parameterStrings = new std::string[6];
   _parameterStrings[0] = std::string("not used");
@@ -30,7 +32,9 @@ char** peanoclaw::native::scenarios::swashes::SWASHESParameters::getFilledParame
 }
 
 peanoclaw::native::scenarios::swashes::SWASHESParameters::SWASHESParameters(int numberOfCellsX, int choice)
+#ifdef PEANOCLAW_SWASHES
 : SWASHES::Parameters(6,  getFilledParameterStrings(numberOfCellsX, choice))
+#endif
 {
 }
 

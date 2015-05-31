@@ -199,12 +199,15 @@ peanoclaw::Patch::Patch(int cellDescriptionIndex)
 }
 
 peanoclaw::Patch::Patch(const tarch::la::Vector<DIMENSIONS, double>& position,
-    const tarch::la::Vector<DIMENSIONS, double>& size, int unknownsPerSubcell,
+    const tarch::la::Vector<DIMENSIONS, double>& size,
+    int unknownsPerSubcell,
     int parameterWithoutGhostlayer,
     int parameterWithGhostlayer,
     const tarch::la::Vector<DIMENSIONS, int>& subdivisionFactor,
-    int ghostLayerWidth, double initialTimestepSize, int level)
-: _cellDescription(0),
+    int ghostLayerWidth,
+    double initialTimestepSize,
+    int level
+) : _cellDescription(0),
   _uNew(0)
 {
   //Initialise Cell Description

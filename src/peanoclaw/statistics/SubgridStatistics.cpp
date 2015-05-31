@@ -154,6 +154,19 @@ void peanoclaw::statistics::SubgridStatistics::copy(const SubgridStatistics& oth
   _isFinalized = other._isFinalized;
 }
 
+void peanoclaw::statistics::SubgridStatistics::deleteData() {
+  #ifndef SharedMemoryParallelisation
+  tarch::multicore::Lock lock(_heapSemaphore);
+  if(_levelStatisticsIndex != -1) {
+    LevelStatisticsHeap::getInstance().deleteData(_levelStatisticsIndex);
+  }
+
+  if(_processStatisticsIndex != -1) {
+    ProcessStatisticsHeap::getInstance().deleteData(_processStatisticsIndex);
+  }
+  #endif
+}
+
 int peanoclaw::statistics::SubgridStatistics::computeProcessorHashCode() {
   #ifdef Parallel
   char processorName[MPI_MAX_PROCESSOR_NAME];
@@ -357,6 +370,7 @@ peanoclaw::statistics::SubgridStatistics::SubgridStatistics(const SubgridStatist
 peanoclaw::statistics::SubgridStatistics& peanoclaw::statistics::SubgridStatistics::operator=(
   SubgridStatistics& other
 ) {
+  deleteData();
   copy(other);
 
   other._levelStatisticsIndex = -1;
@@ -368,7 +382,7 @@ peanoclaw::statistics::SubgridStatistics& peanoclaw::statistics::SubgridStatisti
 const peanoclaw::statistics::SubgridStatistics& peanoclaw::statistics::SubgridStatistics::operator=(
   const SubgridStatistics& other
 ) {
-
+  deleteData();
   copy(other);
 
   #ifndef SharedMemoryParallelisation
@@ -388,16 +402,7 @@ const peanoclaw::statistics::SubgridStatistics& peanoclaw::statistics::SubgridSt
 }
 
 peanoclaw::statistics::SubgridStatistics::~SubgridStatistics() {
-  #ifndef SharedMemoryParallelisation
-  tarch::multicore::Lock lock(_heapSemaphore);
-  if(_levelStatisticsIndex != -1) {
-    //LevelStatisticsHeap::getInstance().deleteData(_levelStatisticsIndex);
-  }
-
-  if(_processStatisticsIndex != -1) {
-    //ProcessStatisticsHeap::getInstance().deleteData(_processStatisticsIndex);
-  }
-  #endif
+  deleteData();
 }
 
 void peanoclaw::statistics::SubgridStatistics::processSubgrid(
@@ -690,6 +695,10 @@ void peanoclaw::statistics::SubgridStatistics::merge(const SubgridStatistics& su
     }
   }
   #endif
+}
+
+double peanoclaw::statistics::SubgridStatistics::getMinimalSubgridTime() const {
+  return _minimalPatchTime;
 }
 
 void peanoclaw::statistics::SubgridStatistics::averageTotalSimulationValues(int numberOfEntries) {

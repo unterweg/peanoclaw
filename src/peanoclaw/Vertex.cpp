@@ -99,7 +99,7 @@ void peanoclaw::Vertex::fillAdjacentGhostLayers(
 //      //&& tarch::la::equals(position(2), 1.0/9.0)
 //      && level == 3
   ;
-  plotVertex = true;
+//  plotVertex = true;
 
   if(plotVertex) {
     std::cerr << "Filling vertex ("

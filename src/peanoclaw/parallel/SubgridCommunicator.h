@@ -92,6 +92,11 @@ class peanoclaw::parallel::SubgridCommunicator {
     int receiveDataArray();
 
     /**
+     * Receives an padding data array and deletes it instantly.
+     */
+    void receivePaddingDataArray();
+
+    /**
      * Receives and returns a CellDescription, either a normal
      * CellDescription, so the resulting vector contains one
      * element, or a padding CellDescription, so the result vector

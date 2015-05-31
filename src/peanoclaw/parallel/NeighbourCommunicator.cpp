@@ -90,6 +90,8 @@ bool peanoclaw::parallel::NeighbourCommunicator::sendSubgrid(
       _statistics.sentNeighborData();
       _subgridCommunicator.sendSubgrid(transferedSubgrid);
 
+      logDebug("sendSubgrid(subgrid)", "Sending subgrid to rank " << _remoteRank << "(" << transferedSubgrid.getUIndex() << "): " << transferedSubgrid);
+
       sentSubgrid = true;
       //TODO unterweg dissertation
       //The subgrid must not be set to "current state was sent" since otherwise
@@ -120,9 +122,11 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
   logTraceInWith1Argument("receiveSubgrid(Subgrid)", localSubgrid);
 
   std::vector<CellDescription> remoteCellDescriptionVector = _subgridCommunicator.receiveCellDescription();
-  logDebug("", "Receiving patch from " << _remoteRank << " at " << localSubgrid.getPosition() << " on level " << localSubgrid.getLevel());
+  logDebug("receiveSubgrid(Subgrid)", "Receiving subgrid from rank " << _remoteRank
+      << " at " << localSubgrid.getPosition() << " on level " << localSubgrid.getLevel() << " #cellDescriptions=" << remoteCellDescriptionVector.size());
 
-  if(!_onlySendSubgridsAfterChange || remoteCellDescriptionVector.size() > 0) {
+//  if(!_onlySendSubgridsAfterChange || remoteCellDescriptionVector.size() > 0) {
+  if(remoteCellDescriptionVector.size() > 0) {
     assertionEquals4(remoteCellDescriptionVector.size(), 1, _position, _level, _remoteRank, localSubgrid);
     CellDescription remoteCellDescription = remoteCellDescriptionVector[0];
     assertionEquals2(localSubgrid.getLevel(), _level, localSubgrid, tarch::parallel::Node::getInstance().getRank());
@@ -138,36 +142,48 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
         localSubgrid, remoteCellDescription.toString(), tarch::parallel::Node::getInstance().getRank(), _remoteRank);
     #endif
 
+    //Copy remote cell description to local cell description
+    remoteCellDescription.setCellDescriptionIndex(localSubgrid.getCellDescriptionIndex());
+    remoteCellDescription.setIsRemote(true); //TODO unterweg: Remote patches are currently never destroyed.
+
     _statistics.receivedNeighborData();
     if(remoteCellDescription.getUIndex() != -1) {
       if(_onlySendOverlappedCells) {
-        if(!localSubgrid.isLeaf() && !localSubgrid.isVirtual()) {
-          localSubgrid.switchToVirtual();
-        }
+        bool localSubgridNotInitialized = !localSubgrid.isLeaf() && !localSubgrid.isVirtual();
+        bool remoteSubgridIsVirtual = remoteCellDescription.getIsVirtual();
+        remoteCellDescription.setIsVirtual(false);
 
         remoteCellDescription.setUIndex(localSubgrid.getUIndex());
         remoteCellDescription.setCellDescriptionIndex(localSubgrid.getCellDescriptionIndex());
         CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0) = remoteCellDescription;
         localSubgrid.reloadCellDescription();
+
+        if(localSubgridNotInitialized) {
+          localSubgrid.switchToVirtual();
+          if(!remoteSubgridIsVirtual) {
+            localSubgrid.switchToLeaf();
+          }
+        } else if(remoteSubgridIsVirtual) {
+          localSubgrid.switchToVirtual();
+        }
+
         _subgridCommunicator.receiveOverlappedCells(remoteCellDescription, localSubgrid);
-        assertion(remoteCellDescription.getUIndex() != -1);
+        assertion(localSubgrid.getUIndex() != -1);
       } else {
         remoteCellDescription.setUIndex(_subgridCommunicator.receiveDataArray());
         _subgridCommunicator.deleteArraysFromSubgrid(localSubgrid);
       }
     } else {
-      _subgridCommunicator.receiveDataArray();
+      _subgridCommunicator.receivePaddingDataArray();
+      CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0) = remoteCellDescription;
+      assertionEquals(CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).size(), 1);
     }
-
-    //Copy remote cell description to local cell description
-    remoteCellDescription.setCellDescriptionIndex(localSubgrid.getCellDescriptionIndex());
-    remoteCellDescription.setIsRemote(true); //TODO unterweg: Remote patches are currently never destroyed.
-    CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0) = remoteCellDescription;
-    assertionEquals(CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).size(), 1);
 
     //Initialize non-parallel fields
     Patch remotePatch(localSubgrid.getCellDescriptionIndex());
     remotePatch.initializeNonParallelFields();
+
+    logDebug("receiveSubgrid", "Subgrid received from rank " << _remoteRank << ": " << remotePatch);
 
     //Check for zeros in transfered patch
     #if defined(Asserts) && defined(AssertForPositiveValues)
@@ -297,7 +313,8 @@ void peanoclaw::parallel::NeighbourCommunicator::sendSubgridsForVertex(
 
       if(!sentSubgrid) {
         logDebug("sendSubgridsForVertex", "Sending padding subgrid to rank " << _remoteRank
-            << " at " << (_position + _subgridSize * (peano::utils::dDelinearised(i, 2).convertScalar<double>()*2.0-1.0)) << " on level " << _level);
+            << " at " << (_position + _subgridSize * (peano::utils::dDelinearised(i, 2).convertScalar<double>()*2.0-1.0)) << " on level " << _level << " which is of rank " << localSubgridRank
+            << " new-worker: " << state.isNewWorkerDueToForkOfExistingDomain() << " forking: " << state.isForking() << " cellDescriptionIndex=" << vertex.getAdjacentCellDescriptionIndexInPeanoOrder(i));
 
         _subgridCommunicator.sendPaddingSubgrid();
       }

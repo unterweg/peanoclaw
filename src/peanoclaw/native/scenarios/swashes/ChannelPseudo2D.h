@@ -11,6 +11,7 @@
 #include "peanoclaw/native/scenarios/SWEScenario.h"
 #include "peanoclaw/native/scenarios/swashes/SWASHESChannel.h"
 #include "peanoclaw/native/scenarios/swashes/SWASHESParameters.h"
+#include "peanoclaw/native/scenarios/FullSWOF2DBoundaryCondition.h"
 
 #include "peano/utils/Dimensions.h"
 #include "tarch/la/Vector.h"
