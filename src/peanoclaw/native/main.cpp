@@ -182,6 +182,7 @@ int main(int argc, char **argv) {
 
 #if defined(Parallel)
   int parallelSetup = peano::initParallelEnvironment(&argc,(char ***)&argv);
+  assertionEquals(parallelSetup, 0);
 #endif
 
   initializeLogFilter();

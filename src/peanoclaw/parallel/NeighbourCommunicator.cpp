@@ -172,6 +172,7 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
         } else {
           _subgridCommunicator.deleteArraysFromSubgrid(localSubgrid);
           CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0).setUIndex(_subgridCommunicator.receiveDataArray());
+          localSubgrid.reloadCellDescription();
         }
         assertion(localSubgrid.getUIndex() != -1);
     } else {
