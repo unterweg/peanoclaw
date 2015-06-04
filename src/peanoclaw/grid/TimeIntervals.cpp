@@ -254,6 +254,14 @@ double peanoclaw::grid::TimeIntervals::getMaximalFineGridTimestep() const {
   return _cellDescription->getMaximumFineGridTimestep();
 }
 
+double peanoclaw::grid::TimeIntervals::getMaximalFineGridTime() const {
+  return _cellDescription->getMaximumFineGridTime();
+}
+
+double peanoclaw::grid::TimeIntervals::getMinimalFineGridTimestep() const {
+  return _cellDescription->getMinimumFineGridTimestep();
+}
+
 double peanoclaw::grid::TimeIntervals::getTimeConstraint() const {
   return _cellDescription->getTime() + _cellDescription->getTimestepSize();
 }

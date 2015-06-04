@@ -520,6 +520,13 @@ void peanoclaw::mappings::Remesh::destroyCell(
     //Patch got moved to other rank, check whether it is now adjacent to the local domain.
     ParallelSubgrid parallelSubgrid(fineGridCell.getCellDescriptionIndex());
 
+    //If the coarse cell belongs to us -> update fine grid time interval
+//    if(coarseGridCell.getCellDescriptionIndex() >= 0 && !coarseGridCell.isRemote(*_state, true, true)) {
+//      Patch coarseSubgrid(coarseGridCell);
+//      coarseSubgrid.getTimeIntervals().updateMaximalFineGridTimeInterval(finePatch.getTimeIntervals().getCurrentTime(), finePatch.getTimeIntervals().getTimestepSize());
+//      coarseSubgrid.getTimeIntervals().updateMinimalFineGridTimeInterval(finePatch.getTimeIntervals().getCurrentTime(), finePatch.getTimeIntervals().getTimestepSize());
+//    }
+
     //If it is adjacent -> Now remote
     //If not -> Delete it
     if(parallelSubgrid.isAdjacentToLocalSubdomain(coarseGridCell, fineGridVertices, fineGridVerticesEnumerator)) {
