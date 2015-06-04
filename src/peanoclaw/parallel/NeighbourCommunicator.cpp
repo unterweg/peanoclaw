@@ -148,7 +148,7 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
 
     _statistics.receivedNeighborData();
     if(remoteCellDescription.getUIndex() != -1) {
-      if(_onlySendOverlappedCells) {
+
         bool localSubgridNotInitialized = !localSubgrid.isLeaf() && !localSubgrid.isVirtual();
         bool remoteSubgridIsVirtual = remoteCellDescription.getIsVirtual();
         remoteCellDescription.setIsVirtual(false);
@@ -167,16 +167,18 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
           localSubgrid.switchToVirtual();
         }
 
-        _subgridCommunicator.receiveOverlappedCells(remoteCellDescription, localSubgrid);
+        if(_onlySendOverlappedCells) {
+          _subgridCommunicator.receiveOverlappedCells(remoteCellDescription, localSubgrid);
+        } else {
+          _subgridCommunicator.deleteArraysFromSubgrid(localSubgrid);
+          CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0).setUIndex(_subgridCommunicator.receiveDataArray());
+        }
         assertion(localSubgrid.getUIndex() != -1);
-      } else {
-        remoteCellDescription.setUIndex(_subgridCommunicator.receiveDataArray());
-        _subgridCommunicator.deleteArraysFromSubgrid(localSubgrid);
-      }
     } else {
       _subgridCommunicator.receivePaddingDataArray();
       CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0) = remoteCellDescription;
       assertionEquals(CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).size(), 1);
+      localSubgrid.reloadCellDescription();
     }
 
     //Initialize non-parallel fields

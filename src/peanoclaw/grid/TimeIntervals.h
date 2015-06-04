@@ -218,6 +218,10 @@ class peanoclaw::grid::TimeIntervals {
      */
     double getMaximalFineGridTimestep() const;
 
+    double getMaximalFineGridTime() const;
+
+    double getMinimalFineGridTimestep() const;
+
     /**
      * Returns the maximum time that is covered by this patch. This
      * time constrains the timestepping of theneighboring patches.

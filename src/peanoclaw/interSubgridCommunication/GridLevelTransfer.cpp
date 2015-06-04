@@ -406,7 +406,6 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepDown(
 }
 
 void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepUp(
-  //int                                  coarseCellDescriptionIndex,
   Patch*                               coarseSubgrid,
   Patch&                               finePatch,
   ParallelSubgrid&                     fineParallelSubgrid,

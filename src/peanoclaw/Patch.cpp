@@ -398,7 +398,7 @@ void peanoclaw::Patch::switchValuesAndTimeIntervalToMinimalFineGridTimeInterval(
   _cellDescription->setTimestepSize(
     _cellDescription->getMinimumFineGridTimestep()
   );
-  assertion(_cellDescription->getMinimumFineGridTimestep() < std::numeric_limits<double>::max());
+//  assertion1(_cellDescription->getMinimumFineGridTimestep() < std::numeric_limits<double>::max(), *this);
 
 //  #ifdef PEANOCLAW_USE_ASCEND_FOR_RESTRICTION
 //  //Interpolate patch values from former [time, time+timestepSize] to new [time, time+timestepSize]
