@@ -32,8 +32,29 @@ class peanoclaw::repositories::Repository {
     
     /**
      * Iterate with current active event handle.
+     *
+     * !!! Stop exchange of boundary vertices
+     *
+     * If you can make your algorithm run without boundary vertex exchange for
+     * a couple of times, you typically observe a significant speedup. Exchange
+     * via a heap in return can often be hidden in the background easier. If you
+     * unset the argument exchangeBoundaryVertices, this has two implications:
+     *
+     * - All vertices are passed through perpareSendToNeighbour and merge to
+     *   allow you to do heap data exchange or boundary modifications, e.g.
+     *   However, the vertices are not physically handled over the MPI but
+     *   discarded instead.
+     * - If you switch to false/true this always has implications on the next
+     *   grid traversal, as boundary data is exchanged similar to Jacobi
+     *   sweeps. If you send away data and afterward switch the flag to false,
+     *   there is still data available in the next sweep that has been received
+     *   from the iteration before. You do not send away data anymore, but you
+     *   receive.
+     *
+     * @param numberOfIterations        How often shall the repository run through a particular adapter
+     * @param exchangeBoundaryVertices  Does Peano have to exchange boundary vertices at all?
      */
-    virtual void iterate(int numberOfIterations=1) = 0;
+    virtual void iterate(int numberOfIterations=1, bool exchangeBoundaryVertices=true) = 0;
 
     virtual peanoclaw::State& getState() = 0;
     virtual const peanoclaw::State& getState() const = 0;
@@ -161,13 +182,22 @@ class peanoclaw::repositories::Repository {
     virtual ContinueCommand continueToIterate() = 0;
 
     /**
-     * Run one global step on all mpi ranks
+     * Run one global step on all mpi ranks besides rank 0
      * 
      * This operation sends a marker to all nodes, i.e. 
      * both idle and working nodes, and calls their runGlobalStep() routine 
      * within the parallel runner. Afterwards, all idle nodes again register as 
      * idle on the node pool, all other nodes continue to run Peano. Should be 
      * used with care, as it might be expensive on massively parallel systems.  
+     *
+     * Please note that all worker runners invoke their runGlobalStep() as a 
+     * reaction to this function call. The global master, i.e. rank 0, however
+     * does not run this operation. If you want to make the master trigger the 
+     * function as well, you have to invoke it manually. Typically, the global 
+     * master code thus comprises two steps: call runGlobalStep() on the 
+     * repository (which in turn invokes runGlobalStep() on all workers) and 
+     * immediately afterwards call runGlobalStep() locally within 
+     * runAsMaster().
      */
     virtual void runGlobalStep() = 0;
     #endif

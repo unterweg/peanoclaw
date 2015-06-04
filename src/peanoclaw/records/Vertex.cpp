@@ -328,10 +328,10 @@
          
       }
       
-      void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+      void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
          _senderDestinationRank = destination;
          
-         if (communicateBlocking) {
+         if (communicateSleep<0) {
          
             const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
             if  (result!=MPI_SUCCESS) {
@@ -415,6 +415,8 @@
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;
@@ -428,8 +430,8 @@
    
    
    
-   void peanoclaw::records::Vertex::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::records::Vertex::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          MPI_Status  status;
          const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -508,6 +510,8 @@
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;
@@ -837,10 +841,10 @@ peanoclaw::records::Vertex peanoclaw::records::VertexPacked::convert() const{
       
    }
    
-   void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       _senderDestinationRank = destination;
       
-      if (communicateBlocking) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -924,6 +928,8 @@ peanoclaw::records::Vertex peanoclaw::records::VertexPacked::convert() const{
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -937,8 +943,8 @@ peanoclaw::records::Vertex peanoclaw::records::VertexPacked::convert() const{
 
 
 
-void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-   if (communicateBlocking) {
+void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+   if (communicateSleep<0) {
    
       MPI_Status  status;
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -1017,6 +1023,8 @@ void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchang
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -1339,10 +1347,10 @@ void peanoclaw::records::Vertex::shutdownDatatype() {
    
 }
 
-void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
    _senderDestinationRank = destination;
    
-   if (communicateBlocking) {
+   if (communicateSleep<0) {
    
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
       if  (result!=MPI_SUCCESS) {
@@ -1426,6 +1434,8 @@ void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnl
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
@@ -1439,8 +1449,8 @@ void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnl
 
 
 
-void peanoclaw::records::Vertex::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void peanoclaw::records::Vertex::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
    MPI_Status  status;
    const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -1519,6 +1529,8 @@ else {
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
@@ -1806,10 +1818,10 @@ MPI_Type_free( &VertexPacked::FullDatatype );
 
 }
 
-void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
 _senderDestinationRank = destination;
 
-if (communicateBlocking) {
+if (communicateSleep<0) {
 
    const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
    if  (result!=MPI_SUCCESS) {
@@ -1893,6 +1905,8 @@ while (!flag) {
       );
    }
    tarch::parallel::Node::getInstance().receiveDanglingMessages();
+   usleep(communicateSleep);
+   
 }
 
 delete sendRequestHandle;
@@ -1906,8 +1920,8 @@ _log.debug("send(int,int)", "sent " + toString() );
 
 
 
-void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
 MPI_Status  status;
 const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -1986,6 +2000,8 @@ while (!flag) {
       );
    }
    tarch::parallel::Node::getInstance().receiveDanglingMessages();
+   usleep(communicateSleep);
+   
 }
 
 delete sendRequestHandle;
@@ -2336,10 +2352,10 @@ MPI_Type_free( &Vertex::FullDatatype );
 
 }
 
-void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
 _senderDestinationRank = destination;
 
-if (communicateBlocking) {
+if (communicateSleep<0) {
 
 const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
 if  (result!=MPI_SUCCESS) {
@@ -2423,6 +2439,8 @@ tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
 );
 }
 tarch::parallel::Node::getInstance().receiveDanglingMessages();
+usleep(communicateSleep);
+
 }
 
 delete sendRequestHandle;
@@ -2436,8 +2454,8 @@ _log.debug("send(int,int)", "sent " + toString() );
 
 
 
-void peanoclaw::records::Vertex::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void peanoclaw::records::Vertex::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
 MPI_Status  status;
 const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -2516,6 +2534,8 @@ tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
 );
 }
 tarch::parallel::Node::getInstance().receiveDanglingMessages();
+usleep(communicateSleep);
+
 }
 
 delete sendRequestHandle;
@@ -2827,10 +2847,10 @@ MPI_Type_free( &VertexPacked::FullDatatype );
 
 }
 
-void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
 _senderDestinationRank = destination;
 
-if (communicateBlocking) {
+if (communicateSleep<0) {
 
 const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
 if  (result!=MPI_SUCCESS) {
@@ -2914,6 +2934,8 @@ tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
 );
 }
 tarch::parallel::Node::getInstance().receiveDanglingMessages();
+usleep(communicateSleep);
+
 }
 
 delete sendRequestHandle;
@@ -2927,8 +2949,8 @@ _log.debug("send(int,int)", "sent " + toString() );
 
 
 
-void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
 MPI_Status  status;
 const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -3007,6 +3029,8 @@ tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
 );
 }
 tarch::parallel::Node::getInstance().receiveDanglingMessages();
+usleep(communicateSleep);
+
 }
 
 delete sendRequestHandle;
@@ -3354,10 +3378,10 @@ MPI_Type_free( &Vertex::FullDatatype );
 
 }
 
-void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void peanoclaw::records::Vertex::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
 _senderDestinationRank = destination;
 
-if (communicateBlocking) {
+if (communicateSleep<0) {
 
 const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
 if  (result!=MPI_SUCCESS) {
@@ -3441,6 +3465,8 @@ tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
 );
 }
 tarch::parallel::Node::getInstance().receiveDanglingMessages();
+usleep(communicateSleep);
+
 }
 
 delete sendRequestHandle;
@@ -3454,8 +3480,8 @@ _log.debug("send(int,int)", "sent " + toString() );
 
 
 
-void peanoclaw::records::Vertex::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void peanoclaw::records::Vertex::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
 MPI_Status  status;
 const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -3534,6 +3560,8 @@ tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
 );
 }
 tarch::parallel::Node::getInstance().receiveDanglingMessages();
+usleep(communicateSleep);
+
 }
 
 delete sendRequestHandle;
@@ -3839,10 +3867,10 @@ MPI_Type_free( &VertexPacked::FullDatatype );
 
 }
 
-void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void peanoclaw::records::VertexPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
 _senderDestinationRank = destination;
 
-if (communicateBlocking) {
+if (communicateSleep<0) {
 
 const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
 if  (result!=MPI_SUCCESS) {
@@ -3926,6 +3954,8 @@ tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
 );
 }
 tarch::parallel::Node::getInstance().receiveDanglingMessages();
+usleep(communicateSleep);
+
 }
 
 delete sendRequestHandle;
@@ -3939,8 +3969,8 @@ _log.debug("send(int,int)", "sent " + toString() );
 
 
 
-void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void peanoclaw::records::VertexPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
 MPI_Status  status;
 const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -4019,6 +4049,8 @@ tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
 );
 }
 tarch::parallel::Node::getInstance().receiveDanglingMessages();
+usleep(communicateSleep);
+
 }
 
 delete sendRequestHandle;

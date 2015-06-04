@@ -31,7 +31,7 @@ namespace peanoclaw {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   14/12/2014 09:18
+ * @date   04/06/2015 16:29
  */
 class peanoclaw::records::RepositoryState { 
    
@@ -46,6 +46,7 @@ class peanoclaw::records::RepositoryState {
       struct PersistentRecords {
          Action _action;
          int _numberOfIterations;
+         bool _exchangeBoundaryVertices;
          /**
           * Generated
           */
@@ -54,7 +55,7 @@ class peanoclaw::records::RepositoryState {
          /**
           * Generated
           */
-         PersistentRecords(const Action& action, const int& numberOfIterations);
+         PersistentRecords(const Action& action, const int& numberOfIterations, const bool& exchangeBoundaryVertices);
          
          
          inline Action getAction() const 
@@ -97,6 +98,26 @@ class peanoclaw::records::RepositoryState {
          
          
          
+         inline bool getExchangeBoundaryVertices() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _exchangeBoundaryVertices;
+         }
+         
+         
+         
+         inline void setExchangeBoundaryVertices(const bool& exchangeBoundaryVertices) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _exchangeBoundaryVertices = exchangeBoundaryVertices;
+         }
+         
+         
+         
       };
       
    private: 
@@ -116,7 +137,7 @@ class peanoclaw::records::RepositoryState {
       /**
        * Generated
        */
-      RepositoryState(const Action& action, const int& numberOfIterations);
+      RepositoryState(const Action& action, const int& numberOfIterations, const bool& exchangeBoundaryVertices);
       
       /**
        * Generated
@@ -160,6 +181,26 @@ class peanoclaw::records::RepositoryState {
  #endif 
  {
          _persistentRecords._numberOfIterations = numberOfIterations;
+      }
+      
+      
+      
+      inline bool getExchangeBoundaryVertices() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+         return _persistentRecords._exchangeBoundaryVertices;
+      }
+      
+      
+      
+      inline void setExchangeBoundaryVertices(const bool& exchangeBoundaryVertices) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+         _persistentRecords._exchangeBoundaryVertices = exchangeBoundaryVertices;
       }
       
       
@@ -215,9 +256,14 @@ class peanoclaw::records::RepositoryState {
          
          static void shutdownDatatype();
          
-         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+         /**
+          * @param communicateSleep -1 Data exchange through blocking mpi
+          * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+          * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+          */
+         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
          
-         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
          
          static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
          
@@ -245,7 +291,7 @@ class peanoclaw::records::RepositoryState {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   14/12/2014 09:18
+    * @date   04/06/2015 16:29
     */
    class peanoclaw::records::RepositoryStatePacked { 
       
@@ -256,6 +302,7 @@ class peanoclaw::records::RepositoryState {
          struct PersistentRecords {
             Action _action;
             int _numberOfIterations;
+            bool _exchangeBoundaryVertices;
             /**
              * Generated
              */
@@ -264,7 +311,7 @@ class peanoclaw::records::RepositoryState {
             /**
              * Generated
              */
-            PersistentRecords(const Action& action, const int& numberOfIterations);
+            PersistentRecords(const Action& action, const int& numberOfIterations, const bool& exchangeBoundaryVertices);
             
             
             inline Action getAction() const 
@@ -307,6 +354,26 @@ class peanoclaw::records::RepositoryState {
             
             
             
+            inline bool getExchangeBoundaryVertices() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               return _exchangeBoundaryVertices;
+            }
+            
+            
+            
+            inline void setExchangeBoundaryVertices(const bool& exchangeBoundaryVertices) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               _exchangeBoundaryVertices = exchangeBoundaryVertices;
+            }
+            
+            
+            
          };
          
       private: 
@@ -326,7 +393,7 @@ class peanoclaw::records::RepositoryState {
          /**
           * Generated
           */
-         RepositoryStatePacked(const Action& action, const int& numberOfIterations);
+         RepositoryStatePacked(const Action& action, const int& numberOfIterations, const bool& exchangeBoundaryVertices);
          
          /**
           * Generated
@@ -370,6 +437,26 @@ class peanoclaw::records::RepositoryState {
  #endif 
  {
             _persistentRecords._numberOfIterations = numberOfIterations;
+         }
+         
+         
+         
+         inline bool getExchangeBoundaryVertices() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _persistentRecords._exchangeBoundaryVertices;
+         }
+         
+         
+         
+         inline void setExchangeBoundaryVertices(const bool& exchangeBoundaryVertices) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _persistentRecords._exchangeBoundaryVertices = exchangeBoundaryVertices;
          }
          
          
@@ -425,9 +512,14 @@ class peanoclaw::records::RepositoryState {
             
             static void shutdownDatatype();
             
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+            /**
+             * @param communicateSleep -1 Data exchange through blocking mpi
+             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             */
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             

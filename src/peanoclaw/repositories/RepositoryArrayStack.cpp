@@ -187,12 +187,13 @@ const peanoclaw::State& peanoclaw::repositories::RepositoryArrayStack::getState(
 }
 
    
-void peanoclaw::repositories::RepositoryArrayStack::iterate(int numberOfIterations) {
+void peanoclaw::repositories::RepositoryArrayStack::iterate(int numberOfIterations, bool exchangeBoundaryVertices) {
   tarch::timing::Watch watch( "peanoclaw::repositories::RepositoryArrayStack", "iterate(bool)", false);
   
   #ifdef Parallel
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     _repositoryState.setNumberOfIterations(numberOfIterations);
+    _repositoryState.setExchangeBoundaryVertices(exchangeBoundaryVertices);
     tarch::parallel::NodePool::getInstance().broadcastToWorkingNodes(
       _repositoryState,
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
@@ -203,6 +204,8 @@ void peanoclaw::repositories::RepositoryArrayStack::iterate(int numberOfIteratio
     numberOfIterations = _repositoryState.getNumberOfIterations();
   }
 
+  peano::parallel::SendReceiveBufferPool::getInstance().exchangeBoundaryVertices(_repositoryState.getExchangeBoundaryVertices());
+
   if ( numberOfIterations > 1 && ( peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated() || _solverState.isInvolvedInJoinOrFork() )) {
     logWarning( "iterate()", "iterate invoked for multiple traversals though load balancing is switched on or grid is not balanced globally. Use activateLoadBalancing(false) to deactivate the load balancing before" );
   }
@@ -210,7 +213,6 @@ void peanoclaw::repositories::RepositoryArrayStack::iterate(int numberOfIteratio
   peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
 
   peano::parallel::loadbalancing::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
-  peano::parallel::loadbalancing::Oracle::getInstance().activateLoadBalancing(_repositoryState.getNumberOfIterations()==1);  
   
   _solverState.currentlyRunsMultipleIterations(_repositoryState.getNumberOfIterations()>1);
   #else
