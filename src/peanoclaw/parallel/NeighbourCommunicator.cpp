@@ -190,10 +190,10 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
 
     //Check for zeros in transfered patch
     #if defined(Asserts) && defined(AssertForPositiveValues)
-    if(remotePatch.isValid() && remotePatch.isLeaf() && !_onlySendOverlappedCells) {
-      dfor(subcellIndex, remotePatch.getSubdivisionFactor()) {
-        assertion3(tarch::la::greater(remotePatch.getAccessor().getValueUNew(subcellIndex, 0), 0.0), subcellIndex, remotePatch, remotePatch.toStringUNew());
-        assertion3(tarch::la::greater(remotePatch.getAccessor().getValueUOld(subcellIndex, 0), 0.0), subcellIndex, remotePatch, remotePatch.toStringUOldWithGhostLayer());
+    if(localSubgrid.isValid() && localSubgrid.isLeaf() && !_onlySendOverlappedCells) {
+      dfor(subcellIndex, localSubgrid.getSubdivisionFactor()) {
+        assertion3(tarch::la::greater(localSubgrid.getAccessor().getValueUNew(subcellIndex, 0), 0.0), subcellIndex, localSubgrid, localSubgrid.toStringUNew());
+        assertion3(tarch::la::greater(localSubgrid.getAccessor().getValueUOld(subcellIndex, 0), 0.0), subcellIndex, localSubgrid, localSubgrid.toStringUOldWithGhostLayer());
       }
     }
     assertionEquals(CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0).getCellDescriptionIndex(), localSubgrid.getCellDescriptionIndex());
