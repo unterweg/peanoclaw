@@ -7,6 +7,7 @@
 #include "peanoclaw/interSubgridCommunication/GridLevelTransfer.h"
 #include "peanoclaw/parallel/NeighbourCommunicator.h"
 #include "peanoclaw/parallel/MasterWorkerAndForkJoinCommunicator.h"
+#include "peanoclaw/statistics/MemoryInformation.h"
 
 #include "peano/grid/aspects/VertexStateAnalysis.h"
 
@@ -57,7 +58,7 @@ peano::MappingSpecification   peanoclaw::mappings::Remesh::touchVertexFirstTimeS
 peano::MappingSpecification   peanoclaw::mappings::Remesh::enterCellSpecification() {
   return peano::MappingSpecification(
     peano::MappingSpecification::WholeTree,
-    peano::MappingSpecification::AvoidCoarseGridRaces
+    peano::MappingSpecification::AvoidFineGridRaces
   );
 }
 
@@ -1301,6 +1302,9 @@ void peanoclaw::mappings::Remesh::endIteration(
     DataHeap::getInstance().finishedToSendSynchronousData();
   }
   #endif
+
+  //TODO unterweg debug
+  logInfo("endIteration", "current: " << peanoclaw::statistics::getCurrentRSS() << " peak: " << peanoclaw::statistics::getPeakRSS());
 
   _spacetreeCommunicationWaitingTimeWatch.startTimer();
   logTraceOutWith1Argument( "endIteration(State)", solverState);

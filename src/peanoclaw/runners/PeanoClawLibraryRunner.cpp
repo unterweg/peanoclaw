@@ -38,6 +38,9 @@
 #include "ControlLoopLoadBalancer/OracleForOnePhaseControlLoopWrapper.h"
 #endif
 
+#include <sys/types.h>
+#include <unistd.h>
+
 #ifdef SharedTBB
 #include "tarch/multicore/tbb/Core.h"
 #endif
@@ -219,6 +222,8 @@ peanoclaw::runners::PeanoClawLibraryRunner::PeanoClawLibraryRunner(
   _initializationWatch("Total initialization", "", false),
   _simulationWatch("Total simulation", "", false)
 {
+  logInfo("PeanoClawLibraryRunner", "pid: " << getpid());
+
   #ifndef Asserts
   _validateGrid = false;
   #endif

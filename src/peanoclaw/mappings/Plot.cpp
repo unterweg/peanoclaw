@@ -469,9 +469,9 @@ void peanoclaw::mappings::Plot::beginIteration(
   logTraceInWith1Argument( "beginIteration(State)", solverState );
 
   std::set<int> plotQ;
-//  plotQ.insert(0);
-//  plotQ.insert(3);
-//  plotQ.insert(4);
+  plotQ.insert(0);
+  plotQ.insert(3);
+  plotQ.insert(4);
   std::set<int> plotParametersWithoutGhostlayer;
   std::set<int> plotParametersWithGhostlayer;
 
@@ -502,7 +502,7 @@ void peanoclaw::mappings::Plot::beginIteration(
     plotQ,
     plotParametersWithoutGhostlayer,
     plotParametersWithGhostlayer,
-    true
+    false//true
   );
 
   //Integrated quantities
