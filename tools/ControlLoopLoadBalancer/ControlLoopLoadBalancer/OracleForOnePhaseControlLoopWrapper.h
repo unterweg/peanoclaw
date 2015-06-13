@@ -25,23 +25,22 @@ class mpibalancing::OracleForOnePhaseControlLoopWrapper : public peano::parallel
         virtual void receivedStartCommand(int commandFromMaster);
         virtual int getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed );
         virtual void receivedTerminateCommand(
-          int     workerRank,
-          double  waitedTime,
-          double  workerNumberOfInnerVertices,
-          double  workerNumberOfBoundaryVertices,
-          double  workerNumberOfOuterVertices,
-          double  workerNumberOfInnerCells,
-          double  workerNumberOfOuterCells,
-          int     workerMaxLevel,
-          double  workerLocalWorkload,
-          double  workerTotalWorkload,
-          double  workerMaxWorkload,
-          double  workerMinWorkload,
-          int     currentLevel,
-          double  parentCellLocalWorkload,
-          const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-          const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
-          bool    workerCouldNotEraseDueToDecomposition
+            int     workerRank,
+            double  workerNumberOfInnerVertices,
+            double  workerNumberOfBoundaryVertices,
+            double  workerNumberOfOuterVertices,
+            double  workerNumberOfInnerCells,
+            double  workerNumberOfOuterCells,
+            int     workerMaxLevel,
+            double  workerLocalWorkload,
+            double  workerTotalWorkload,
+            double  workerMaxWorkload,
+            double  workerMinWorkload,
+            int     currentLevel,
+            double  parentCellLocalWorkload,
+            const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
+            const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
+            bool    workerCouldNotEraseDueToDecomposition
         );
 
         virtual void plotStatistics();

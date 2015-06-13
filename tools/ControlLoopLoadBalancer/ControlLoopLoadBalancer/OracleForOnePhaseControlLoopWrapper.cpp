@@ -53,29 +53,28 @@ int mpibalancing::OracleForOnePhaseControlLoopWrapper::getCommandForWorker( int 
 }
 
 void mpibalancing::OracleForOnePhaseControlLoopWrapper::receivedTerminateCommand(
-      int     workerRank,
-      double  waitedTime,
-      double  workerNumberOfInnerVertices,
-      double  workerNumberOfBoundaryVertices,
-      double  workerNumberOfOuterVertices,
-      double  workerNumberOfInnerCells,
-      double  workerNumberOfOuterCells,
-      int     workerMaxLevel,
-      double  workerLocalWorkload,
-      double  workerTotalWorkload,
-      double  workerMaxWorkload,
-      double  workerMinWorkload,
-      int     currentLevel,
-      double  parentCellLocalWorkload,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
-      bool workerCouldNotEraseDueToDecomposition)
-{
+    int     workerRank,
+    double  workerNumberOfInnerVertices,
+    double  workerNumberOfBoundaryVertices,
+    double  workerNumberOfOuterVertices,
+    double  workerNumberOfInnerCells,
+    double  workerNumberOfOuterCells,
+    int     workerMaxLevel,
+    double  workerLocalWorkload,
+    double  workerTotalWorkload,
+    double  workerMaxWorkload,
+    double  workerMinWorkload,
+    int     currentLevel,
+    double  parentCellLocalWorkload,
+    const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
+    const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
+    bool    workerCouldNotEraseDueToDecomposition
+) {
     // our worker finished its current iteration: let us feed our new data (which might be the first data given by this particular worker)
     // into our history information to give more accurate loadbalancing in our consequent turns
     _controlLoopLoadBalancer.receivedTerminateCommand(
         workerRank,
-        waitedTime,
+        0.0,
         workerNumberOfInnerVertices,
         workerNumberOfBoundaryVertices,
         workerNumberOfOuterVertices,
@@ -110,5 +109,5 @@ void mpibalancing::OracleForOnePhaseControlLoopWrapper::forkFailed() {
 }
 
 int mpibalancing::OracleForOnePhaseControlLoopWrapper::getCoarsestRegularInnerAndOuterGridLevel() const {
-    return 3;
+    return 1;
 }
