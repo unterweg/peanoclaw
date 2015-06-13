@@ -49,6 +49,7 @@ void peanoclaw::statistics::SubgridStatistics::initializeLevelAndProcessStatisti
   #endif
   processStatisticsEntry.setProcessorHashCode(computeProcessorHashCode());
   processStatisticsEntry.setNumberOfCellUpdates(0);
+  processStatisticsEntry.setWallclockTimeForIteration(0.0);
   processStatistics.push_back(processStatisticsEntry);
 
   //TODO unterweg debug
@@ -584,7 +585,12 @@ void peanoclaw::statistics::SubgridStatistics::logProcessStatistics(std::string 
       numberOfIgnoredProcesses++;
     }
 
-    logInfo("logProcessStatistics(...)", "Rank " << i->getRank() << " (Processor: " << i->getProcessorHashCode() << "): #cell updates=" << i->getNumberOfCellUpdates() << " time for iteration=" << i->getWallclockTimeForIteration() << "s");
+    logInfo("logProcessStatistics(...)",
+      "Rank " << i->getRank()
+      << " (Processor: " << i->getProcessorHashCode()
+      << "): #cell updates=" << i->getNumberOfCellUpdates()
+      << " time for iteration=" << i->getWallclockTimeForIteration() << "s"
+    );
   }
 
   double averageCellUpdates = (double)totalCellUpdates / numberOfWorkers;

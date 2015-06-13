@@ -89,6 +89,7 @@ if parallel == 'yes' or parallel == 'parallel_yes':
    cppdefines.append('Parallel')
    cppdefines.append('MPICH_IGNORE_CXX_SEEK')
    cppdefines.append('MPICH_SKIP_MPICXX')
+   cppdefines.append('noMultipleThreadsMayTriggerMPICalls')
    cpppath.extend(mpiConfiguration.getMPIIncludes())
    libpath.extend(mpiConfiguration.getMPILibrarypaths())
    libs.extend(mpiConfiguration.getMPILibraries())
