@@ -258,9 +258,14 @@ def getPeanoSources(Glob, buildpath, multicore):
      sourcesBuiltinGeometry
      ]
   
+  sourcesPerformanceAnalysis = [
+     Glob(join(buildpath, 'kernel/peano/performanceanalysis/*.cpp'))                           
+    ]
+  
   sourcesPeanoBase = [
     sourcesPeanoKernel,
     sourcesPeanoGeometry,
+    sourcesPerformanceAnalysis,
     sourcesPeanoUtils,
     sourcesDatatraversal,
     # sourcesQueries,
