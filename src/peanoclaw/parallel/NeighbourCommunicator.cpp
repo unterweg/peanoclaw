@@ -191,8 +191,8 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
     #if defined(Asserts) && defined(AssertForPositiveValues)
     if(remotePatch.isValid() && remotePatch.isLeaf() && !_onlySendOverlappedCells) {
       dfor(subcellIndex, remotePatch.getSubdivisionFactor()) {
-        assertion3(tarch::la::greater(remotePatch.getAccessor().getValueUNew(subcellIndex, 0), 0.0), subcellIndex, remotePatch, remotePatch.toStringUNew());
-        assertion3(tarch::la::greater(remotePatch.getAccessor().getValueUOld(subcellIndex, 0), 0.0), subcellIndex, remotePatch, remotePatch.toStringUOldWithGhostLayer());
+        assertion4(tarch::la::greater(remotePatch.getAccessor().getValueUNew(subcellIndex, 0), 0.0), tarch::parallel::Node::getInstance().getRank(), subcellIndex, remotePatch, remotePatch.toStringUNew());
+        assertion4(tarch::la::greater(remotePatch.getAccessor().getValueUOld(subcellIndex, 0), 0.0), tarch::parallel::Node::getInstance().getRank(), subcellIndex, remotePatch, remotePatch.toStringUOldWithGhostLayer());
       }
     }
     assertionEquals(CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0).getCellDescriptionIndex(), localSubgrid.getCellDescriptionIndex());
