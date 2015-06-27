@@ -127,7 +127,7 @@ if valgrind == 'no':
 elif valgrind == 'yes':
    ccflags.append('-g')
    cppdefines.append('USE_VALGRIND')
-   valgrindRoot = os.getenv ('VALGRIND_ROOT')
+   valgrindRoot = os.getenv ('VALGRIND_BASE')
    if(valgrindRoot == None):
      valgrindRoot = "/usr"
    cpppath.append(join(valgrindRoot, "include"))
