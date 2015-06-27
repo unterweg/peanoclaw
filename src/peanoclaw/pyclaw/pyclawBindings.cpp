@@ -144,12 +144,30 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   fluxCorrectionCallback = 0;
 
 #if defined(Parallel)
-  char argv[2][256];
-  memset(argv, 0, sizeof(char) * 2 * 256);
-  int argc = 1;
+  //char argv[2][256];
+  //memset(argv, 0, sizeof(char) * 2 * 256);
+  //int argc = 1;
+  //char* argv[] = {"shallowCustomPatchGridSizeAndEndTime.py"}; //, "13122", "162"};//, "0.00111111111111", "1", "0", "1", "1"};
   //sprintf(argv[0], "%s", "peanoclaw");
+
+  char** argv = new char*[30];
+  for(int i = 0; i < 30; i++) {
+    argv[i] = new char[255];
+  }
+  strcpy(argv[0], "python");
+  strcpy(argv[1], "shallowCustomPatchGridSizeAndEndTime.py");
+  strcpy(argv[2], "13122");
+  strcpy(argv[3], "162");
+  strcpy(argv[4], "0.00111111111111");
+  strcpy(argv[5], "1");
+  strcpy(argv[6], "0");
+  strcpy(argv[7], "1");
+  strcpy(argv[8], "1");
+  int argc = 2;
+
   peano::initParallelEnvironment(&argc,(char ***)&argv);
   peano::initSharedMemoryEnvironment();
+
 #endif
 
   //Initialize Python
