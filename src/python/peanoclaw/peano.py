@@ -136,7 +136,7 @@ class Peano(object):
 
 #     self.rank = self.crank.value
     
-    print 'peano instance: got rank: ', self.rank
+#     print 'peano instance: got rank: ', self.rank
 
     # Set PeanoSolution
     import peanoclaw as peanoclaw
