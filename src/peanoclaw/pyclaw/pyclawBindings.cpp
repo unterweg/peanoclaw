@@ -240,11 +240,11 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
 
   assertion(runner != 0);
  
-#if defined(Parallel) 
-  *rank = tarch::parallel::Node::getInstance().getRank();
-#else
-  *rank = 0;
-#endif
+//#if defined(Parallel)
+//  *rank = tarch::parallel::Node::getInstance().getRank();
+//#else
+//  *rank = 0;
+//#endif
 
   if(_calledFromPython) {
     PyGILState_Release(_pythonState);
