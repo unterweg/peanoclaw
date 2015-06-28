@@ -175,15 +175,15 @@ class Peano(object):
   
   def evolve_to_time(self, tend):
     self.libpeano.pyclaw_peano_evolveToTime(
-      tend, 
-      self.peano
+      c_double(tend), 
+      c_void_p(self.peano)
     )
 
   def teardown(self):
     self.libpeano.pyclaw_peano_destroy(self.peano)
     
-#   def getRank(self):
-#       return self.rank
+  def getRank(self):
+    return self.rank
 
   def runWorker(self):
     self.libpeano.pyclaw_peano_runWorker.argtypes = [c_void_p]
