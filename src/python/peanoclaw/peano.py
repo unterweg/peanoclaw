@@ -76,7 +76,7 @@ class Peano(object):
       domain_position_x2 = dimensions[2].lower
       domain_size_x2 = dimensions[2].upper - dimensions[2].lower
       
-#     self.crank = c_int()
+    crank = c_int()
     self.libpeano.pyclaw_peano_new.argtypes = [ c_double, #Initial mesh width
                                                 c_double, #Domain position X0
                                                 c_double, #Domain position X1
@@ -97,11 +97,13 @@ class Peano(object):
                                                 c_void_p, #q Initialization callback
                                                 c_void_p, #Boundary condition callback
                                                 c_void_p, #Solver callback
+                                                c_void_p, #Refinement criterion callback
                                                 c_void_p, #Solution callback
                                                 c_void_p, #Interpolation callback
                                                 c_void_p, #Restriction callback
                                                 c_void_p, #Flux correction callback
                                                 c_bool,   #Enable Peano logging
+                                                c_int,    #Fork level increment
                                                 c_void_p  #rank
                                                 ] 
     self.peano = self.libpeano.pyclaw_peano_new(c_double(initial_minimal_mesh_width),
@@ -130,13 +132,13 @@ class Peano(object):
                                                 restriction_callback.get_restriction_callback(),
                                                 flux_correction_callback.get_flux_correction_callback(),
                                                 c_bool(self.internal_settings.enable_peano_logging),
-                                                c_int(self.internal_settings.fork_level_increment)#,
-#                                                 byref(self.crank)
+                                                c_int(self.internal_settings.fork_level_increment),
+                                                byref(crank)
                                                 )
 
-#     self.rank = self.crank.value
+    self.rank = crank.value
     
-#     print 'peano instance: got rank: ', self.rank
+    print 'peano instance: got rank: ', self.rank
 
     # Set PeanoSolution
     import peanoclaw as peanoclaw
