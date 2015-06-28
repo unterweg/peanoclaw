@@ -133,8 +133,8 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   InterPatchCommunicationCallback restrictionCallback,
   InterPatchCommunicationCallback fluxCorrectionCallback,
   bool enablePeanoLogging,
-  int forkLevelIncrement,
-  int *rank
+  int forkLevelIncrement//,
+//  int *rank
 ) {
   peano::fillLookupTables();
 

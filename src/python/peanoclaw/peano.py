@@ -76,7 +76,7 @@ class Peano(object):
       domain_position_x2 = dimensions[2].lower
       domain_size_x2 = dimensions[2].upper - dimensions[2].lower
       
-    self.crank = c_int()
+#     self.crank = c_int()
     self.libpeano.pyclaw_peano_new.argtypes = [ c_double, #Initial mesh width
                                                 c_double, #Domain position X0
                                                 c_double, #Domain position X1
@@ -93,6 +93,7 @@ class Peano(object):
                                                 c_double, #Initial timestep size
                                                 c_char_p, #Config file
                                                 c_bool,   #Use dimensional splitting
+                                                c_bool,   #Reduce reductions
                                                 c_void_p, #q Initialization callback
                                                 c_void_p, #Boundary condition callback
                                                 c_void_p, #Solver callback
@@ -110,16 +111,16 @@ class Peano(object):
                                                 c_double(dimensions[0].upper - dimensions[0].lower),
                                                 c_double(dimensions[1].upper - dimensions[1].lower),
                                                 c_double(domain_size_x2),
-                                                subdivision_factor_x0,
-                                                subdivision_factor_x1,
-                                                subdivision_factor_x2,
-                                                number_of_unknowns,
-                                                number_of_auxiliar_fields,
-                                                ghostlayer_width,
-                                                dt_initial,
+                                                c_int(subdivision_factor_x0),
+                                                c_int(subdivision_factor_x1),
+                                                c_int(subdivision_factor_x2),
+                                                c_int(number_of_unknowns),
+                                                c_int(number_of_auxiliar_fields),
+                                                c_int(ghostlayer_width),
+                                                c_double(dt_initial),
                                                 c_char_p(configuration_file),
-                                                self.internal_settings.use_dimensional_splitting_optimization,
-                                                self.internal_settings.reduce_reductions,
+                                                c_bool(self.internal_settings.use_dimensional_splitting_optimization),
+                                                c_bool(self.internal_settings.reduce_reductions),
                                                 initialization_callback.get_initialization_callback(),
                                                 boundary_condition_callback.get_boundary_condition_callback(),
                                                 solver_callback.get_solver_callback(),
@@ -128,12 +129,12 @@ class Peano(object):
                                                 interpolation_callback.get_interpolation_callback(),
                                                 restriction_callback.get_restriction_callback(),
                                                 flux_correction_callback.get_flux_correction_callback(),
-                                                self.internal_settings.enable_peano_logging,
-                                                self.internal_settings.fork_level_increment,
-                                                byref(self.crank)
+                                                c_bool(self.internal_settings.enable_peano_logging),
+                                                c_int(self.internal_settings.fork_level_increment)#,
+#                                                 byref(self.crank)
                                                 )
 
-    self.rank = self.crank.value
+#     self.rank = self.crank.value
     
     print 'peano instance: got rank: ', self.rank
 
@@ -179,8 +180,8 @@ class Peano(object):
   def teardown(self):
     self.libpeano.pyclaw_peano_destroy(self.peano)
     
-  def getRank(self):
-      return self.rank
+#   def getRank(self):
+#       return self.rank
 
   def runWorker(self):
     self.libpeano.pyclaw_peano_runWorker.argtypes = [c_void_p]
