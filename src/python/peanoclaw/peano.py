@@ -38,6 +38,9 @@ class Peano(object):
     '''
     Constructor
     '''
+    #Causes Ctrl+C to quit Peano
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
     dim = len(solution.state.grid.dimensions)
     self.internal_settings = internal_settings
     
@@ -148,9 +151,6 @@ class Peano(object):
     else:
         logging.getLogger('peanoclaw').warning("Use peanoclaw.Solution instead of pyclaw.Solution together with peanoclaw.Solver to provide plotting functionality.")
     
-    #Causes Ctrl+C to quit Peano
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-
   def run_tests(self):
     self.libpeano.pyclaw_peano_runTests()
             
