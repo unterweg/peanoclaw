@@ -303,7 +303,7 @@ elif solver == 'swe':
   cppdefines.append('WAVE_PROPAGATION_SOLVER=' + str(WAVE_PROPAGATION_SOLVER))
   cppdefines.append('VECTORIZE')
   
-  cppdefines.append('AssertForPositiveValues')
+  cppdefines.append('DoNotAssertForPositiveValues')
 elif solver == 'fullswof2d':
   #Configure FullSWOF-Sources
   fullSWOF2DPath = '../FullSWOF_2D'

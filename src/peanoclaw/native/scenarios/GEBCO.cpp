@@ -27,7 +27,7 @@ using namespace netCDF::exceptions;
 
 void peanoclaw::native::scenarios::GEBCO::readRange(NcFile& ncFile, const std::string& rangeName, double range[2]) {
   NcVar rangeVar=ncFile.getVar(rangeName);
-  assertion1(!rangeVar.isNull, "No range of name " << rangeName << ".");
+  assertion1(!rangeVar.isNull(), "No range of name " << rangeName << ".");
   rangeVar.getVar(range);
 }
 #endif
@@ -124,6 +124,8 @@ peanoclaw::native::scenarios::GEBCO::GEBCO(const std::string& bathymetryFileName
   } catch(NcException& e) {
     logError("GEBCO", "Error while reading bathymetry: " << e.what());
   }
+  #else
+  logError("GEBCO(...)", "NetCDF disabled. Cannot read GEBCO file.");
   #endif
 }
 
