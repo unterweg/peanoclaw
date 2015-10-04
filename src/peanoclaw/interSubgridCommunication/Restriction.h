@@ -67,6 +67,14 @@ class peanoclaw::interSubgridCommunication::Restriction {
       peanoclaw::Patch& destination,
       bool              restrictOnlyOverlappedRegions
     ) = 0;
+
+    /**
+     * Finalizes a restriction.
+     */
+    virtual void postProcessRestriction(
+      peanoclaw::Patch& destination,
+      bool              restrictOnlyOverlappedRegions
+    ) const = 0;
 };
 
 #endif /* PEANOCLAW_INTERSUBGRIDCOMMUNICATION_RESTRICTION_H_ */

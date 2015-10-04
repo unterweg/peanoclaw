@@ -95,6 +95,10 @@ private:
    * Plotter for writing the age of the patch.
    */
   tarch::plotter::griddata::Writer::CellDataWriter*                                             _cellAgeWriter;
+  /**
+   * Plotter for writing the level of the subgrid.
+   */
+  tarch::plotter::griddata::Writer::CellDataWriter*                                             _cellLevelWriter;
 
 #ifdef Parallel
   /**

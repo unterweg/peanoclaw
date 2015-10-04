@@ -17,6 +17,106 @@ template<int NumberOfUnknowns>
 tarch::logging::Log peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::_log( "peanoclaw::interSubgridCommunication::DefaultInterpolation" );
 
 template<int NumberOfUnknowns>
+template<int Dimensionality>
+tarch::la::Vector<Dimensionality, int> peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::getSubcellInSourceSubgrid(
+  const tarch::la::Vector<Dimensionality, double>& subcellPositionInDestinationSubgrid,
+  const tarch::la::Vector<Dimensionality, double>& sourcePosition,
+  const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
+  const tarch::la::Vector<Dimensionality, int>& sourceSubdivisionFactor,
+  const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize
+) const {
+  tarch::la::Vector<Dimensionality, double> subcellPositionInSourcePatch = subcellPositionInDestinationSubgrid - (sourcePosition + sourceSubcellSize * 0.5);
+  tarch::la::Vector<Dimensionality, int> subcellIndexInSourcePatch(0.0);
+  for(int d = 0; d < DIMENSIONS; d++) {
+    subcellIndexInSourcePatch(d) = std::floor(subcellPositionInSourcePatch(d) * inverseSourceSubcellSize(d));
+  }
+  for(int d = 0; d < DIMENSIONS; d++) {
+    //Correct source patch subcell index, if on the boundary -> switch to extrapolation
+    subcellIndexInSourcePatch(d) = std::max(0, std::min(sourceSubdivisionFactor(d)-2,subcellIndexInSourcePatch(d)));
+  }
+  return subcellIndexInSourcePatch;
+}
+
+template<int NumberOfUnknowns>
+template<int Dimensionality>
+double peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::getSpatialFactor(
+  const tarch::la::Vector<Dimensionality, double>& destinationSubcellCenter,
+  const tarch::la::Vector<Dimensionality, double>& neighborPositionInSourcePatch,
+  const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize,
+  const tarch::la::Vector<Dimensionality, int>& offset
+) const {
+  double spatialFactor = 1.0;
+  for(int d = 0; d < DIMENSIONS; d++) {
+    double sign = 1 - 2*offset(d);
+    spatialFactor *= 1.0 -
+                     (
+//                           _signLookupTable[lookupTableEntry++] *
+                         sign *
+                       (
+                         destinationSubcellCenter(d) - neighborPositionInSourcePatch(d)
+                       )
+                     )
+                     * inverseSourceSubcellSize(d);
+  }
+  return spatialFactor;
+}
+
+template<int NumberOfUnknowns>
+void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::interpolateUnknowns(
+  peanoclaw::grid::SubgridAccessor& sourceAccessor,
+  peanoclaw::grid::SubgridAccessor& destinationAccessor,
+  const tarch::la::Vector<DIMENSIONS,int>& neighborIndexInSourcePatch,
+  const tarch::la::Vector<DIMENSIONS,int>& subcellIndexInDestinationPatch,
+  double temporalFactor,
+  double spatialFactor,
+  bool interpolateToUOld
+) const {
+  int linearSourceUOldIndex = sourceAccessor.getLinearIndexUOld(neighborIndexInSourcePatch);
+  int linearSourceUNewIndex = sourceAccessor.getLinearIndexUNew(neighborIndexInSourcePatch);
+  int linearDestinationIndex;
+  if(interpolateToUOld){
+    linearDestinationIndex = destinationAccessor.getLinearIndexUOld(subcellIndexInDestinationPatch);
+  } else {
+    linearDestinationIndex = destinationAccessor.getLinearIndexUNew(subcellIndexInDestinationPatch);
+  }
+
+  for(int unknown = 0; unknown < NumberOfUnknowns; unknown++) {
+    //Get value from source patch either from uNew or from the ghostlayer in uOld.
+    double sourceUOld = sourceAccessor.getValueUOld(linearSourceUOldIndex, unknown);
+    double sourceUNew = sourceAccessor.getValueUNew(linearSourceUNewIndex, unknown);
+
+    logDebug("interpolateSolution(...)", "\tspatialFactorUNew=" << spatialFactor
+        << ", spatialFactorUNew=" << spatialFactor
+        << " due to destination position " << destination.getSubcellCenter(subcellIndexInDestinationPatch)
+        << " and source position " << source.getSubcellCenter(neighborIndexInSourcePatch)
+        << " and source.subcellsize=" << sourceSubcellSize << " and offset=" << offset);
+    logDebug("interpolateSolution(...)", "\ttimeFactor=" << timeFactor
+        << " due to destination time " << destination.getTimeIntervals().getCurrentTime()
+        << " and destination timestep size " << destination.getTimeIntervals().getTimestepSize()
+        << " and source time " << source.getTimeIntervals().getCurrentTime()
+        << " and source timestep size " << source.getTimeIntervals().getTimestepSize());
+
+    if(interpolateToUOld) {
+      logDebug("", "\tAdding UOld value " << sourceUOld << " and UNew value " << sourceUNew
+          << " with spatialFactor " << spatialFactor << " and timeFactor "  << timeFactor
+          << " to value " << destination.getAccessor().getValueUOld(subcellIndexInDestinationPatch, unknown));
+
+      destinationAccessor.setValueUOld(linearDestinationIndex, unknown,
+          destinationAccessor.getValueUOld(linearDestinationIndex, unknown)
+          + spatialFactor * (sourceUOld * (1.0-temporalFactor) + sourceUNew * temporalFactor));
+    } else {
+      logDebug("interpolateSolution(...)", "\tAdding UNew value " << sourceUNew << " and UOld value " << sourceUOld
+          << " with spatialFactor " << spatialFactor << " and timeFactor " << timeFactor
+          << " to value " << destination.getAccessor().getValueUNew(subcellIndexInDestinationPatch, unknown));
+
+      destinationAccessor.setValueUNew(linearDestinationIndex, unknown,
+        destinationAccessor.getValueUNew(linearDestinationIndex, unknown)
+        + spatialFactor * sourceUOld * (1.0-temporalFactor) + spatialFactor * sourceUNew * temporalFactor);
+    }
+  }
+}
+
+template<int NumberOfUnknowns>
 peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::DefaultInterpolationTemplate() {
   int entry = 0;
   dfor2(offset)
@@ -87,6 +187,9 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
   tarch::la::Vector<DIMENSIONS, int> sourceSubdivisionFactor = source.getSubdivisionFactor();
   tarch::la::Vector<DIMENSIONS, double> sourceSubcellSize = source.getSubcellSize();
   tarch::la::Vector<DIMENSIONS, double> inverseSourceSubcellSize = tarch::la::invertEntries(sourceSubcellSize);
+//  tarch::la::Vector<DIMENSIONS, double> destinationPosition = destination.getPosition();
+//  tarch::la::Vector<DIMENSIONS, double> destinationSubcellSize = destination.getSubcellSize();
+//  tarch::la::Vector<DIMENSIONS, int> destinationSubdivisionFactor = destination.getSubdivisionFactor();
 
   #ifdef Asserts
   for(int d = 0; d < DIMENSIONS; d++) {
@@ -108,19 +211,18 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
 
     //Map to global space
     tarch::la::Vector<DIMENSIONS, int> subcellIndexInDestinationPatch = destinationIterator.getCellIndex();
-    tarch::la::Vector<DIMENSIONS, double> subcellPositionInSourcePatch = destination.getSubcellCenter(subcellIndexInDestinationPatch);
     tarch::la::Vector<DIMENSIONS, double> destinationSubcellCenter = destination.getSubcellCenter(subcellIndexInDestinationPatch);
 
+
     //Map to local space of source patch
-    subcellPositionInSourcePatch -= (sourcePosition + sourceSubcellSize * 0.5);
-    tarch::la::Vector<DIMENSIONS, int> subcellIndexInSourcePatch;
-    for(int d = 0; d < DIMENSIONS; d++) {
-      subcellIndexInSourcePatch(d) = std::floor(subcellPositionInSourcePatch(d) * inverseSourceSubcellSize(d));
-    }
-    for(int d = 0; d < DIMENSIONS; d++) {
-      //Correct source patch subcell index, if on the boundary -> switch to extrapolation
-      subcellIndexInSourcePatch(d) = std::max(0, std::min(sourceSubdivisionFactor(d)-2,subcellIndexInSourcePatch(d)));
-    }
+    tarch::la::Vector<DIMENSIONS, int> subcellIndexInSourcePatch = getSubcellInSourceSubgrid<DIMENSIONS>(
+      destination.getSubcellCenter(subcellIndexInDestinationPatch),
+      sourcePosition,
+      sourceSubcellSize,
+      sourceSubdivisionFactor,
+      inverseSourceSubcellSize
+    );
+
 
     logDebug("", "Mapping source-point " << subcellPositionInSourcePatch
         << " in source-cell " << subcellIndexInSourcePatch
@@ -136,102 +238,39 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
 
       //Calculate factor for spatial interpolation. sign is used to account for extrapolation
       //if destination cell center is outside the source cell.
-      double spatialFactor = 1.0;
-      for(int d = 0; d < DIMENSIONS; d++) {
-        double sign = 1 - 2*offset(d);
-        spatialFactor *= 1.0 -
-                         (
-//                           _signLookupTable[lookupTableEntry++] *
-                             sign *
-                           (
-                             destinationSubcellCenter(d) - neighborPositionInSourcePatch(d)
-                           )
-                         )
-                         * inverseSourceSubcellSize(d);
-      }
+      double spatialFactor = getSpatialFactor<DIMENSIONS>(
+        destinationSubcellCenter,
+        neighborPositionInSourcePatch,
+        inverseSourceSubcellSize,
+        offset
+      );
 
-      int linearSourceUOldIndex = sourceAccessor.getLinearIndexUOld(neighborIndexInSourcePatch);
-      int linearSourceUNewIndex = sourceAccessor.getLinearIndexUNew(neighborIndexInSourcePatch);
-      int linearDestinationIndex;
-      if(interpolateToUOld){
-        linearDestinationIndex = destinationAccessor.getLinearIndexUOld(subcellIndexInDestinationPatch);
-      } else {
-        linearDestinationIndex = destinationAccessor.getLinearIndexUNew(subcellIndexInDestinationPatch);
-      }
-
-      for(int unknown = 0; unknown < NumberOfUnknowns; unknown++) {
-        //Get value from source patch either from uNew or from the ghostlayer in uOld.
-        double sourceUOld = sourceAccessor.getValueUOld(linearSourceUOldIndex, unknown);
-        double sourceUNew = sourceAccessor.getValueUNew(linearSourceUNewIndex, unknown);
-
-        logDebug("interpolateSolution(...)", "\tspatialFactorUNew=" << spatialFactor
-            << ", spatialFactorUNew=" << spatialFactor
-            << " due to destination position " << destination.getSubcellCenter(subcellIndexInDestinationPatch)
-            << " and source position " << source.getSubcellCenter(neighborIndexInSourcePatch)
-            << " and source.subcellsize=" << sourceSubcellSize << " and offset=" << offset);
-        logDebug("interpolateSolution(...)", "\ttimeFactor=" << timeFactor
-            << " due to destination time " << destination.getTimeIntervals().getCurrentTime()
-            << " and destination timestep size " << destination.getTimeIntervals().getTimestepSize()
-            << " and source time " << source.getTimeIntervals().getCurrentTime()
-            << " and source timestep size " << source.getTimeIntervals().getTimestepSize());
-
-        if(interpolateToUOld) {
-          logDebug("", "\tAdding UOld value " << sourceUOld << " and UNew value " << sourceUNew
-              << " with spatialFactor " << spatialFactor << " and timeFactor "  << timeFactor
-              << " to value " << destination.getAccessor().getValueUOld(subcellIndexInDestinationPatch, unknown));
-
-          destinationAccessor.setValueUOld(linearDestinationIndex, unknown,
-              destinationAccessor.getValueUOld(linearDestinationIndex, unknown)
-              + spatialFactor * (sourceUOld * (1.0-timeFactor) + sourceUNew * timeFactor));
-        } else {
-          logDebug("interpolateSolution(...)", "\tAdding UNew value " << sourceUNew << " and UOld value " << sourceUOld
-              << " with spatialFactor " << spatialFactor << " and timeFactor " << timeFactor
-              << " to value " << destination.getAccessor().getValueUNew(subcellIndexInDestinationPatch, unknown));
-
-          destinationAccessor.setValueUNew(linearDestinationIndex, unknown,
-            destinationAccessor.getValueUNew(linearDestinationIndex, unknown)
-            + spatialFactor * sourceUOld * (1.0-timeFactor) + spatialFactor * sourceUNew * timeFactor);
-        }
-      }
-//      tarch::la::Vector<NumberOfUnknowns, double> sourceUOld = sourceAccessor.getUnknownsUOld();
-//      tarch::la::Vector<NumberOfUnknowns, double> sourceUNew = sourceAccessor.getUnknownsUNew();
-//
-//      #ifdef Asserts
-//      for(int i = 0; i < NumberOfUnknowns; i++) {
-//        assertionEquals3(sourceUOld[i], source.getValueUOld(sourceAccessor.getCellIndex(), i), sourceUOld, sourceAccessor.getCellIndex(), source.toStringUOldWithGhostLayer());
-//        assertionEquals3(sourceUNew[i], source.getValueUNew(sourceAccessor.getCellIndex(), i), sourceUNew, sourceAccessor.getCellIndex(), source.toStringUNew());
-//      }
-//      #endif
-//
-//      if(interpolateToUOld) {
-//
-//        //TODO unterweg debug
-////        std::cout << "Setting value "
-////            << sourceUOld << std::endl << sourceUNew << std::endl << "timeFactor=" << timeFactor
-////            << " spatialFactor=" << spatialFactor << std::endl
-////            << (destinationAccessor.getUnknownsUOld()
-////            + spatialFactor * (sourceUOld * (1.0-timeFactor) + sourceUNew * timeFactor)) << std::endl;
-//
-//        destinationAccessor.setUnknownsUOld(
-//          destinationAccessor.getUnknownsUOld()
-//            + spatialFactor * (sourceUOld * (1.0-timeFactor) + sourceUNew * timeFactor)
-//        );
-//      } else {
-//
-//        //TODO unterweg debug
-////        std::cout << "Setting value "
-////            << sourceUOld << std::endl << sourceUNew << std::endl << "timeFactor=" << timeFactor
-////            << " spatialFactor=" << spatialFactor << std::endl
-////            << (destinationAccessor.getUnknownsUNew()
-////                + spatialFactor * (sourceUOld * (1.0-timeFactor) + sourceUNew * timeFactor)) << std::endl;
-//
-//        destinationAccessor.setUnknownsUNew(
-//          destinationAccessor.getUnknownsUNew()
-//            + spatialFactor * (sourceUOld * (1.0-timeFactor) + sourceUNew * timeFactor)
-//        );
-//      }
-
+      interpolateUnknowns(
+        sourceAccessor,
+        destinationAccessor,
+        neighborIndexInSourcePatch,
+        subcellIndexInDestinationPatch,
+        timeFactor,
+        spatialFactor,
+        interpolateToUOld
+      );
     }
+
+    //Interpolate fluxes
+//    if(destination.getAge() == 0) {
+//      for(int d = 0; d < DIMENSIONS; d++) {
+//        for(int direction = -1; direction <= 1; direction+=2) {
+//          for(int destinationIndex = 0; destinationIndex < destinationSubdivisionFactor[d]; destinationIndex++) {
+//            double destinationFluxPosition = destinationIndex * destinationSubcellSize[d] + destinationPosition[d];
+//            int sourceIndex = std::min(std::max(0, (int)((destinationFluxPosition - sourcePosition[d]) / sourceSubcellSize()[d])), sourceSubdivisionFactor[d] - 2);
+//            double sourceFluxPosition = sourceIndex * sourceSubcellSize[d] + sourcePosition;
+//            double factor = (destinationFluxPosition - sourceFluxPosition) / sourceSubcellSize[d];
+//
+////            destinationAccessor.setFlux()
+//          }
+//        }
+//      }
+//    }
 //    logDebug("interpolateSolution(...)", "For subcell " << destinationIterator.getCellIndex() << " interpolated value is " << destinationIterator.getUnknownUOld(0));
   }
 

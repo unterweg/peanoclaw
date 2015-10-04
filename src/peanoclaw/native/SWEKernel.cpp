@@ -97,14 +97,19 @@ peanoclaw::native::SWEKernel::SWEKernel(
   peanoclaw::interSubgridCommunication::Interpolation*   interpolation,
   peanoclaw::interSubgridCommunication::Restriction*     restriction,
   peanoclaw::interSubgridCommunication::FluxCorrection*  fluxCorrection
-) : Numerics(transfer, interpolation, restriction, fluxCorrection),
+) : Numerics(
+    transfer,
+    scenario.hasCustomInterpolation() ? scenario.getCustomInterpolation() : interpolation,
+    scenario.hasCustomRestriction() ? scenario.getCustomRestriction() : restriction,
+    fluxCorrection
+),
 _totalSolverCallbackTime(0.0),
 _scenario(scenario),
 _cachedSubdivisionFactor(-1),
 _cachedGhostlayerWidth(-1),
 _cachedBlock(0)
 {
-  //import_array();
+
 }
 
 peanoclaw::native::SWEKernel::~SWEKernel()
@@ -215,44 +220,57 @@ void peanoclaw::native::SWEKernel::interpolateSolution (
   bool interpolateToCurrentTime,
   bool useTimeUNewOrTimeUOld
 ) const {
-  peanoclaw::grid::SubgridAccessor sourceAccessor = source.getAccessor();
-  peanoclaw::grid::SubgridAccessor destinationAccessor = destination.getAccessor();
-  tarch::la::Vector<DIMENSIONS,int> sourceSubdivisionFactor = source.getSubdivisionFactor();
+  if(_scenario.hasCustomInterpolation()) {
+    //Interpolate
+    Numerics::interpolateSolution (
+      destinationSize,
+      destinationOffset,
+      source,
+      destination,
+      interpolateToUOld,
+      interpolateToCurrentTime,
+      useTimeUNewOrTimeUOld
+    );
+  } else {
+    peanoclaw::grid::SubgridAccessor sourceAccessor = source.getAccessor();
+    peanoclaw::grid::SubgridAccessor destinationAccessor = destination.getAccessor();
+    tarch::la::Vector<DIMENSIONS,int> sourceSubdivisionFactor = source.getSubdivisionFactor();
 
-  peanoclaw::geometry::Region destinationRegion(destinationOffset, destinationSize);
-  peanoclaw::geometry::Region sourceRegion = destinationRegion.mapToPatch(destination, source);
+    peanoclaw::geometry::Region destinationRegion(destinationOffset, destinationSize);
+    peanoclaw::geometry::Region sourceRegion = destinationRegion.mapToPatch(destination, source);
 
-  //Increase sourceRegion by one cell in each direction.
-  for(int d = 0; d < DIMENSIONS; d++) {
-    if(sourceRegion._offset[d] > 0) {
-      sourceRegion._offset[d] = sourceRegion._offset[d]-1;
-      sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._size[d] + 2);
-    } else {
-      sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._size[d] + 1);
+    //Increase sourceRegion by one cell in each direction.
+    for(int d = 0; d < DIMENSIONS; d++) {
+      if(sourceRegion._offset[d] > 0) {
+        sourceRegion._offset[d] = sourceRegion._offset[d]-1;
+        sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._offset[d] + sourceRegion._size[d] + 2) - sourceRegion._offset[d];
+      } else {
+        sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._offset[d] + sourceRegion._size[d] + 1) - sourceRegion._offset[d];;
+      }
     }
+
+    //Source: Water Height above Sea Floor -> Absolute Water Height
+    transformWaterHeight(source, sourceRegion, true, false); //UOld
+    transformWaterHeight(source, sourceRegion, false, false); // UNew
+
+    //Interpolate
+    Numerics::interpolateSolution (
+      destinationSize,
+      destinationOffset,
+      source,
+      destination,
+      interpolateToUOld,
+      interpolateToCurrentTime,
+      useTimeUNewOrTimeUOld
+    );
+
+    //Source: Absolute Water Height -> Water Height above Sea Floor
+    transformWaterHeight(source, sourceRegion, true, true); //UOld
+    transformWaterHeight(source, sourceRegion, false, true); // UNew
+
+    //Destination: Absolute Water Height -> Water Height above Sea Floor
+    transformWaterHeight(destination, destinationRegion, interpolateToUOld, true);
   }
-
-  //Source: Water Height above Sea Floor -> Absolute Water Height
-  transformWaterHeight(source, sourceRegion, true, false); //UOld
-  transformWaterHeight(source, sourceRegion, false, false); // UNew
-
-  //Interpolate
-  Numerics::interpolateSolution (
-    destinationSize,
-    destinationOffset,
-    source,
-    destination,
-    interpolateToUOld,
-    interpolateToCurrentTime,
-    useTimeUNewOrTimeUOld
-  );
-
-  //Source: Absolute Water Height -> Water Height above Sea Floor
-  transformWaterHeight(source, sourceRegion, true, true); //UOld
-  transformWaterHeight(source, sourceRegion, false, true); // UNew
-
-  //Destination: Absolute Water Height -> Water Height above Sea Floor
-  transformWaterHeight(destination, destinationRegion, interpolateToUOld, true);
 }
 
 void peanoclaw::native::SWEKernel::restrictSolution (
@@ -260,28 +278,35 @@ void peanoclaw::native::SWEKernel::restrictSolution (
   peanoclaw::Patch& destination,
   bool              restrictOnlyOverlappedRegions
 ) const {
+  if(_scenario.hasCustomRestriction()) {
+    Numerics::restrictSolution(source, destination, restrictOnlyOverlappedRegions);
+  } else {
+    peanoclaw::geometry::Region sourceRegion(tarch::la::Vector<DIMENSIONS,int>(0), source.getSubdivisionFactor());
 
-  peanoclaw::geometry::Region sourceRegion(tarch::la::Vector<DIMENSIONS,int>(0), source.getSubdivisionFactor());
+    transformWaterHeight(source, sourceRegion, true, false); //UOld
+    transformWaterHeight(source, sourceRegion, false, false); //UNew
 
-  transformWaterHeight(source, sourceRegion, true, false); //UOld
-  transformWaterHeight(source, sourceRegion, false, false); //UNew
+    Numerics::restrictSolution(
+      source,
+      destination,
+      restrictOnlyOverlappedRegions
+    );
 
-  Numerics::restrictSolution(
-    source,
-    destination,
-    restrictOnlyOverlappedRegions
-  );
-
-  transformWaterHeight(source, sourceRegion, true, true); //UOld
-  transformWaterHeight(source, sourceRegion, false, true); //UNew
+    transformWaterHeight(source, sourceRegion, true, true); //UOld
+    transformWaterHeight(source, sourceRegion, false, true); //UNew
+  }
 }
 
 void peanoclaw::native::SWEKernel::postProcessRestriction(
   peanoclaw::Patch& destination,
   bool              restrictOnlyOverlappedRegions
 ) const {
-  peanoclaw::geometry::Region destinationRegion(tarch::la::Vector<DIMENSIONS,int>(0), destination.getSubdivisionFactor());
-  transformWaterHeight(destination, destinationRegion, true, true); //UOld
-  transformWaterHeight(destination, destinationRegion, false, true); //UNew
+  if(_scenario.hasCustomRestriction()) {
+    Numerics::postProcessRestriction(destination, restrictOnlyOverlappedRegions);
+  } else {
+    peanoclaw::geometry::Region destinationRegion(tarch::la::Vector<DIMENSIONS,int>(0), destination.getSubdivisionFactor());
+    transformWaterHeight(destination, destinationRegion, true, true); //UOld
+    transformWaterHeight(destination, destinationRegion, false, true); //UNew
+  }
 }
 

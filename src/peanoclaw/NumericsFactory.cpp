@@ -127,7 +127,6 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createFullSWOF2DNumerics(
   //Restriction Callback
   peanoclaw::interSubgridCommunication::Restriction* restriction;
   restriction = new peanoclaw::interSubgridCommunication::DefaultRestriction();
-//  restriction = new peanoclaw::interSubgridCommunication::BathymetryRestriction();
 
   //Flux Correction Callback
   peanoclaw::solver::fullswof2D::FluxCorrection* fluxCorrection;

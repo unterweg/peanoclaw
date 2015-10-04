@@ -9,6 +9,10 @@
 #include "peanoclaw/geometry/Region.h"
 #include "peanoclaw/grid/aspects/BoundaryIterator.h"
 #include "peanoclaw/grid/boundaryConditions/ExtrapolateBoundaryCondition.h"
+#include "peanoclaw/Numerics.h"
+
+#include "peanoclaw/interSubgridCommunication/BathymetryInterpolation.h"
+#include "peanoclaw/interSubgridCommunication/BathymetryRestriction.h"
 
 #include "peano/utils/Loop.h"
 
@@ -72,9 +76,8 @@ void peanoclaw::native::scenarios::Storegga::initializePatch(peanoclaw::Patch& s
     double plumeFactor = sqrt(std::max(0.0, (_slideRadius - plumeRadius) / _slideRadius));
     double waterSurface = -depressionFactor * _slideDepth + plumeFactor * _slideDepth;
 
-
     double bathymetry = accessor.getParameterWithGhostlayer(subcellIndex, 0);
-    double waterHeight = bathymetry > waterSurface ? waterSurface : waterSurface - bathymetry;
+    double waterHeight = bathymetry > waterSurface ? 0.0 : waterSurface - bathymetry;
     accessor.setValueUNew(subcellIndex, 0, waterHeight);
     accessor.setValueUNew(subcellIndex, 1, -(depressionFactor + plumeFactor) * _slideVelocity * waterHeight);
     accessor.setValueUNew(subcellIndex, 2, (depressionFactor + plumeFactor) * _slideVelocity * waterHeight);
@@ -99,15 +102,15 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::Storegga::com
   double minWaterHeight = std::numeric_limits<double>::max();
   double maxWaterHeight = -std::numeric_limits<double>::max();
   dfor(subcellIndex, subgrid.getSubdivisionFactor()) {
-    double absoluteWaterHeight = accessor.getParameterWithGhostlayer(subcellIndex, 0) + accessor.getValueUNew(subcellIndex, 0);
+    double absoluteWaterHeight = std::min(0.0, accessor.getParameterWithGhostlayer(subcellIndex, 0)) + accessor.getValueUNew(subcellIndex, 0);
     minWaterHeight = std::min(minWaterHeight, absoluteWaterHeight);
     maxWaterHeight = std::max(maxWaterHeight, absoluteWaterHeight);
   }
 
-  if(minBathymetry * maxBathymetry < 0.0 || (maxWaterHeight - minWaterHeight) > 0.5) {
+  if(/*minBathymetry * maxBathymetry < 0.0 ||*/ (maxWaterHeight - minWaterHeight) > 0.5) {
     //Refine along coastline
     return _minimalMeshWidth;
-  } else if (maxWaterHeight - minWaterHeight > 0.15) {
+  } else if (maxWaterHeight - minWaterHeight > 1.0) {
     return subgrid.getSubcellSize();
   } else {
     return _maximalMeshWidth;
@@ -150,8 +153,8 @@ void peanoclaw::native::scenarios::Storegga::setBoundaryCondition(
   accessor.setValueUOld(destinationSubcellIndex, 0, bathymetry < 0.0 ? -bathymetry : 0.0);
 
   for(int unknown = 1; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
-    double sourceHeight = accessor.getValueUOld(sourceSubcellIndex, 0);
-    double destinationHeight = accessor.getValueUOld(destinationSubcellIndex, 0);
+//    double sourceHeight = accessor.getValueUOld(sourceSubcellIndex, 0);
+//    double destinationHeight = accessor.getValueUOld(destinationSubcellIndex, 0);
 
 //    if(sourceHeight < 1) {
 //      accessor.setValueUOld(destinationSubcellIndex, unknown, 0.0);
@@ -196,5 +199,13 @@ float peanoclaw::native::scenarios::Storegga::waterHeightAtRest() {
 
 float peanoclaw::native::scenarios::Storegga::endSimulation() {
   return _endTime;
+}
+
+peanoclaw::interSubgridCommunication::Interpolation* peanoclaw::native::scenarios::Storegga::getCustomInterpolation() const {
+  return new peanoclaw::interSubgridCommunication::BathymetryInterpolation(0.0);
+}
+
+peanoclaw::interSubgridCommunication::Restriction* peanoclaw::native::scenarios::Storegga::getCustomRestriction() const {
+  return new peanoclaw::interSubgridCommunication::BathymetryRestriction(0.0);
 }
 

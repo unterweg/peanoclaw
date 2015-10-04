@@ -14,6 +14,10 @@ peanoclaw::Numerics::Numerics(
   peanoclaw::interSubgridCommunication::Restriction*     restriction,
   peanoclaw::interSubgridCommunication::FluxCorrection*  fluxCorrection
 ) : _transfer(transfer), _interpolation(interpolation), _restriction(restriction), _fluxCorrection(fluxCorrection) {
+  assertion(transfer != 0);
+  assertion(interpolation != 0);
+  assertion(restriction != 0);
+  assertion(fluxCorrection != 0);
 }
 
 peanoclaw::Numerics::~Numerics() {
@@ -75,6 +79,7 @@ void peanoclaw::Numerics::postProcessRestriction(
   peanoclaw::Patch& destination,
   bool              restrictOnlyOverlappedRegions
 ) const {
+  _restriction->postProcessRestriction(destination, restrictOnlyOverlappedRegions);
 }
 
 void peanoclaw::Numerics::applyFluxCorrection (

@@ -38,6 +38,18 @@ class peanoclaw::native::scenarios::Storegga : public peanoclaw::native::scenari
     double                                _slideVelocity;
     double                                _slideDepth;
 
+    void transformWaterHeight(
+      peanoclaw::Patch& subgrid,
+      const peanoclaw::geometry::Region&       region,
+      bool              modifyUOld,
+      bool              absoluteToAboveSeaFloor
+    ) const;
+
+    double clipWaterHeight(
+      double waterHeight,
+      bool absoluteToAboveSeaFloor
+    ) const;
+
   public:
     Storegga(
       const std::vector<std::string>& arguments
@@ -64,6 +76,11 @@ class peanoclaw::native::scenarios::Storegga : public peanoclaw::native::scenari
     tarch::la::Vector<DIMENSIONS,int>    getSubdivisionFactor() const;
     double                               getGlobalTimestepSize() const;
     double                               getEndTime() const;
+
+    bool hasCustomInterpolation() const {return true;}
+    peanoclaw::interSubgridCommunication::Interpolation* getCustomInterpolation() const;
+    bool hasCustomRestriction() const {return true;}
+    peanoclaw::interSubgridCommunication::Restriction* getCustomRestriction() const;
 
     //pure SWE-Scenario
     virtual float getWaterHeight(float x, float y);

@@ -17,28 +17,40 @@ namespace peanoclaw {
   }
 }
 
+/**
+ * This restriction type is used for the Storegga scenario.
+ */
 class peanoclaw::interSubgridCommunication::BathymetryRestriction : public Restriction {
 
   private:
+    double _seaLevel;
+
     void restrictRegion (
-        peanoclaw::Patch&                  source,
-        const peanoclaw::geometry::Region& sourceRegion,
-        peanoclaw::grid::SubgridAccessor&  sourceIterator,
-        peanoclaw::Patch&                  destination,
-        peanoclaw::grid::SubgridAccessor&  destinationIterator
+        peanoclaw::Patch&                     source,
+        const peanoclaw::geometry::Region&    sourceRegion,
+        peanoclaw::grid::SubgridIterator<3>&  sourceIterator,
+        peanoclaw::Patch&                     destination,
+        peanoclaw::grid::SubgridIterator<3>&  destinationIterator
     );
 
   public:
+    BathymetryRestriction(double seaLevel);
+
     virtual ~BathymetryRestriction(){};
 
     /**
      * Restricts data from a fine patch to a coarse patch.
      */
-    virtual void restrictSolution (
+    void restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch& destination,
       bool              restrictOnlyOverlappedRegions
     );
+
+    void postProcessRestriction(
+      peanoclaw::Patch& destination,
+      bool              restrictOnlyOverlappedRegions
+    ) const;
 };
 
 

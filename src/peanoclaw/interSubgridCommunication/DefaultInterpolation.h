@@ -37,6 +37,33 @@ class peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate {
 
     int _signLookupTable[TWO_POWER_D_TIMES_D];
 
+    void interpolateUnknowns(
+      peanoclaw::grid::SubgridAccessor& sourceAccessor,
+      peanoclaw::grid::SubgridAccessor& destinationAccessor,
+      const tarch::la::Vector<DIMENSIONS,int>& neighborIndexInSourcePatch,
+      const tarch::la::Vector<DIMENSIONS,int>& subcellIndexInDestinationPatch,
+      double temporalFactor,
+      double spatialFactor,
+      bool interpolateToUOld
+    ) const;
+
+    template<int Dimensionality>
+    double getSpatialFactor(
+      const tarch::la::Vector<Dimensionality, double>& destinationSubcellCenter,
+      const tarch::la::Vector<Dimensionality, double>& neighborPositionInSourcePatch,
+      const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize,
+      const tarch::la::Vector<Dimensionality, int>& offset
+    ) const;
+
+    template<int Dimensionality>
+    tarch::la::Vector<Dimensionality, int> getSubcellInSourceSubgrid(
+      const tarch::la::Vector<Dimensionality, double>& subcellPositionInDestinationSubgrid,
+      const tarch::la::Vector<Dimensionality, double>& sourcePosition,
+      const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
+      const tarch::la::Vector<Dimensionality, int>& sourceSubdivisionFactor,
+      const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize
+    ) const;
+
   public:
     DefaultInterpolationTemplate();
 
