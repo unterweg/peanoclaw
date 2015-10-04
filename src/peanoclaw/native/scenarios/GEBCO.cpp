@@ -59,16 +59,16 @@ void peanoclaw::native::scenarios::GEBCO::mapToGEBCO(
   tarch::la::Vector<2,int>& upperBound
 ) const {
   lowerBound = tarch::la::multiplyComponents(
-                 offset + 1e-8,
+                 offset - 1e-8,
                  tarch::la::invertEntries(_cellSize)
                ).convertScalar<int>();
   upperBound = tarch::la::multiplyComponents(
-                 offset + size - 1e-8,
+                 offset + size + 1e-8,
                  tarch::la::invertEntries(_cellSize)
                ).convertScalar<int>();
   for(int d = 0; d < 2; d++) {
-    lowerBound[d] = std::max(0, std::min(_numberOfCells[d], lowerBound[d]));
-    upperBound[d] = std::max(0, std::min(_numberOfCells[d], upperBound[d]));
+    lowerBound[d] = std::max(0, std::min(_numberOfCells[d], lowerBound[d] - 1));
+    upperBound[d] = std::max(0, std::min(_numberOfCells[d], upperBound[d] + 1));
   }
 }
 
@@ -162,23 +162,37 @@ double peanoclaw::native::scenarios::GEBCO::getAveragedBathymetry(
                                        // + tarch::la::Vector<2,int>(1);
   mapToGEBCO(offset, size, lowerBound, upperBound);
 
+  double cellArea = tarch::la::volume(size);
+
   double bathymetry = 0.0;
   int numberOfCells = 0;
+  double overlap = 0.0;
   dfor(localCellIndex, upperBound - lowerBound) {
     tarch::la::Vector<2,int> cellIndex = localCellIndex + lowerBound;
-    bathymetry += getBathymetry(cellIndex);
+
+    double overlappingArea = 1.0;
+    for(int d = 0; d < DIMENSIONS; d++) {
+      overlappingArea *= std::max(0.0, std::min(offset[d] + size[d], (cellIndex[d] + 1) * _cellSize[d]) - std::max(offset[d], cellIndex[d] * _cellSize[d]));
+    }
+
+    bathymetry += getBathymetry(cellIndex) * overlappingArea / cellArea;
     numberOfCells++;
+    overlap += overlappingArea;
   }
 
   //TODO unterweg debug
 //  std::cout << "Averaging over " << tarch::la::volume(upperBound - lowerBound) << " cells. offset=" << offset << " size=" << size << " lowerBound=" << lowerBound << " upperBound=" << upperBound << std::endl;
 
-  if(numberOfCells == 0) {
-//    std::cout << "Averaging over " << tarch::la::volume(upperBound - lowerBound) << " cells. offset=" << offset << " size=" << size << " lowerBound=" << lowerBound << " upperBound=" << upperBound << std::endl;
-    return 0.0;
+  if(tarch::la::allGreater(offset, tarch::la::Vector<DIMENSIONS,double>(0.0)) && tarch::la::allGreater(_size, offset + size)) {
+    assertion4(tarch::la::greater(overlap, 0.0), numberOfCells, offset, size, overlap);
+    assertion6(abs(overlap - cellArea) < 0.1 * cellArea, overlap, cellArea, offset, size, lowerBound, upperBound);
   }
 
-  return bathymetry / numberOfCells;
+  if(tarch::la::equals(overlap, 0.0)) {
+    return -20000.0;
+  }
+
+  return bathymetry;// / numberOfCells;
   #else
   return 0.0;
   #endif
