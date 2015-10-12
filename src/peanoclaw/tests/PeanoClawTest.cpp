@@ -8,11 +8,11 @@
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(peanoclaw::tests::PeanoClawTest)
 
-
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)
 #endif
 
+tarch::logging::Log peanoclaw::tests::PeanoClawTest::_log("peanoclaw::tests::PeanoClawTest");
  
 peanoclaw::tests::PeanoClawTest::PeanoClawTest():
   tarch::tests::TestCase( "peanoclaw::tests::PeanoClawTest" ) {
@@ -30,6 +30,7 @@ void peanoclaw::tests::PeanoClawTest::setUp() {
 
 
 void peanoclaw::tests::PeanoClawTest::run() {
+  logInfo("run()", "Running PeanoClawTest");
   testMethod( testVertexAdjacentIndices );
   testMethod( testCellIndices );
 }

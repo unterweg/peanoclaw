@@ -33,6 +33,11 @@ class peanoclaw::pyclaw::RestrictionCallbackWrapper : public peanoclaw::interSub
       peanoclaw::Patch& destination,
       bool restrictOnlyOverlappedRegions
     );
+
+    virtual void postProcessRestriction(
+      peanoclaw::Patch& destination,
+      bool              restrictOnlyOverlappedRegions
+    ) const {}
 };
 
 #endif /* PEANOCLAW_PYCLAW_RESTRICTIONCALLBACKWRAPPER_H_ */

@@ -42,6 +42,7 @@ void peanoclaw::tests::GhostLayerCompositorTest::setUp() {
 }
 
 void peanoclaw::tests::GhostLayerCompositorTest::run() {
+  logInfo("run()", "Running GhostlayerCompositorTest");
   testMethod( testTimesteppingVeto2D );
   testMethod( testInterpolationFromCoarseToFinePatchLeftGhostLayer2D );
   testMethod( testInterpolationFromCoarseToFinePatchRightGhostLayer2D );

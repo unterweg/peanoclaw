@@ -9,6 +9,7 @@
 #define PEANO_APPLICATIONS_PEANOCLAW_TESTS_PATCHTEST_H_
 
 #include "tarch/tests/TestCase.h"
+#include "tarch/logging/Log.h"
 
 #include <vector>
 
@@ -31,6 +32,11 @@ namespace peanoclaw {
 class peanoclaw::tests::PatchTest: public tarch::tests::TestCase {
   private:
     typedef peanoclaw::records::Data Data;
+
+    /**
+     * Logging device
+     */
+    static tarch::logging::Log _log;
 
     /**
      * Test wether the filling of the uNew-Array is working properly.

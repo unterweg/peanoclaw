@@ -4,10 +4,8 @@
 #ifndef _PEANO_APPLICATIONS_PEANOCLAW_TESTS_PeanoClawTest_H_
 #define _PEANO_APPLICATIONS_PEANOCLAW_TESTS_PeanoClawTest_H_
  
-
-
 #include "tarch/tests/TestCase.h"
-
+#include "tarch/logging/Log.h"
 
 namespace peanoclaw {
   namespace tests {
@@ -23,6 +21,11 @@ namespace peanoclaw {
  */ 
 class peanoclaw::tests::PeanoClawTest: public tarch::tests::TestCase {
   private:
+    /**
+     * Logging device
+     */
+    static tarch::logging::Log _log;
+
     /**
      * Test wether the getters and setters for the adjacent patch indices in the
      * vertex are correct.

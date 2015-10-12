@@ -1,0 +1,300 @@
+/*
+ * NonOvershootingInterpolation.cpp
+ *
+ *  Created on: Oct 12, 2015
+ *      Author: kristof
+ */
+
+#include "peanoclaw/Patch.h"
+#include "peanoclaw/grid/SubgridAccessor.h"
+#include "peano/utils/Loop.h"
+
+#ifdef Parallel
+#include "tarch/parallel/Node.h"
+#endif
+
+template<int NumberOfUnknowns>
+tarch::logging::Log peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::_log( "peanoclaw::interSubgridCommunication::NonOvershootingInterpolation" );
+
+template<int NumberOfUnknowns>
+template<int Dimensionality>
+tarch::la::Vector<Dimensionality, int> peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::getSubcellInSourceSubgrid(
+  const tarch::la::Vector<Dimensionality, double>& subcellPositionInDestinationSubgrid,
+  const tarch::la::Vector<Dimensionality, double>& sourcePosition,
+  const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
+  const tarch::la::Vector<Dimensionality, int>& sourceSubdivisionFactor,
+  const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize,
+  bool& extrapolating
+) const {
+  tarch::la::Vector<Dimensionality, double> subcellPositionInSourcePatch = subcellPositionInDestinationSubgrid - (sourcePosition + sourceSubcellSize * 0.5);
+  tarch::la::Vector<Dimensionality, int> subcellIndexInSourcePatch(0.0);
+  for(int d = 0; d < DIMENSIONS; d++) {
+    subcellIndexInSourcePatch(d) = std::floor(subcellPositionInSourcePatch(d) * inverseSourceSubcellSize(d));
+  }
+  for(int d = 0; d < DIMENSIONS; d++) {
+    //Correct source patch subcell index, if on the boundary -> switch to extrapolation
+    int clippedSubcellIndexInSourcePatch = std::max(0, std::min(sourceSubdivisionFactor(d)-2,subcellIndexInSourcePatch(d)));
+
+    if(clippedSubcellIndexInSourcePatch != subcellIndexInSourcePatch(d)) {
+      extrapolating = true;
+    }
+
+    subcellIndexInSourcePatch(d) = clippedSubcellIndexInSourcePatch;
+  }
+  return subcellIndexInSourcePatch;
+}
+
+template<int NumberOfUnknowns>
+template<int Dimensionality>
+double peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::getSpatialFactor(
+  const tarch::la::Vector<Dimensionality, double>& destinationSubcellCenter,
+  const tarch::la::Vector<Dimensionality, double>& neighborPositionInSourcePatch,
+  const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
+  const tarch::la::Vector<Dimensionality, double>& destinationSubcellSize,
+  const tarch::la::Vector<Dimensionality, int>& offset,
+  const bool extrapolating
+) const {
+  double spatialFactor = 1.0;
+
+  for(int d = 0; d < DIMENSIONS; d++) {
+    double sign = 1 - 2*offset(d);
+
+    double extendedSourceSubcellSize = extrapolating ? 2.0 * sourceSubcellSize(d) - destinationSubcellSize(d) : sourceSubcellSize(d);
+    double extendedNeighborPositionInSourcePatch = extrapolating ? neighborPositionInSourcePatch(d) - sign * 0.5 * (sourceSubcellSize[d] - destinationSubcellSize[d]) : neighborPositionInSourcePatch(d);
+
+    spatialFactor *= 1.0 -
+                     (
+                         sign *
+                       (
+                         destinationSubcellCenter(d) - extendedNeighborPositionInSourcePatch
+                       )
+                     )
+                     / extendedSourceSubcellSize;
+  }
+  return spatialFactor;
+}
+
+template<int NumberOfUnknowns>
+void peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::interpolateUnknowns(
+  peanoclaw::grid::SubgridAccessor& sourceAccessor,
+  peanoclaw::grid::SubgridAccessor& destinationAccessor,
+  const tarch::la::Vector<DIMENSIONS,int>& neighborIndexInSourcePatch,
+  const tarch::la::Vector<DIMENSIONS,int>& subcellIndexInDestinationPatch,
+  double temporalFactor,
+  double spatialFactor,
+  bool interpolateToUOld
+) const {
+  int linearSourceUOldIndex = sourceAccessor.getLinearIndexUOld(neighborIndexInSourcePatch);
+  int linearSourceUNewIndex = sourceAccessor.getLinearIndexUNew(neighborIndexInSourcePatch);
+  int linearDestinationIndex;
+  if(interpolateToUOld){
+    linearDestinationIndex = destinationAccessor.getLinearIndexUOld(subcellIndexInDestinationPatch);
+  } else {
+    linearDestinationIndex = destinationAccessor.getLinearIndexUNew(subcellIndexInDestinationPatch);
+  }
+
+  for(int unknown = 0; unknown < NumberOfUnknowns; unknown++) {
+    //Get value from source patch either from uNew or from the ghostlayer in uOld.
+    double sourceUOld = sourceAccessor.getValueUOld(linearSourceUOldIndex, unknown);
+    double sourceUNew = sourceAccessor.getValueUNew(linearSourceUNewIndex, unknown);
+
+    logDebug("interpolateSolution(...)", "\tspatialFactorUNew=" << spatialFactor
+        << ", spatialFactorUNew=" << spatialFactor
+        << " due to destination position " << destination.getSubcellCenter(subcellIndexInDestinationPatch)
+        << " and source position " << source.getSubcellCenter(neighborIndexInSourcePatch)
+        << " and source.subcellsize=" << sourceSubcellSize << " and offset=" << offset);
+    logDebug("interpolateSolution(...)", "\ttimeFactor=" << timeFactor
+        << " due to destination time " << destination.getTimeIntervals().getCurrentTime()
+        << " and destination timestep size " << destination.getTimeIntervals().getTimestepSize()
+        << " and source time " << source.getTimeIntervals().getCurrentTime()
+        << " and source timestep size " << source.getTimeIntervals().getTimestepSize());
+
+    if(interpolateToUOld) {
+      logDebug("", "\tAdding UOld value " << sourceUOld << " and UNew value " << sourceUNew
+          << " with spatialFactor " << spatialFactor << " and timeFactor "  << timeFactor
+          << " to value " << destination.getAccessor().getValueUOld(subcellIndexInDestinationPatch, unknown));
+
+      destinationAccessor.setValueUOld(linearDestinationIndex, unknown,
+          destinationAccessor.getValueUOld(linearDestinationIndex, unknown)
+          + spatialFactor * (sourceUOld * (1.0-temporalFactor) + sourceUNew * temporalFactor));
+    } else {
+      logDebug("interpolateSolution(...)", "\tAdding UNew value " << sourceUNew << " and UOld value " << sourceUOld
+          << " with spatialFactor " << spatialFactor << " and timeFactor " << timeFactor
+          << " to value " << destination.getAccessor().getValueUNew(subcellIndexInDestinationPatch, unknown));
+
+      destinationAccessor.setValueUNew(linearDestinationIndex, unknown,
+        destinationAccessor.getValueUNew(linearDestinationIndex, unknown)
+        + spatialFactor * sourceUOld * (1.0-temporalFactor) + spatialFactor * sourceUNew * temporalFactor);
+    }
+  }
+}
+
+template<int NumberOfUnknowns>
+peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::NonOvershootingInterpolationTemplate() {
+  int entry = 0;
+  dfor2(offset)
+    for(int d = 0; d < DIMENSIONS; d++) {
+      _signLookupTable[entry++] = 1 - 2*offset(d);
+    }
+  enddforx
+}
+
+template<int NumberOfUnknowns>
+void peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::interpolateSolution(
+  const tarch::la::Vector<DIMENSIONS, int>&    destinationSize,
+  const tarch::la::Vector<DIMENSIONS, int>&    destinationOffset,
+  peanoclaw::Patch& source,
+  peanoclaw::Patch& destination,
+  bool interpolateToUOld,
+  bool interpolateToCurrentTime,
+  bool useTimeUNewOrTimeUOld
+) {
+  logTraceInWith4Arguments("", destinationSize, destinationOffset, source.toString(), destination.toString());
+  assertionEquals(source.getUnknownsPerSubcell(), destination.getUnknownsPerSubcell());
+
+  //Factor for interpolation in time
+  double timeFactor;
+  if(tarch::la::equals(source.getTimeIntervals().getTimestepSize(), 0.0)) {
+    timeFactor = 1.0;
+  } else {
+    if(useTimeUNewOrTimeUOld) {
+      if(interpolateToCurrentTime) {
+        timeFactor = (destination.getTimeIntervals().getTimeUOld() - source.getTimeIntervals().getTimeUOld()) / (source.getTimeIntervals().getTimeUNew() - source.getTimeIntervals().getTimeUOld());
+      } else {
+        timeFactor = (destination.getTimeIntervals().getTimeUNew() - source.getTimeIntervals().getTimeUOld()) / (source.getTimeIntervals().getTimeUNew() - source.getTimeIntervals().getTimeUOld());
+      }
+    } else {
+      if(interpolateToCurrentTime) {
+        timeFactor = (destination.getTimeIntervals().getCurrentTime() - source.getTimeIntervals().getCurrentTime()) / (source.getTimeIntervals().getCurrentTime() + source.getTimeIntervals().getTimestepSize() - source.getTimeIntervals().getCurrentTime());
+      } else {
+        timeFactor = (destination.getTimeIntervals().getCurrentTime() + destination.getTimeIntervals().getTimestepSize() - source.getTimeIntervals().getCurrentTime()) / (source.getTimeIntervals().getCurrentTime() + source.getTimeIntervals().getTimestepSize() - source.getTimeIntervals().getCurrentTime());
+      }
+    }
+  }
+
+  //TODO This should be guaranteed by the timestepping criterion but may be violated at the moment
+  // when coarsening the grid. Fixed?
+  timeFactor = std::max(0.0, std::min(1.0, timeFactor));
+
+  assertion(!tarch::la::smaller(timeFactor, 0.0) && !tarch::la::greater(timeFactor, 1.0));
+
+  peanoclaw::grid::SubgridAccessor sourceAccessor = source.getAccessor();
+  peanoclaw::grid::SubgridIterator<NumberOfUnknowns> sourceIterator
+    = sourceAccessor.getSubgridIterator<NumberOfUnknowns>(0, source.getSubdivisionFactor());
+  peanoclaw::grid::SubgridAccessor destinationAccessor = destination.getAccessor();
+  peanoclaw::grid::SubgridIterator<NumberOfUnknowns> destinationIterator
+    = destinationAccessor.getSubgridIterator<NumberOfUnknowns>(destinationOffset, destinationSize);
+
+  //Clear ghostlayer
+  //destination.clearRegion(destinationOffset, destinationSize, interpolateToUOld);
+  while(destinationIterator.moveToNextCell()) {
+    destinationIterator.setUnknownsUOld(tarch::la::Vector<NumberOfUnknowns, double>(0.0));
+  }
+  destinationIterator.restart();
+
+  //Prefetch data
+  tarch::la::Vector<DIMENSIONS, double> sourcePosition = source.getPosition();
+  tarch::la::Vector<DIMENSIONS, int> sourceSubdivisionFactor = source.getSubdivisionFactor();
+  tarch::la::Vector<DIMENSIONS, double> sourceSubcellSize = source.getSubcellSize();
+  tarch::la::Vector<DIMENSIONS, double> inverseSourceSubcellSize = tarch::la::invertEntries(sourceSubcellSize);
+  tarch::la::Vector<DIMENSIONS, double> destinationSubcellSize = destination.getSubcellSize();
+
+  #ifdef Asserts
+  for(int d = 0; d < DIMENSIONS; d++) {
+    assertionMsg(
+        tarch::la::smallerEquals(source.getPosition()(d) - source.getGhostlayerWidth() * destination.getSubcellSize()(d),
+            destination.getPosition()(d) + destination.getSubcellSize()(d) * destinationOffset(d))
+        && tarch::la::greaterEquals(source.getPosition()(d) + source.getSize()(d) + source.getGhostlayerWidth() * destination.getSubcellSize()(d),
+            destination.getPosition()(d) + destination.getSubcellSize()(d) * (destinationOffset(d) + destinationSize(d))),
+        "The kernel of the destination block must be totally included in the source patch."
+        << "\nd=" << d
+        << "\nSource: " << source.toString() << "\nDestination: " << destination.toString()
+        << "\ndestinationOffset: " << destinationOffset << "\ndestinationSize: " << destinationSize);
+  }
+  #endif
+
+  //Interpolate/Extrapolate
+  //dfor(subcellIndex, destinationSize) {
+  while(destinationIterator.moveToNextCell()) {
+
+    //Map to global space
+    tarch::la::Vector<DIMENSIONS, int> subcellIndexInDestinationPatch = destinationIterator.getCellIndex();
+    tarch::la::Vector<DIMENSIONS, double> destinationSubcellCenter = destination.getSubcellCenter(subcellIndexInDestinationPatch);
+
+
+    //Map to local space of source patch
+    bool extrapolating;
+    tarch::la::Vector<DIMENSIONS, int> subcellIndexInSourcePatch = getSubcellInSourceSubgrid<DIMENSIONS>(
+      destination.getSubcellCenter(subcellIndexInDestinationPatch),
+      sourcePosition,
+      sourceSubcellSize,
+      sourceSubdivisionFactor,
+      inverseSourceSubcellSize,
+      extrapolating
+    );
+
+
+    logDebug("", "Mapping source-point " << subcellPositionInSourcePatch
+        << " in source-cell " << subcellIndexInSourcePatch
+        << " to destination-cell " << destinationIterator.getCellIndex());
+
+    sourceIterator.restart(subcellIndexInSourcePatch, tarch::la::Vector<DIMENSIONS, int>(2));
+    dfor2(offset)
+      tarch::la::Vector<DIMENSIONS, int> neighborIndexInSourcePatch = subcellIndexInSourcePatch + offset;
+      tarch::la::Vector<DIMENSIONS, double> neighborPositionInSourcePatch = source.getSubcellCenter(neighborIndexInSourcePatch);
+
+      //Calculate factor for spatial interpolation.
+      double spatialFactor = getSpatialFactor<DIMENSIONS>(
+        destinationSubcellCenter,
+        neighborPositionInSourcePatch,
+        sourceSubcellSize,
+        destinationSubcellSize,
+        offset,
+        extrapolating
+      );
+
+      interpolateUnknowns(
+        sourceAccessor,
+        destinationAccessor,
+        neighborIndexInSourcePatch,
+        subcellIndexInDestinationPatch,
+        timeFactor,
+        spatialFactor,
+        interpolateToUOld
+      );
+    }
+  }
+
+  #ifdef Asserts
+  if(destination.containsNaN()) {
+    std::cout << "Invalid interpolation "
+        #ifdef Parallel
+        << "on rank " << tarch::parallel::Node::getInstance().getRank() << " "
+        #endif
+        << "from patch " << std::endl << source.toString() << std::endl << source.toStringUNew() << std::endl << source.toStringUOldWithGhostLayer()
+              << std::endl << "to patch" << std::endl << destination.toString() << std::endl << destination.toStringUNew() << std::endl << destination.toStringUOldWithGhostLayer() << std::endl;
+    assertion(false);
+  }
+
+  #ifdef AssertForPositiveValues
+  dfor(subcellIndex, destinationSize) {
+    tarch::la::Vector<DIMENSIONS, int> subcellIndexInDestinationPatch = subcellIndex + destinationOffset;
+    double checkedValue
+      = interpolateToUOld ? destinationAccessor.getValueUOld(subcellIndexInDestinationPatch, 0): destinationAccessor.getValueUNew(subcellIndexInDestinationPatch, 0);
+    if(checkedValue<= 0.0) {
+      assertionFail("Invalid interpolation "
+        #ifdef Parallel
+        << "on rank " << tarch::parallel::Node::getInstance().getRank() << " "
+        #endif
+        << "from patch " << std::endl << source << std::endl << source.toStringUNew() << std::endl << source.toStringUOldWithGhostLayer()
+        << std::endl << "to patch" << std::endl << destination << std::endl << destination.toStringUNew() << std::endl << destination.toStringUOldWithGhostLayer()
+        << std::endl << "value=" << destinationAccessor.getValueUOld(subcellIndexInDestinationPatch, 0)
+      );
+      throw "";
+    }
+  }
+  #endif
+  #endif
+
+  logTraceOut("");
+}
