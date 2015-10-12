@@ -23,8 +23,7 @@ tarch::la::Vector<Dimensionality, int> peanoclaw::interSubgridCommunication::Non
   const tarch::la::Vector<Dimensionality, double>& sourcePosition,
   const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
   const tarch::la::Vector<Dimensionality, int>& sourceSubdivisionFactor,
-  const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize,
-  bool& extrapolating
+  const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize
 ) const {
   tarch::la::Vector<Dimensionality, double> subcellPositionInSourcePatch = subcellPositionInDestinationSubgrid - (sourcePosition + sourceSubcellSize * 0.5);
   tarch::la::Vector<Dimensionality, int> subcellIndexInSourcePatch(0.0);
@@ -33,13 +32,7 @@ tarch::la::Vector<Dimensionality, int> peanoclaw::interSubgridCommunication::Non
   }
   for(int d = 0; d < DIMENSIONS; d++) {
     //Correct source patch subcell index, if on the boundary -> switch to extrapolation
-    int clippedSubcellIndexInSourcePatch = std::max(0, std::min(sourceSubdivisionFactor(d)-2,subcellIndexInSourcePatch(d)));
-
-    if(clippedSubcellIndexInSourcePatch != subcellIndexInSourcePatch(d)) {
-      extrapolating = true;
-    }
-
-    subcellIndexInSourcePatch(d) = clippedSubcellIndexInSourcePatch;
+    subcellIndexInSourcePatch(d) = std::max(0, std::min(sourceSubdivisionFactor(d)-2,subcellIndexInSourcePatch(d)));
   }
   return subcellIndexInSourcePatch;
 }
@@ -51,16 +44,15 @@ double peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplat
   const tarch::la::Vector<Dimensionality, double>& neighborPositionInSourcePatch,
   const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
   const tarch::la::Vector<Dimensionality, double>& destinationSubcellSize,
-  const tarch::la::Vector<Dimensionality, int>& offset,
-  const bool extrapolating
+  const tarch::la::Vector<Dimensionality, int>& offset
 ) const {
   double spatialFactor = 1.0;
 
   for(int d = 0; d < DIMENSIONS; d++) {
     double sign = 1 - 2*offset(d);
 
-    double extendedSourceSubcellSize = extrapolating ? 2.0 * sourceSubcellSize(d) - destinationSubcellSize(d) : sourceSubcellSize(d);
-    double extendedNeighborPositionInSourcePatch = extrapolating ? neighborPositionInSourcePatch(d) - sign * 0.5 * (sourceSubcellSize[d] - destinationSubcellSize[d]) : neighborPositionInSourcePatch(d);
+    double extendedSourceSubcellSize = 2.0 * sourceSubcellSize(d) - destinationSubcellSize(d);
+    double extendedNeighborPositionInSourcePatch = neighborPositionInSourcePatch(d) - sign * 0.5 * (sourceSubcellSize[d] - destinationSubcellSize[d]);
 
     spatialFactor *= 1.0 -
                      (
@@ -223,14 +215,12 @@ void peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<
 
 
     //Map to local space of source patch
-    bool extrapolating;
     tarch::la::Vector<DIMENSIONS, int> subcellIndexInSourcePatch = getSubcellInSourceSubgrid<DIMENSIONS>(
       destination.getSubcellCenter(subcellIndexInDestinationPatch),
       sourcePosition,
       sourceSubcellSize,
       sourceSubdivisionFactor,
-      inverseSourceSubcellSize,
-      extrapolating
+      inverseSourceSubcellSize
     );
 
 
@@ -249,8 +239,7 @@ void peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<
         neighborPositionInSourcePatch,
         sourceSubcellSize,
         destinationSubcellSize,
-        offset,
-        extrapolating
+        offset
       );
 
       interpolateUnknowns(

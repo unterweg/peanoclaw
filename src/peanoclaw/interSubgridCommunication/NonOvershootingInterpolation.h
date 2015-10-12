@@ -56,8 +56,7 @@ class peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate
       const tarch::la::Vector<Dimensionality, double>& neighborPositionInSourcePatch,
       const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
       const tarch::la::Vector<Dimensionality, double>& destinationSubcellSize,
-      const tarch::la::Vector<Dimensionality, int>& offset,
-      const bool extrapolating
+      const tarch::la::Vector<Dimensionality, int>& offset
     ) const;
 
     template<int Dimensionality>
@@ -66,8 +65,7 @@ class peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate
       const tarch::la::Vector<Dimensionality, double>& sourcePosition,
       const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
       const tarch::la::Vector<Dimensionality, int>& sourceSubdivisionFactor,
-      const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize,
-      bool& extrapolating
+      const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize
     ) const;
 
   public:
