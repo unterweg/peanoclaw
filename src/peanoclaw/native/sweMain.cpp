@@ -106,7 +106,7 @@ void peanoclaw::native::sweMain(
       // update the cell values
       l_wavePropagationBlock.updateUnknowns(l_maxTimeStepWidth);
 
-      l_wavePropgationBlock.synchAfterWrite();
+      l_wavePropagationBlock.synchAfterWrite();
 
       // update the cpu time in the logger
       tools::Logger::logger.updateTime("Cpu");
