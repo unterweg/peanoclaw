@@ -9,6 +9,7 @@
 #define PEANOCLAW_TESTS_GHOSTLAYEREXTRAPOLATIONTEST_H_
 
 #include "tarch/tests/TestCase.h"
+#include "tarch/logging/Log.h"
 
 namespace peanoclaw {
   namespace tests {
@@ -19,6 +20,11 @@ namespace peanoclaw {
 class peanoclaw::tests::GhostlayerExtrapolationTest : public tarch::tests::TestCase {
 
   private:
+    /**
+     * Logging device
+     */
+    static tarch::logging::Log _log;
+
     /**
      * Testing the extrapolation of ghostlayer corners in a 2d-patch. The patch has
      * 3x3 cells and a ghostlayer width of 2. Thus, the values are set as follows:

@@ -37,10 +37,10 @@ void peanoclaw::native::sweMain(
 
   tarch::la::Vector<DIMENSIONS,double> resolution
     = tarch::la::multiplyComponents(scenario.getDomainSize(), tarch::la::invertEntries(numberOfCells.convertScalar<double>()));
-  Block l_wavePropgationBlock(numberOfCells[0],numberOfCells[1],resolution[0],resolution[1]);
+  Block l_wavePropagationBlock(numberOfCells[0],numberOfCells[1],resolution[0],resolution[1]);
 
   // initialize the wave propagation block
-  l_wavePropgationBlock.initScenario(0, 0, scenario);
+  l_wavePropagationBlock.initScenario(0, 0, scenario);
 
   // Init fancy progressbar
   tools::ProgressBar progressBar(scenario.getEndTime());
@@ -55,7 +55,7 @@ void peanoclaw::native::sweMain(
   io::BoundarySize l_boundarySize = {{1, 1, 1, 1}};
   // consturct a VtkWriter
   io::VtkWriter l_writer( l_fileName,
-          l_wavePropgationBlock.getBathymetry(),
+          l_wavePropagationBlock.getBathymetry(),
           l_boundarySize,
           numberOfCells[0], numberOfCells[1],
           resolution[0], resolution[1] );
@@ -87,7 +87,7 @@ void peanoclaw::native::sweMain(
     // do time steps until next checkpoint is reached
     while( l_t < time ) {
       // set values in ghost cells:
-      l_wavePropgationBlock.setGhostLayer();
+      l_wavePropagationBlock.setGhostLayer();
 
       // reset the cpu clock
       tools::Logger::logger.resetClockToCurrentTime("Cpu");
@@ -98,13 +98,15 @@ void peanoclaw::native::sweMain(
 //      l_wavePropgationBlock.computeMaxTimestep();
 
       // compute numerical flux on each edge
-      l_wavePropgationBlock.computeNumericalFluxes();
+      l_wavePropagationBlock.computeNumericalFluxes();
 
       //! maximum allowed time step width.
-      float l_maxTimeStepWidth = l_wavePropgationBlock.getMaxTimestep();
+      float l_maxTimeStepWidth = l_wavePropagationBlock.getMaxTimestep();
 
       // update the cell values
-      l_wavePropgationBlock.updateUnknowns(l_maxTimeStepWidth);
+      l_wavePropagationBlock.updateUnknowns(l_maxTimeStepWidth);
+
+      l_wavePropgationBlock.synchAfterWrite();
 
       // update the cpu time in the logger
       tools::Logger::logger.updateTime("Cpu");

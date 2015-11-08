@@ -148,6 +148,8 @@ peanoclaw::mappings::SolveTimestep::SolveTimestep()
     _useDimensionalSplittingExtrapolation(true),
     _collectSubgridStatistics(true),
     _correctFluxes(true),
+    _reduceReductions(true),
+    _estimateNeighborInducedMaximumTimestep(false),
     _iterationWatch("", "", false),
     _workerIterations(-1) {
   logTraceIn( "SolveTimestep()" );
@@ -174,6 +176,8 @@ peanoclaw::mappings::SolveTimestep::SolveTimestep(const SolveTimestep&  masterTh
   _useDimensionalSplittingExtrapolation(masterThread._useDimensionalSplittingExtrapolation),
   _collectSubgridStatistics(masterThread._collectSubgridStatistics),
   _correctFluxes(masterThread._correctFluxes),
+  _reduceReductions(true),
+  _estimateNeighborInducedMaximumTimestep(false),
   _estimatedRemainingIterationsUntilGlobalTimestep(masterThread._estimatedRemainingIterationsUntilGlobalTimestep),
   _workerIterations(masterThread._workerIterations),
   _iterationWatch("", "", false)
@@ -449,8 +453,10 @@ void peanoclaw::mappings::SolveTimestep::prepareSendToMaster(
         tarch::parallel::NodePool::getInstance().getMasterRank());
   }
 
-  LevelStatisticsHeap::getInstance().finishedToSendSynchronousData();
-  ProcessStatisticsHeap::getInstance().finishedToSendSynchronousData();
+  if(_collectSubgridStatistics) {
+    LevelStatisticsHeap::getInstance().finishedToSendSynchronousData();
+    ProcessStatisticsHeap::getInstance().finishedToSendSynchronousData();
+  }
 
   logTraceOut( "prepareSendToMaster(...)" );
 }
@@ -847,12 +853,14 @@ void peanoclaw::mappings::SolveTimestep::beginIteration(
   _estimateNeighborInducedMaximumTimestep = solverState.estimateNeighborInducedMaximumTimestep();
 
 #ifdef Parallel
-  LevelStatisticsHeap::getInstance().startToSendSynchronousData();
-  LevelStatisticsHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
-  TimeIntervalStatisticsHeap::getInstance().startToSendSynchronousData();
-  TimeIntervalStatisticsHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
+  if(_collectSubgridStatistics) {
+    LevelStatisticsHeap::getInstance().startToSendSynchronousData();
+//    LevelStatisticsHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
+//    TimeIntervalStatisticsHeap::getInstance().startToSendSynchronousData();
+//    TimeIntervalStatisticsHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
+  }
   ProcessStatisticsHeap::getInstance().startToSendSynchronousData();
-  ProcessStatisticsHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
+//  ProcessStatisticsHeap::getInstance().startToSendBoundaryData(solverState.isTraversalInverted());
 #endif
 
   _iterationWatch.startTimer();
@@ -885,12 +893,12 @@ void peanoclaw::mappings::SolveTimestep::endIteration(
   _subgridStatistics.finalizeIteration(solverState);
   _sharedMemoryStatistics.logStatistics();
 
-  LevelStatisticsHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());
-  TimeIntervalStatisticsHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());
-  ProcessStatisticsHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());
-  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+//  LevelStatisticsHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());
+//  TimeIntervalStatisticsHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());
+//  ProcessStatisticsHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());
+  if (tarch::parallel::Node::getInstance().isGlobalMaster() && _collectSubgridStatistics) {
     LevelStatisticsHeap::getInstance().finishedToSendSynchronousData();
-    TimeIntervalStatisticsHeap::getInstance().finishedToSendSynchronousData();
+//    TimeIntervalStatisticsHeap::getInstance().finishedToSendSynchronousData();
     ProcessStatisticsHeap::getInstance().finishedToSendSynchronousData();
   }
 

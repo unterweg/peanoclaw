@@ -34,7 +34,7 @@ namespace peanoclaw {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   14/12/2014 09:18
+    * @date   24/10/2015 20:24
     */
    class peanoclaw::records::State { 
       
@@ -116,6 +116,7 @@ namespace peanoclaw {
             bool _hasErased;
             bool _hasTriggeredEraseForNextIteration;
             bool _hasChangedVertexOrCellState;
+            bool _hasModifiedGridInPreviousIteration;
             bool _isTraversalInverted;
             bool _reduceStateAndCell;
             bool _couldNotEraseDueToDecompositionFlag;
@@ -128,7 +129,7 @@ namespace peanoclaw {
             /**
              * Generated
              */
-            PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const bool& restrictStatistics, const int& estimatedNumberOfIterationsToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
+            PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const bool& restrictStatistics, const int& estimatedNumberOfIterationsToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& hasModifiedGridInPreviousIteration, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
             
             
             inline bool getIsInitializing() const 
@@ -1297,6 +1298,26 @@ namespace peanoclaw {
             
             
             
+            inline bool getHasModifiedGridInPreviousIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               return _hasModifiedGridInPreviousIteration;
+            }
+            
+            
+            
+            inline void setHasModifiedGridInPreviousIteration(const bool& hasModifiedGridInPreviousIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               _hasModifiedGridInPreviousIteration = hasModifiedGridInPreviousIteration;
+            }
+            
+            
+            
             inline bool getIsTraversalInverted() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -1396,7 +1417,7 @@ namespace peanoclaw {
          /**
           * Generated
           */
-         State(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const bool& restrictStatistics, const int& estimatedNumberOfIterationsToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
+         State(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const bool& restrictStatistics, const int& estimatedNumberOfIterationsToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& hasModifiedGridInPreviousIteration, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
          
          /**
           * Generated
@@ -2752,6 +2773,26 @@ namespace peanoclaw {
          
          
          
+         inline bool getHasModifiedGridInPreviousIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _persistentRecords._hasModifiedGridInPreviousIteration;
+         }
+         
+         
+         
+         inline void setHasModifiedGridInPreviousIteration(const bool& hasModifiedGridInPreviousIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _persistentRecords._hasModifiedGridInPreviousIteration = hasModifiedGridInPreviousIteration;
+         }
+         
+         
+         
          inline bool getIsTraversalInverted() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -2873,9 +2914,14 @@ namespace peanoclaw {
             
             static void shutdownDatatype();
             
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+            /**
+             * @param communicateSleep -1 Data exchange through blocking mpi
+             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             */
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
@@ -2903,7 +2949,7 @@ namespace peanoclaw {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   14/12/2014 09:18
+       * @date   24/10/2015 20:24
        */
       class peanoclaw::records::StatePacked { 
          
@@ -2959,9 +3005,10 @@ namespace peanoclaw {
                 |  hasErased	| startbit 24	| #bits 1
                 |  hasTriggeredEraseForNextIteration	| startbit 25	| #bits 1
                 |  hasChangedVertexOrCellState	| startbit 26	| #bits 1
-                |  reduceStateAndCell	| startbit 27	| #bits 1
-                |  couldNotEraseDueToDecompositionFlag	| startbit 28	| #bits 1
-                |  subWorkerIsInvolvedInJoinOrFork	| startbit 29	| #bits 1
+                |  hasModifiedGridInPreviousIteration	| startbit 27	| #bits 1
+                |  reduceStateAndCell	| startbit 28	| #bits 1
+                |  couldNotEraseDueToDecompositionFlag	| startbit 29	| #bits 1
+                |  subWorkerIsInvolvedInJoinOrFork	| startbit 30	| #bits 1
                 */
                int _packedRecords0;
                
@@ -2973,7 +3020,7 @@ namespace peanoclaw {
                /**
                 * Generated
                 */
-               PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const bool& restrictStatistics, const int& estimatedNumberOfIterationsToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
+               PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const bool& restrictStatistics, const int& estimatedNumberOfIterationsToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& hasModifiedGridInPreviousIteration, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
                
                
                inline bool getIsInitializing() const 
@@ -4217,6 +4264,29 @@ namespace peanoclaw {
                
                
                
+               inline bool getHasModifiedGridInPreviousIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  int mask = 1 << (27);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+               }
+               
+               
+               
+               inline void setHasModifiedGridInPreviousIteration(const bool& hasModifiedGridInPreviousIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  int mask = 1 << (27);
+   _packedRecords0 = static_cast<int>( hasModifiedGridInPreviousIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+               }
+               
+               
+               
                inline bool getIsTraversalInverted() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -4242,7 +4312,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (27);
+                  int mask = 1 << (28);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -4254,7 +4324,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (27);
+                  int mask = 1 << (28);
    _packedRecords0 = static_cast<int>( reduceStateAndCell ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -4265,7 +4335,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (28);
+                  int mask = 1 << (29);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -4277,7 +4347,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (28);
+                  int mask = 1 << (29);
    _packedRecords0 = static_cast<int>( couldNotEraseDueToDecompositionFlag ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -4288,7 +4358,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (29);
+                  int mask = 1 << (30);
    int tmp = static_cast<int>(_packedRecords0 & mask);
    return (tmp != 0);
                }
@@ -4300,7 +4370,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-                  int mask = 1 << (29);
+                  int mask = 1 << (30);
    _packedRecords0 = static_cast<int>( subWorkerIsInvolvedInJoinOrFork ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
                }
                
@@ -4325,7 +4395,7 @@ namespace peanoclaw {
             /**
              * Generated
              */
-            StatePacked(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const bool& restrictStatistics, const int& estimatedNumberOfIterationsToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
+            StatePacked(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const bool& reduceReductions, const bool& restrictStatistics, const int& estimatedNumberOfIterationsToGlobalTimestep, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& hasModifiedGridInPreviousIteration, const bool& isTraversalInverted, const bool& reduceStateAndCell, const bool& couldNotEraseDueToDecompositionFlag, const bool& subWorkerIsInvolvedInJoinOrFork);
             
             /**
              * Generated
@@ -5756,6 +5826,29 @@ namespace peanoclaw {
             
             
             
+            inline bool getHasModifiedGridInPreviousIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               int mask = 1 << (27);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+            }
+            
+            
+            
+            inline void setHasModifiedGridInPreviousIteration(const bool& hasModifiedGridInPreviousIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+               int mask = 1 << (27);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasModifiedGridInPreviousIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+            }
+            
+            
+            
             inline bool getIsTraversalInverted() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -5781,7 +5874,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (27);
+               int mask = 1 << (28);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -5793,7 +5886,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (27);
+               int mask = 1 << (28);
    _persistentRecords._packedRecords0 = static_cast<int>( reduceStateAndCell ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -5804,7 +5897,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (28);
+               int mask = 1 << (29);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -5816,7 +5909,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (28);
+               int mask = 1 << (29);
    _persistentRecords._packedRecords0 = static_cast<int>( couldNotEraseDueToDecompositionFlag ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -5827,7 +5920,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (29);
+               int mask = 1 << (30);
    int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
             }
@@ -5839,7 +5932,7 @@ namespace peanoclaw {
  __attribute__((always_inline))
  #endif 
  {
-               int mask = 1 << (29);
+               int mask = 1 << (30);
    _persistentRecords._packedRecords0 = static_cast<int>( subWorkerIsInvolvedInJoinOrFork ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
             }
             
@@ -5886,9 +5979,14 @@ namespace peanoclaw {
                
                static void shutdownDatatype();
                
-               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+               /**
+                * @param communicateSleep -1 Data exchange through blocking mpi
+                * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                */
+               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                
-               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                
                static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                
@@ -5913,7 +6011,7 @@ namespace peanoclaw {
           *
           * 		   build date: 09-02-2014 14:40
           *
-          * @date   14/12/2014 09:18
+          * @date   24/10/2015 20:24
           */
          class peanoclaw::records::State { 
             
@@ -5992,6 +6090,7 @@ namespace peanoclaw {
                   bool _hasErased;
                   bool _hasTriggeredEraseForNextIteration;
                   bool _hasChangedVertexOrCellState;
+                  bool _hasModifiedGridInPreviousIteration;
                   bool _isTraversalInverted;
                   /**
                    * Generated
@@ -6001,7 +6100,7 @@ namespace peanoclaw {
                   /**
                    * Generated
                    */
-                  PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+                  PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& hasModifiedGridInPreviousIteration, const bool& isTraversalInverted);
                   
                   
                   inline bool getIsInitializing() const 
@@ -7110,6 +7209,26 @@ namespace peanoclaw {
                   
                   
                   
+                  inline bool getHasModifiedGridInPreviousIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _hasModifiedGridInPreviousIteration;
+                  }
+                  
+                  
+                  
+                  inline void setHasModifiedGridInPreviousIteration(const bool& hasModifiedGridInPreviousIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _hasModifiedGridInPreviousIteration = hasModifiedGridInPreviousIteration;
+                  }
+                  
+                  
+                  
                   inline bool getIsTraversalInverted() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -7149,7 +7268,7 @@ namespace peanoclaw {
                /**
                 * Generated
                 */
-               State(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+               State(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& hasModifiedGridInPreviousIteration, const bool& isTraversalInverted);
                
                /**
                 * Generated
@@ -8445,6 +8564,26 @@ namespace peanoclaw {
                
                
                
+               inline bool getHasModifiedGridInPreviousIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  return _persistentRecords._hasModifiedGridInPreviousIteration;
+               }
+               
+               
+               
+               inline void setHasModifiedGridInPreviousIteration(const bool& hasModifiedGridInPreviousIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  _persistentRecords._hasModifiedGridInPreviousIteration = hasModifiedGridInPreviousIteration;
+               }
+               
+               
+               
                inline bool getIsTraversalInverted() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -8506,9 +8645,14 @@ namespace peanoclaw {
                   
                   static void shutdownDatatype();
                   
-                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                  /**
+                   * @param communicateSleep -1 Data exchange through blocking mpi
+                   * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                   * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                   */
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                   
-                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                   
                   static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                   
@@ -8536,7 +8680,7 @@ namespace peanoclaw {
              *
              * 		   build date: 09-02-2014 14:40
              *
-             * @date   14/12/2014 09:18
+             * @date   24/10/2015 20:24
              */
             class peanoclaw::records::StatePacked { 
                
@@ -8589,6 +8733,7 @@ namespace peanoclaw {
                       |  hasErased	| startbit 22	| #bits 1
                       |  hasTriggeredEraseForNextIteration	| startbit 23	| #bits 1
                       |  hasChangedVertexOrCellState	| startbit 24	| #bits 1
+                      |  hasModifiedGridInPreviousIteration	| startbit 25	| #bits 1
                       */
                      int _packedRecords0;
                      
@@ -8600,7 +8745,7 @@ namespace peanoclaw {
                      /**
                       * Generated
                       */
-                     PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+                     PersistentRecords(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& hasModifiedGridInPreviousIteration, const bool& isTraversalInverted);
                      
                      
                      inline bool getIsInitializing() const 
@@ -9778,6 +9923,29 @@ namespace peanoclaw {
                      
                      
                      
+                     inline bool getHasModifiedGridInPreviousIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        int mask = 1 << (25);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+                     }
+                     
+                     
+                     
+                     inline void setHasModifiedGridInPreviousIteration(const bool& hasModifiedGridInPreviousIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                        int mask = 1 << (25);
+   _packedRecords0 = static_cast<int>( hasModifiedGridInPreviousIteration ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+                     }
+                     
+                     
+                     
                      inline bool getIsTraversalInverted() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -9817,7 +9985,7 @@ namespace peanoclaw {
                   /**
                    * Generated
                    */
-                  StatePacked(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+                  StatePacked(const bool& isInitializing, const bool& isRefinementCriterionEnabled, const int& unknownsPerSubcell, const int& numberOfParametersWithoutGhostlayerPerSubcell, const int& numberOfParametersWithGhostlayerPerSubcell, const tarch::la::Vector<DIMENSIONS,double>& initialMaximalSubgridSize, const tarch::la::Vector<DIMENSIONS,int>& defaultSubdivisionFactor, const int& defaultGhostWidthLayer, const double& initialTimestepSize, const bool& useDimensionalSplittingExtrapolation, const double& globalTimestepEndTime, const bool& allPatchesEvolvedToGlobalTimestep, const bool& enableFluxCorrection, const bool& estimateNeighborInducedMaximumTimestep, const tarch::la::Vector<DIMENSIONS,double>& domainOffset, const tarch::la::Vector<DIMENSIONS,double>& domainSize, const tarch::la::Vector<32,int>& plotName, const int& plotNumber, const double& startMaximumGlobalTimeInterval, const double& endMaximumGlobalTimeInterval, const double& startMinimumGlobalTimeInterval, const double& endMinimumGlobalTimeInterval, const double& minimalTimestep, const double& totalNumberOfCellUpdates, const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const double& numberOfInnerLeafVertices, const double& numberOfBoundaryLeafVertices, const double& numberOfOuterLeafVertices, const double& numberOfInnerLeafCells, const double& numberOfOuterLeafCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& hasModifiedGridInPreviousIteration, const bool& isTraversalInverted);
                   
                   /**
                    * Generated
@@ -11182,6 +11350,29 @@ namespace peanoclaw {
                   
                   
                   
+                  inline bool getHasModifiedGridInPreviousIteration() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     int mask = 1 << (25);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+                  }
+                  
+                  
+                  
+                  inline void setHasModifiedGridInPreviousIteration(const bool& hasModifiedGridInPreviousIteration) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     int mask = 1 << (25);
+   _persistentRecords._packedRecords0 = static_cast<int>( hasModifiedGridInPreviousIteration ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+                  }
+                  
+                  
+                  
                   inline bool getIsTraversalInverted() const 
  #ifdef UseManualInlining
  __attribute__((always_inline))
@@ -11243,9 +11434,14 @@ namespace peanoclaw {
                      
                      static void shutdownDatatype();
                      
-                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                     /**
+                      * @param communicateSleep -1 Data exchange through blocking mpi
+                      * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                      * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                      */
+                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                      
-                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                      
                      static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                      

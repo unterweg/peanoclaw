@@ -19,6 +19,8 @@ registerTest(peanoclaw::tests::GhostlayerExtrapolationTest)
 #pragma optimize("",off)
 #endif
 
+tarch::logging::Log peanoclaw::tests::GhostlayerExtrapolationTest::_log("peanoclaw::tests::GhostlayerExtrapolationTest");
+
 void peanoclaw::tests::GhostlayerExtrapolationTest::testEdgeExtrapolation2D() {
   #ifdef Dim2
   int ghostlayerWidth = 2;
@@ -83,9 +85,6 @@ void peanoclaw::tests::GhostlayerExtrapolationTest::testEdgeExtrapolation2D() {
     double c2 = 4.0;
     double c3 = 3.0;
     double c4 = 5.0;
-
-    //TODO unterweg debug
-    std::cout << subgrid.toStringUOldWithGhostLayer() << std::endl;
 
     //Lower-Left
     assignList(subcell) = -ghostlayerWidth, -ghostlayerWidth;
@@ -373,6 +372,7 @@ void peanoclaw::tests::GhostlayerExtrapolationTest::testEdgeAndCornerExtrapolati
 }
 
 void peanoclaw::tests::GhostlayerExtrapolationTest::run() {
+  logInfo("run()", "Running GhostlayerExtrapolationTest");
   testMethod( testEdgeExtrapolation2D );
   testMethod( testEdgeAndCornerExtrapolation3D );
 }

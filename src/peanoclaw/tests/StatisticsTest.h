@@ -9,6 +9,7 @@
 #define PEANOCLAW_TESTS_STATISTICSTEST_H_
 
 #include "tarch/tests/TestCase.h"
+#include "tarch/logging/Log.h"
 
 namespace peanoclaw {
   namespace tests {
@@ -19,6 +20,11 @@ namespace peanoclaw {
 class peanoclaw::tests::StatisticsTest : public tarch::tests::TestCase {
 
   private:
+    /**
+     * Logging device
+     */
+    static tarch::logging::Log _log;
+
     /**
      * Tests the method getNeighborPositionOnLevel(...) from class
      * peanoclaw::statistics::ParallelGridValidator

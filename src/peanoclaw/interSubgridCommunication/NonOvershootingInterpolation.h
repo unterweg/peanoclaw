@@ -1,12 +1,12 @@
 /*
- * DefaultInterpolation.h
+ * NonOvershootingInterpolation.h
  *
- *  Created on: Mar 7, 2013
+ *  Created on: Oct 12, 2015
  *      Author: kristof
  */
 
-#ifndef PEANOCLAW_INTERSUBGRIDCOMMUNICATION_DEFAULTINTERPOLATION_H_
-#define PEANOCLAW_INTERSUBGRIDCOMMUNICATION_DEFAULTINTERPOLATION_H_
+#ifndef PEANOCLAW_INTERSUBGRIDCOMMUNICATION_NONOVERSHOOTINGINTERPOLATION_H_
+#define PEANOCLAW_INTERSUBGRIDCOMMUNICATION_NONOVERSHOOTINGINTERPOLATION_H_
 
 #include "peanoclaw/interSubgridCommunication/Interpolation.h"
 #include "peanoclaw/Patch.h"
@@ -16,10 +16,10 @@
 
 namespace peanoclaw {
   namespace interSubgridCommunication {
-    class DefaultInterpolation;
+    class NonOvershootingInterpolation;
 
     template<int NumberOfUnknowns>
-    class DefaultInterpolationTemplate;
+    class NonOvershootingInterpolationTemplate;
   }
 }
 
@@ -28,7 +28,7 @@ namespace peanoclaw {
  * to fine subgrids.
  */
 template<int NumberOfUnknowns>
-class peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate {
+class peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate {
   private:
     /**
      * Logging device for the trace macros.
@@ -47,11 +47,15 @@ class peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate {
       bool interpolateToUOld
     ) const;
 
+    /**
+     * Sign is used to account for extrapolation if destination cell center is outside the source cell.
+     */
     template<int Dimensionality>
     double getSpatialFactor(
       const tarch::la::Vector<Dimensionality, double>& destinationSubcellCenter,
       const tarch::la::Vector<Dimensionality, double>& neighborPositionInSourcePatch,
-      const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize,
+      const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
+      const tarch::la::Vector<Dimensionality, double>& destinationSubcellSize,
       const tarch::la::Vector<Dimensionality, int>& offset
     ) const;
 
@@ -65,7 +69,7 @@ class peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate {
     ) const;
 
   public:
-    DefaultInterpolationTemplate();
+    NonOvershootingInterpolationTemplate();
 
     /**
      * @see peanoclaw::interSubgridCommunication::Interpolation
@@ -93,7 +97,7 @@ class peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate {
 /**
  * Implements a d-linear interpolation of grid values.
  */
-class peanoclaw::interSubgridCommunication::DefaultInterpolation : public peanoclaw::interSubgridCommunication::Interpolation {
+class peanoclaw::interSubgridCommunication::NonOvershootingInterpolation : public peanoclaw::interSubgridCommunication::Interpolation {
   public:
     void interpolateSolution (
       const tarch::la::Vector<DIMENSIONS, int>&    destinationSize,
@@ -107,61 +111,61 @@ class peanoclaw::interSubgridCommunication::DefaultInterpolation : public peanoc
       switch(source.getUnknownsPerSubcell()) {
         case 1:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<1> transfer1;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<1> transfer1;
             transfer1.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 2:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<2> transfer2;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<2> transfer2;
             transfer2.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 3:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<3> transfer3;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<3> transfer3;
             transfer3.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 4:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<4> transfer4;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<4> transfer4;
             transfer4.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 5:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<5> transfer5;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<5> transfer5;
             transfer5.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 6:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<6> transfer6;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<6> transfer6;
             transfer6.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 7:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<7> transfer7;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<7> transfer7;
             transfer7.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 8:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<8> transfer8;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<8> transfer8;
             transfer8.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 9:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<9> transfer9;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<9> transfer9;
             transfer9.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
         case 10:
           {
-            peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<10> transfer10;
+            peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<10> transfer10;
             transfer10.interpolateSolution(destinationSize, destinationOffset, source, destination, interpolateToUOld, interpolateToCurrentTime, useTimeUNewOrTimeUOld);
           }
           break;
@@ -171,6 +175,6 @@ class peanoclaw::interSubgridCommunication::DefaultInterpolation : public peanoc
     }
 };
 
-#include "peanoclaw/interSubgridCommunication/DefaultInterpolation.cpph"
+#include "peanoclaw/interSubgridCommunication/NonOvershootingInterpolation.cpph"
 
-#endif /* PEANOCLAW_INTERSUBGRIDCOMMUNICATION_DEFAULTINTERPOLATION_H_ */
+#endif /* PEANOCLAW_INTERSUBGRIDCOMMUNICATION_NONOVERSHOOTINGINTERPOLATION_H_ */

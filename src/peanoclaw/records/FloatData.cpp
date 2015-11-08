@@ -134,8 +134,8 @@ peanoclaw::records::FloatDataPacked peanoclaw::records::FloatData::convert() con
       
    }
    
-   void peanoclaw::records::FloatData::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::records::FloatData::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -219,6 +219,8 @@ peanoclaw::records::FloatDataPacked peanoclaw::records::FloatData::convert() con
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;
@@ -232,8 +234,8 @@ peanoclaw::records::FloatDataPacked peanoclaw::records::FloatData::convert() con
    
    
    
-   void peanoclaw::records::FloatData::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::records::FloatData::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          MPI_Status  status;
          const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -311,6 +313,8 @@ peanoclaw::records::FloatDataPacked peanoclaw::records::FloatData::convert() con
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;
@@ -484,8 +488,8 @@ peanoclaw::records::FloatData peanoclaw::records::FloatDataPacked::convert() con
       
    }
    
-   void peanoclaw::records::FloatDataPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::records::FloatDataPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -569,6 +573,8 @@ peanoclaw::records::FloatData peanoclaw::records::FloatDataPacked::convert() con
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;
@@ -582,8 +588,8 @@ peanoclaw::records::FloatData peanoclaw::records::FloatDataPacked::convert() con
    
    
    
-   void peanoclaw::records::FloatDataPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::records::FloatDataPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          MPI_Status  status;
          const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -661,6 +667,8 @@ peanoclaw::records::FloatData peanoclaw::records::FloatDataPacked::convert() con
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;

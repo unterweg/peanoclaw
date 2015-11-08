@@ -128,7 +128,7 @@ if valgrind == 'no':
 elif valgrind == 'yes':
    ccflags.append('-g')
    cppdefines.append('USE_VALGRIND')
-   valgrindRoot = os.getenv ('VALGRIND_ROOT')
+   valgrindRoot = os.getenv ('VALGRIND_BASE')
    if(valgrindRoot == None):
      valgrindRoot = "/usr"
    cpppath.append(join(valgrindRoot, "include"))
@@ -308,7 +308,7 @@ elif solver == 'swe':
   cppdefines.append('WAVE_PROPAGATION_SOLVER=' + str(WAVE_PROPAGATION_SOLVER))
   cppdefines.append('VECTORIZE')
   
-  cppdefines.append('AssertForPositiveValues')
+  cppdefines.append('DoNotAssertForPositiveValues')
 elif solver == 'fullswof2d':
   #Configure FullSWOF-Sources
   fullSWOF2DPath = '../FullSWOF_2D'

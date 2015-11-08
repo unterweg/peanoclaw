@@ -33,7 +33,7 @@ namespace peanoclaw {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   12/05/2015 20:06
+    * @date   24/10/2015 20:24
     */
    class peanoclaw::records::PatchDescription { 
       
@@ -838,9 +838,14 @@ namespace peanoclaw {
             
             static void shutdownDatatype();
             
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+            /**
+             * @param communicateSleep -1 Data exchange through blocking mpi
+             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             */
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
@@ -856,7 +861,7 @@ namespace peanoclaw {
              *
              * 		   build date: 09-02-2014 14:40
              *
-             * @date   12/05/2015 20:06
+             * @date   24/10/2015 20:24
              */
             class peanoclaw::records::PatchDescriptionPacked { 
                
@@ -1659,9 +1664,14 @@ namespace peanoclaw {
                      
                      static void shutdownDatatype();
                      
-                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                     /**
+                      * @param communicateSleep -1 Data exchange through blocking mpi
+                      * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                      * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                      */
+                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                      
-                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                      
                      static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                      
@@ -1679,7 +1689,7 @@ namespace peanoclaw {
                       *
                       * 		   build date: 09-02-2014 14:40
                       *
-                      * @date   12/05/2015 20:06
+                      * @date   24/10/2015 20:24
                       */
                      class peanoclaw::records::PatchDescription { 
                         
@@ -2443,9 +2453,14 @@ namespace peanoclaw {
                               
                               static void shutdownDatatype();
                               
-                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                              /**
+                               * @param communicateSleep -1 Data exchange through blocking mpi
+                               * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                               * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                               */
+                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                               
-                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                               
                               static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                               
@@ -2461,7 +2476,7 @@ namespace peanoclaw {
                                *
                                * 		   build date: 09-02-2014 14:40
                                *
-                               * @date   12/05/2015 20:06
+                               * @date   24/10/2015 20:24
                                */
                               class peanoclaw::records::PatchDescriptionPacked { 
                                  
@@ -3223,9 +3238,14 @@ namespace peanoclaw {
                                        
                                        static void shutdownDatatype();
                                        
-                                       void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                                       /**
+                                        * @param communicateSleep -1 Data exchange through blocking mpi
+                                        * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                                        * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                                        */
+                                       void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                        
-                                       void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
+                                       void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                        
                                        static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                                        

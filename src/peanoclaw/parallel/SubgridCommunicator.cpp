@@ -41,7 +41,7 @@ std::vector<peanoclaw::records::CellDescription> peanoclaw::parallel::SubgridCom
     MPI_Pack_size(1, CellDescription::Packed::Datatype, MPI_COMM_WORLD, &cellDescriptionSize);
 
     size_t numberOfCellDescriptions = (block.size() - 1) / cellDescriptionSize;
-    assertion1(block.size() - 1 == 0 || block.size() - 1 == cellDescriptionSize, block.size());
+    assertion1(block.size() - 1 == 0 || block.size() - 1 == (size_t)cellDescriptionSize, block.size());
 
     //assertion1(numberOfCellDescriptions > 0, "no cell descriptions, huh? we always send one");
 
@@ -87,14 +87,15 @@ void peanoclaw::parallel::SubgridCommunicator::sendSubgrid(Patch& subgrid) {
   }
 
   if(subgrid.getUIndex() != -1) {
-    #if defined(AssertForPositiveValues) && defined(Asserts)
-    if(subgrid.isLeaf()) {
-      assertion3(!subgrid.containsNonPositiveNumberInUnknownInUNew(0),
-                  _remoteRank,
-                  subgrid,
-                  subgrid.toStringUNew()
-      );
+    #if defined(Asserts) && defined(AssertForPositiveValues)
+    if(subgrid.isValid() && subgrid.isLeaf() && !_onlySendOverlappedCells) {
+      dfor(subcellIndex, subgrid.getSubdivisionFactor()) {
+        assertion4(tarch::la::greater(subgrid.getAccessor().getValueUNew(subcellIndex, 0), 0.0), tarch::parallel::Node::getInstance().getRank(), subcellIndex, subgrid, subgrid.toStringUNew());
+        assertion4(tarch::la::greater(subgrid.getAccessor().getValueUOld(subcellIndex, 0), 0.0), tarch::parallel::Node::getInstance().getRank(), subcellIndex, subgrid, subgrid.toStringUOldWithGhostLayer());
+      }
     }
+    assertionEquals(CellDescriptionHeap::getInstance().getData(subgrid.getCellDescriptionIndex()).at(0).getCellDescriptionIndex(), subgrid.getCellDescriptionIndex());
+    assertion1(!tarch::la::smaller(subgrid.getTimeIntervals().getTimestepSize(), 0.0) || !subgrid.isLeaf(), subgrid);
     #endif
 
     if(_onlySendOverlappedCells) {
@@ -155,7 +156,7 @@ void peanoclaw::parallel::SubgridCommunicator::sendCellDescription(int cellDescr
     for (size_t i=0; i < numberOfCellDescriptions; i++) {
         CellDescription::Packed packed = localCellDescriptionVector[i].convert();
         MPI_Pack(&packed, 1, CellDescription::Packed::Datatype, block.data(), block.size(), &block_position, MPI_COMM_WORLD );
-        assertionEquals(block_position, 1+cellDescriptionSize*numberOfCellDescriptions);
+        assertionEquals((size_t)block_position, (1+cellDescriptionSize*numberOfCellDescriptions));
     }
     #endif
   } else {

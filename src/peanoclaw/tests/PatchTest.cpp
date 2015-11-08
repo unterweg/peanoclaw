@@ -21,6 +21,7 @@ registerTest(peanoclaw::tests::PatchTest)
 
 using namespace peanoclaw::geometry;
 
+tarch::logging::Log peanoclaw::tests::PatchTest::_log("peanoclaw::tests::PatchTest");
 
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)
@@ -41,6 +42,7 @@ void peanoclaw::tests::PatchTest::setUp() {
 
 
 void peanoclaw::tests::PatchTest::run() {
+  logInfo("run()", "Running PatchTest");
   testMethod( testFillingOfUNewArray );
   testMethod( testFillingOfUOldArray );
   testMethod( testInvalidPatch );

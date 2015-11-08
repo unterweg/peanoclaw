@@ -1,7 +1,7 @@
 /*
- * DefaultInterpolation.cpp
+ * NonOvershootingInterpolation.cpp
  *
- *  Created on: Mar 7, 2013
+ *  Created on: Oct 12, 2015
  *      Author: kristof
  */
 
@@ -14,11 +14,11 @@
 #endif
 
 template<int NumberOfUnknowns>
-tarch::logging::Log peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::_log( "peanoclaw::interSubgridCommunication::DefaultInterpolation" );
+tarch::logging::Log peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::_log( "peanoclaw::interSubgridCommunication::NonOvershootingInterpolation" );
 
 template<int NumberOfUnknowns>
 template<int Dimensionality>
-tarch::la::Vector<Dimensionality, int> peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::getSubcellInSourceSubgrid(
+tarch::la::Vector<Dimensionality, int> peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::getSubcellInSourceSubgrid(
   const tarch::la::Vector<Dimensionality, double>& subcellPositionInDestinationSubgrid,
   const tarch::la::Vector<Dimensionality, double>& sourcePosition,
   const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
@@ -39,30 +39,35 @@ tarch::la::Vector<Dimensionality, int> peanoclaw::interSubgridCommunication::Def
 
 template<int NumberOfUnknowns>
 template<int Dimensionality>
-double peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::getSpatialFactor(
+double peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::getSpatialFactor(
   const tarch::la::Vector<Dimensionality, double>& destinationSubcellCenter,
   const tarch::la::Vector<Dimensionality, double>& neighborPositionInSourcePatch,
-  const tarch::la::Vector<Dimensionality, double>& inverseSourceSubcellSize,
+  const tarch::la::Vector<Dimensionality, double>& sourceSubcellSize,
+  const tarch::la::Vector<Dimensionality, double>& destinationSubcellSize,
   const tarch::la::Vector<Dimensionality, int>& offset
 ) const {
   double spatialFactor = 1.0;
+
   for(int d = 0; d < DIMENSIONS; d++) {
     double sign = 1 - 2*offset(d);
+
+    double extendedSourceSubcellSize = 2.0 * sourceSubcellSize(d) - destinationSubcellSize(d);
+    double extendedNeighborPositionInSourcePatch = neighborPositionInSourcePatch(d) - sign * 0.5 * (sourceSubcellSize[d] - destinationSubcellSize[d]);
+
     spatialFactor *= 1.0 -
                      (
-//                           _signLookupTable[lookupTableEntry++] *
                          sign *
                        (
-                         destinationSubcellCenter(d) - neighborPositionInSourcePatch(d)
+                         destinationSubcellCenter(d) - extendedNeighborPositionInSourcePatch
                        )
                      )
-                     * inverseSourceSubcellSize(d);
+                     / extendedSourceSubcellSize;
   }
   return spatialFactor;
 }
 
 template<int NumberOfUnknowns>
-void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::interpolateUnknowns(
+void peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::interpolateUnknowns(
   peanoclaw::grid::SubgridAccessor& sourceAccessor,
   peanoclaw::grid::SubgridAccessor& destinationAccessor,
   const tarch::la::Vector<DIMENSIONS,int>& neighborIndexInSourcePatch,
@@ -117,7 +122,7 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
 }
 
 template<int NumberOfUnknowns>
-peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::DefaultInterpolationTemplate() {
+peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::NonOvershootingInterpolationTemplate() {
   int entry = 0;
   dfor2(offset)
     for(int d = 0; d < DIMENSIONS; d++) {
@@ -127,7 +132,7 @@ peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnkno
 }
 
 template<int NumberOfUnknowns>
-void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOfUnknowns>::interpolateSolution(
+void peanoclaw::interSubgridCommunication::NonOvershootingInterpolationTemplate<NumberOfUnknowns>::interpolateSolution(
   const tarch::la::Vector<DIMENSIONS, int>&    destinationSize,
   const tarch::la::Vector<DIMENSIONS, int>&    destinationOffset,
   peanoclaw::Patch& source,
@@ -138,9 +143,6 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
 ) {
   logTraceInWith4Arguments("", destinationSize, destinationOffset, source.toString(), destination.toString());
   assertionEquals(source.getUnknownsPerSubcell(), destination.getUnknownsPerSubcell());
-
-  //TODO unterweg debug
-//  std::cout << "Interpolated cells:" << tarch::la::volume(destinationSize) << std::endl;
 
   //Factor for interpolation in time
   double timeFactor;
@@ -187,9 +189,7 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
   tarch::la::Vector<DIMENSIONS, int> sourceSubdivisionFactor = source.getSubdivisionFactor();
   tarch::la::Vector<DIMENSIONS, double> sourceSubcellSize = source.getSubcellSize();
   tarch::la::Vector<DIMENSIONS, double> inverseSourceSubcellSize = tarch::la::invertEntries(sourceSubcellSize);
-//  tarch::la::Vector<DIMENSIONS, double> destinationPosition = destination.getPosition();
-//  tarch::la::Vector<DIMENSIONS, double> destinationSubcellSize = destination.getSubcellSize();
-//  tarch::la::Vector<DIMENSIONS, int> destinationSubdivisionFactor = destination.getSubdivisionFactor();
+  tarch::la::Vector<DIMENSIONS, double> destinationSubcellSize = destination.getSubcellSize();
 
   #ifdef Asserts
   for(int d = 0; d < DIMENSIONS; d++) {
@@ -229,19 +229,16 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
         << " to destination-cell " << destinationIterator.getCellIndex());
 
     sourceIterator.restart(subcellIndexInSourcePatch, tarch::la::Vector<DIMENSIONS, int>(2));
-//    int lookupTableEntry = 0;
     dfor2(offset)
-//    while(sourceAccessor.moveToNextCell()) {
-//      tarch::la::Vector<DIMENSIONS, int> neighborIndexInSourcePatch = sourceAccessor.getCellIndex();
       tarch::la::Vector<DIMENSIONS, int> neighborIndexInSourcePatch = subcellIndexInSourcePatch + offset;
       tarch::la::Vector<DIMENSIONS, double> neighborPositionInSourcePatch = source.getSubcellCenter(neighborIndexInSourcePatch);
 
-      //Calculate factor for spatial interpolation. sign is used to account for extrapolation
-      //if destination cell center is outside the source cell.
+      //Calculate factor for spatial interpolation.
       double spatialFactor = getSpatialFactor<DIMENSIONS>(
         destinationSubcellCenter,
         neighborPositionInSourcePatch,
-        inverseSourceSubcellSize,
+        sourceSubcellSize,
+        destinationSubcellSize,
         offset
       );
 
@@ -255,23 +252,6 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
         interpolateToUOld
       );
     }
-
-    //Interpolate fluxes
-//    if(destination.getAge() == 0) {
-//      for(int d = 0; d < DIMENSIONS; d++) {
-//        for(int direction = -1; direction <= 1; direction+=2) {
-//          for(int destinationIndex = 0; destinationIndex < destinationSubdivisionFactor[d]; destinationIndex++) {
-//            double destinationFluxPosition = destinationIndex * destinationSubcellSize[d] + destinationPosition[d];
-//            int sourceIndex = std::min(std::max(0, (int)((destinationFluxPosition - sourcePosition[d]) / sourceSubcellSize()[d])), sourceSubdivisionFactor[d] - 2);
-//            double sourceFluxPosition = sourceIndex * sourceSubcellSize[d] + sourcePosition;
-//            double factor = (destinationFluxPosition - sourceFluxPosition) / sourceSubcellSize[d];
-//
-////            destinationAccessor.setFlux()
-//          }
-//        }
-//      }
-//    }
-//    logDebug("interpolateSolution(...)", "For subcell " << destinationIterator.getCellIndex() << " interpolated value is " << destinationIterator.getUnknownUOld(0));
   }
 
   #ifdef Asserts

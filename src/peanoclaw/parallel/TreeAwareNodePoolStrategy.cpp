@@ -25,7 +25,7 @@ peanoclaw::parallel::TreeAwareNodePoolStrategy::Node::Node()
 }
 
 peanoclaw::parallel::TreeAwareNodePoolStrategy::Node::Node(int rank)
-  : _state(Registered),
+  : _state(Unregistered),
     _rank(rank),
     _level(-100)
 {

@@ -47,6 +47,7 @@ def addPython(cppdefines, cpppath, libpath, libs):
    cppdefines.append('NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION')
       
    # Add paths and lib
+   print 'Using Python from path', pythonHome
    libpath.append(pythonHome + '/lib')
    libpath.append(pythonHome + '/lib/python' + pythonVersion)
    cpppath.append(pythonHome + '/include/python' + pythonVersion)
@@ -258,9 +259,14 @@ def getPeanoSources(Glob, buildpath, multicore):
      sourcesBuiltinGeometry
      ]
   
+  sourcesPerformanceAnalysis = [
+     Glob(join(buildpath, 'kernel/peano/performanceanalysis/*.cpp'))                           
+    ]
+  
   sourcesPeanoBase = [
     sourcesPeanoKernel,
     sourcesPeanoGeometry,
+    sourcesPerformanceAnalysis,
     sourcesPeanoUtils,
     sourcesDatatraversal,
     # sourcesQueries,

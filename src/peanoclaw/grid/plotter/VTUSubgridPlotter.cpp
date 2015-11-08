@@ -58,8 +58,9 @@ peanoclaw::grid::plotter::VTUSubgridPlotter::VTUSubgridPlotter(
     _cellTimeNewWriter           = _vtuWriter.createCellDataWriter("timeNew", 1);
     _cellDemandedMeshWidthWriter = _vtuWriter.createCellDataWriter("demandedMeshWidth", 1);
     _cellAgeWriter               = _vtuWriter.createCellDataWriter("age", 1);
+    _cellLevelWriter             = _vtuWriter.createCellDataWriter("level", 1);
     #ifdef Parallel
-    _cellRankWriter               = _vtuWriter.createCellDataWriter("rank", 1);
+    _cellRankWriter              = _vtuWriter.createCellDataWriter("rank", 1);
     #endif
   }
 }
@@ -88,6 +89,7 @@ peanoclaw::grid::plotter::VTUSubgridPlotter::~VTUSubgridPlotter() {
     delete _cellTimeNewWriter;
     delete _cellDemandedMeshWidthWriter;
     delete _cellAgeWriter;
+    delete _cellLevelWriter;
     #ifdef Parallel
     delete _cellRankWriter;
     #endif
@@ -152,6 +154,7 @@ void peanoclaw::grid::plotter::VTUSubgridPlotter::plotSubcell(
       _cellTimeNewWriter->plotCell(number, patch.getTimeIntervals().getCurrentTime() + patch.getTimeIntervals().getTimestepSize());
       _cellDemandedMeshWidthWriter->plotCell(number, tarch::la::norm1(patch.getDemandedMeshWidth()) / DIMENSIONS);
       _cellAgeWriter->plotCell(number, patch.getAge());
+      _cellLevelWriter->plotCell(number, patch.getLevel());
 
       #ifdef Parallel
       _cellRankWriter->plotCell(number, tarch::parallel::Node::getInstance().getRank());
@@ -232,6 +235,7 @@ void peanoclaw::grid::plotter::VTUSubgridPlotter::close() {
     _cellTimeNewWriter->close();
     _cellDemandedMeshWidthWriter->close();
     _cellAgeWriter->close();
+    _cellLevelWriter->close();
     #ifdef Parallel
     _cellRankWriter->close();
     #endif

@@ -43,32 +43,6 @@ void configureLogFilter(bool enablePeanoLogging) {
   tarch::logging::CommandLineLogger::getInstance().clearFilterList();
 
   if(enablePeanoLogging) {
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
-//
-//    //Disable Peano
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peano::", true ) );
-//
-//    //Disable Validation
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::mappings::ValidateGrid", true ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::statistics::ParallelGridValidator", true ) );
-//
-//    //Disable minimal time subgrid
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::repositories", false ) );
-//
-//    //Selective Tracing
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::statistics::ParallelStatistics", true ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::runners::PeanoClawLibraryRunner", false ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::statistics::SubgridStatistics::logLevelStatistics", false ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peanoclaw::parallel", false ) );
-//
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peano::grid::nodes::loops::LoadVertexLoopBody", true ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peano::grid::Grid", true ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peano::grid::nodes::Root", true ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peano::parallel::SendReceiveBufferPool::releaseMessages", true ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peano::parallel::SendReceiveBufferAbstractImplementation", true ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peano::parallel::JoinDataBufferPool::releaseMessages", true ) );
-//    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "tarch::mpianalysis", true ) );
     std::string logFilterFileName = "peanoclaw.logfilter";
     std::ifstream logFilterFile(logFilterFileName.c_str());
     if(logFilterFile) {
@@ -144,12 +118,30 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
   fluxCorrectionCallback = 0;
 
 #if defined(Parallel)
-  char argv[2][256];
-  memset(argv, 0, sizeof(char) * 2 * 256);
-  int argc = 1;
+  //char argv[2][256];
+  //memset(argv, 0, sizeof(char) * 2 * 256);
+  //int argc = 1;
+  //char* argv[] = {"shallowCustomPatchGridSizeAndEndTime.py"}; //, "13122", "162"};//, "0.00111111111111", "1", "0", "1", "1"};
   //sprintf(argv[0], "%s", "peanoclaw");
+
+  char** argv = new char*[30];
+  for(int i = 0; i < 30; i++) {
+    argv[i] = new char[255];
+  }
+  strcpy(argv[0], "python");
+  strcpy(argv[1], "shallowCustomPatchGridSizeAndEndTime.py");
+  strcpy(argv[2], "13122");
+  strcpy(argv[3], "162");
+  strcpy(argv[4], "0.00111111111111");
+  strcpy(argv[5], "1");
+  strcpy(argv[6], "0");
+  strcpy(argv[7], "1");
+  strcpy(argv[8], "1");
+  int argc = 2;
+
   peano::initParallelEnvironment(&argc,(char ***)&argv);
   peano::initSharedMemoryEnvironment();
+
 #endif
 
   //Initialize Python
@@ -222,7 +214,7 @@ peanoclaw::runners::PeanoClawLibraryRunner* pyclaw_peano_new (
 
   assertion(runner != 0);
  
-#if defined(Parallel) 
+#if defined(Parallel)
   *rank = tarch::parallel::Node::getInstance().getRank();
 #else
   *rank = 0;

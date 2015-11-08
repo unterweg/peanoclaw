@@ -92,8 +92,10 @@ void peanoclaw::grid::plotter::HDF5SubgridPlotter::plotSubgrid(
     position[d] = subgrid.getPosition()[d];
     size[d] = subgrid.getSize()[d];
   }
+  int level = subgrid.getLevel();
   H5LTset_attribute_double(_fileID, s.str().c_str(), "position", position, DIMENSIONS);
   H5LTset_attribute_double(_fileID, s.str().c_str(), "size", size, DIMENSIONS);
+  H5LTset_attribute_int(_fileID, s.str().c_str(), "level", &level, 1);
 
   #endif
 }

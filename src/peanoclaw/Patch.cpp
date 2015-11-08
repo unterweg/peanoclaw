@@ -543,28 +543,32 @@ std::string peanoclaw::Patch::toStringUOldWithGhostLayer() const {
     str << "q0:" << std::endl;
     printUnknownWithGhostLayer(str, 0);
 
-    str << "q1:" << std::endl;
-    printUnknownWithGhostLayer(str, 1);
+    if(getUnknownsPerSubcell() > 1) {
+      str << "q1:" << std::endl;
+      printUnknownWithGhostLayer(str, 1);
+    }
 
-    str << "q2:" << std::endl;
-    printUnknownWithGhostLayer(str, 2);
+    if(getUnknownsPerSubcell() > 2) {
+      str << "q2:" << std::endl;
+      printUnknownWithGhostLayer(str, 2);
+    }
 
 //    str << "bathymetry:" << std::endl;
 //    printUnknownWithGhostLayer(str, 3);
 
     //Fluxes
-    for(int d = 0; d < DIMENSIONS; d++) {
-      str << "dimension=" << d << std::endl;
-      for(int direction = -1; direction <=1; direction+=2) {
-        str << "\tdirection=" << direction << std::endl << "\t";
-        for(int i = 0; i < getSubdivisionFactor()[peanoclaw::grid::Linearization::getGlobalDimension(0, d)]; i++) {
-          tarch::la::Vector<DIMENSIONS_MINUS_ONE,int> interfaceIndex;
-          interfaceIndex[0] = i;
-          str << PATCH_VALUE_FORMAT << _accessor.getFlux(interfaceIndex, 0, d, direction) << " ";
-        }
-        str << std::endl;
-      }
-    }
+//    for(int d = 0; d < DIMENSIONS; d++) {
+//      str << "dimension=" << d << std::endl;
+//      for(int direction = -1; direction <=1; direction+=2) {
+//        str << "\tdirection=" << direction << std::endl << "\t";
+//        for(int i = 0; i < getSubdivisionFactor()[peanoclaw::grid::Linearization::getGlobalDimension(0, d)]; i++) {
+//          tarch::la::Vector<DIMENSIONS_MINUS_ONE,int> interfaceIndex;
+//          interfaceIndex[0] = i;
+//          str << PATCH_VALUE_FORMAT << _accessor.getFlux(interfaceIndex, 0, d, direction) << " ";
+//        }
+//        str << std::endl;
+//      }
+//    }
 
     #elif Dim3
     //Plot patch

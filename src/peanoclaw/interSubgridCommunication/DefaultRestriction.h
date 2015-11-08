@@ -39,29 +39,6 @@ class peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate {
     friend class peanoclaw::tests::GridLevelTransferTest;
 
     /**
-     * Returns the region of the region where the two given patches overlap.
-     */
-    inline double calculateOverlappingRegion(
-        const tarch::la::Vector<DIMENSIONS, double>& position1,
-        const tarch::la::Vector<DIMENSIONS, double>& size1,
-        const tarch::la::Vector<DIMENSIONS, double>& position2,
-        const tarch::la::Vector<DIMENSIONS, double>& size2
-    ) {
-      double region = 1.0;
-
-      for(int d = 0; d < DIMENSIONS; d++) {
-        double overlappingInterval =
-            std::min(position1(d)+size1(d), position2(d)+size2(d))
-        - std::max(position1(d), position2(d));
-        region *= overlappingInterval;
-
-        region = std::max(region, 0.0);
-      }
-
-      return region;
-    }
-
-    /**
      * Restricts the data from the given source to the destination averaging
      * over the source cells that overlap with a destination cell.
      *
@@ -143,6 +120,11 @@ class peanoclaw::interSubgridCommunication::DefaultRestriction
           assertionFail("Number of unknowns " << source.getUnknownsPerSubcell() << " not supported!");
       }
     }
+
+    virtual void postProcessRestriction(
+      peanoclaw::Patch& destination,
+      bool              restrictOnlyOverlappedRegions
+    ) const {}
 };
 
 #include "peanoclaw/interSubgridCommunication/DefaultRestriction.cpph"

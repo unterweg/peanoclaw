@@ -5,9 +5,10 @@ peanoclaw::records::RepositoryState::PersistentRecords::PersistentRecords() {
 }
 
 
-peanoclaw::records::RepositoryState::PersistentRecords::PersistentRecords(const Action& action, const int& numberOfIterations):
+peanoclaw::records::RepositoryState::PersistentRecords::PersistentRecords(const Action& action, const int& numberOfIterations, const bool& exchangeBoundaryVertices):
 _action(action),
-_numberOfIterations(numberOfIterations) {
+_numberOfIterations(numberOfIterations),
+_exchangeBoundaryVertices(exchangeBoundaryVertices) {
    
 }
 
@@ -17,13 +18,13 @@ peanoclaw::records::RepositoryState::RepositoryState() {
 
 
 peanoclaw::records::RepositoryState::RepositoryState(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._action, persistentRecords._numberOfIterations) {
+_persistentRecords(persistentRecords._action, persistentRecords._numberOfIterations, persistentRecords._exchangeBoundaryVertices) {
    
 }
 
 
-peanoclaw::records::RepositoryState::RepositoryState(const Action& action, const int& numberOfIterations):
-_persistentRecords(action, numberOfIterations) {
+peanoclaw::records::RepositoryState::RepositoryState(const Action& action, const int& numberOfIterations, const bool& exchangeBoundaryVertices):
+_persistentRecords(action, numberOfIterations, exchangeBoundaryVertices) {
    
 }
 
@@ -69,6 +70,8 @@ void peanoclaw::records::RepositoryState::toString (std::ostream& out) const {
    out << "action:" << toString(getAction());
    out << ",";
    out << "numberOfIterations:" << getNumberOfIterations();
+   out << ",";
+   out << "exchangeBoundaryVertices:" << getExchangeBoundaryVertices();
    out <<  ")";
 }
 
@@ -80,7 +83,8 @@ peanoclaw::records::RepositoryState::PersistentRecords peanoclaw::records::Repos
 peanoclaw::records::RepositoryStatePacked peanoclaw::records::RepositoryState::convert() const{
    return RepositoryStatePacked(
       getAction(),
-      getNumberOfIterations()
+      getNumberOfIterations(),
+      getExchangeBoundaryVertices()
    );
 }
 
@@ -95,16 +99,18 @@ peanoclaw::records::RepositoryStatePacked peanoclaw::records::RepositoryState::c
       {
          RepositoryState dummyRepositoryState[2];
          
-         const int Attributes = 3;
+         const int Attributes = 4;
          MPI_Datatype subtypes[Attributes] = {
             MPI_INT,		 //action
             MPI_INT,		 //numberOfIterations
+            MPI_CHAR,		 //exchangeBoundaryVertices
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
             1,		 //action
             1,		 //numberOfIterations
+            1,		 //exchangeBoundaryVertices
             1		 // end/displacement flag
          };
          
@@ -114,7 +120,8 @@ peanoclaw::records::RepositoryStatePacked peanoclaw::records::RepositoryState::c
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[0]))), &base);
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[0]._persistentRecords._action))), 		&disp[0] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[0]._persistentRecords._numberOfIterations))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[1]._persistentRecords._action))), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[0]._persistentRecords._exchangeBoundaryVertices))), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[1]._persistentRecords._action))), 		&disp[3] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -129,16 +136,18 @@ peanoclaw::records::RepositoryStatePacked peanoclaw::records::RepositoryState::c
       {
          RepositoryState dummyRepositoryState[2];
          
-         const int Attributes = 3;
+         const int Attributes = 4;
          MPI_Datatype subtypes[Attributes] = {
             MPI_INT,		 //action
             MPI_INT,		 //numberOfIterations
+            MPI_CHAR,		 //exchangeBoundaryVertices
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
             1,		 //action
             1,		 //numberOfIterations
+            1,		 //exchangeBoundaryVertices
             1		 // end/displacement flag
          };
          
@@ -148,7 +157,8 @@ peanoclaw::records::RepositoryStatePacked peanoclaw::records::RepositoryState::c
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[0]))), &base);
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[0]._persistentRecords._action))), 		&disp[0] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[0]._persistentRecords._numberOfIterations))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[1]._persistentRecords._action))), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[0]._persistentRecords._exchangeBoundaryVertices))), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryState[1]._persistentRecords._action))), 		&disp[3] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -170,10 +180,10 @@ peanoclaw::records::RepositoryStatePacked peanoclaw::records::RepositoryState::c
       
    }
    
-   void peanoclaw::records::RepositoryState::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void peanoclaw::records::RepositoryState::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       _senderDestinationRank = destination;
       
-      if (communicateBlocking) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -257,6 +267,8 @@ peanoclaw::records::RepositoryStatePacked peanoclaw::records::RepositoryState::c
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -270,8 +282,8 @@ peanoclaw::records::RepositoryStatePacked peanoclaw::records::RepositoryState::c
 
 
 
-void peanoclaw::records::RepositoryState::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-   if (communicateBlocking) {
+void peanoclaw::records::RepositoryState::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+   if (communicateSleep<0) {
    
       MPI_Status  status;
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -350,6 +362,8 @@ void peanoclaw::records::RepositoryState::receive(int source, int tag, bool exch
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -399,9 +413,10 @@ peanoclaw::records::RepositoryStatePacked::PersistentRecords::PersistentRecords(
 }
 
 
-peanoclaw::records::RepositoryStatePacked::PersistentRecords::PersistentRecords(const Action& action, const int& numberOfIterations):
+peanoclaw::records::RepositoryStatePacked::PersistentRecords::PersistentRecords(const Action& action, const int& numberOfIterations, const bool& exchangeBoundaryVertices):
 _action(action),
-_numberOfIterations(numberOfIterations) {
+_numberOfIterations(numberOfIterations),
+_exchangeBoundaryVertices(exchangeBoundaryVertices) {
 
 }
 
@@ -411,13 +426,13 @@ peanoclaw::records::RepositoryStatePacked::RepositoryStatePacked() {
 
 
 peanoclaw::records::RepositoryStatePacked::RepositoryStatePacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._action, persistentRecords._numberOfIterations) {
+_persistentRecords(persistentRecords._action, persistentRecords._numberOfIterations, persistentRecords._exchangeBoundaryVertices) {
 
 }
 
 
-peanoclaw::records::RepositoryStatePacked::RepositoryStatePacked(const Action& action, const int& numberOfIterations):
-_persistentRecords(action, numberOfIterations) {
+peanoclaw::records::RepositoryStatePacked::RepositoryStatePacked(const Action& action, const int& numberOfIterations, const bool& exchangeBoundaryVertices):
+_persistentRecords(action, numberOfIterations, exchangeBoundaryVertices) {
 
 }
 
@@ -445,6 +460,8 @@ out << "(";
 out << "action:" << toString(getAction());
 out << ",";
 out << "numberOfIterations:" << getNumberOfIterations();
+out << ",";
+out << "exchangeBoundaryVertices:" << getExchangeBoundaryVertices();
 out <<  ")";
 }
 
@@ -456,7 +473,8 @@ return _persistentRecords;
 peanoclaw::records::RepositoryState peanoclaw::records::RepositoryStatePacked::convert() const{
 return RepositoryState(
    getAction(),
-   getNumberOfIterations()
+   getNumberOfIterations(),
+   getExchangeBoundaryVertices()
 );
 }
 
@@ -471,16 +489,18 @@ void peanoclaw::records::RepositoryStatePacked::initDatatype() {
    {
       RepositoryStatePacked dummyRepositoryStatePacked[2];
       
-      const int Attributes = 3;
+      const int Attributes = 4;
       MPI_Datatype subtypes[Attributes] = {
          MPI_INT,		 //action
          MPI_INT,		 //numberOfIterations
+         MPI_CHAR,		 //exchangeBoundaryVertices
          MPI_UB		 // end/displacement flag
       };
       
       int blocklen[Attributes] = {
          1,		 //action
          1,		 //numberOfIterations
+         1,		 //exchangeBoundaryVertices
          1		 // end/displacement flag
       };
       
@@ -490,7 +510,8 @@ void peanoclaw::records::RepositoryStatePacked::initDatatype() {
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[0]))), &base);
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[0]._persistentRecords._action))), 		&disp[0] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[0]._persistentRecords._numberOfIterations))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[1]._persistentRecords._action))), 		&disp[2] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[0]._persistentRecords._exchangeBoundaryVertices))), 		&disp[2] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[1]._persistentRecords._action))), 		&disp[3] );
       
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
@@ -505,16 +526,18 @@ void peanoclaw::records::RepositoryStatePacked::initDatatype() {
    {
       RepositoryStatePacked dummyRepositoryStatePacked[2];
       
-      const int Attributes = 3;
+      const int Attributes = 4;
       MPI_Datatype subtypes[Attributes] = {
          MPI_INT,		 //action
          MPI_INT,		 //numberOfIterations
+         MPI_CHAR,		 //exchangeBoundaryVertices
          MPI_UB		 // end/displacement flag
       };
       
       int blocklen[Attributes] = {
          1,		 //action
          1,		 //numberOfIterations
+         1,		 //exchangeBoundaryVertices
          1		 // end/displacement flag
       };
       
@@ -524,7 +547,8 @@ void peanoclaw::records::RepositoryStatePacked::initDatatype() {
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[0]))), &base);
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[0]._persistentRecords._action))), 		&disp[0] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[0]._persistentRecords._numberOfIterations))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[1]._persistentRecords._action))), 		&disp[2] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[0]._persistentRecords._exchangeBoundaryVertices))), 		&disp[2] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyRepositoryStatePacked[1]._persistentRecords._action))), 		&disp[3] );
       
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
@@ -546,10 +570,10 @@ void peanoclaw::records::RepositoryStatePacked::shutdownDatatype() {
    
 }
 
-void peanoclaw::records::RepositoryStatePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void peanoclaw::records::RepositoryStatePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
    _senderDestinationRank = destination;
    
-   if (communicateBlocking) {
+   if (communicateSleep<0) {
    
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
       if  (result!=MPI_SUCCESS) {
@@ -633,6 +657,8 @@ void peanoclaw::records::RepositoryStatePacked::send(int destination, int tag, b
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
@@ -646,8 +672,8 @@ void peanoclaw::records::RepositoryStatePacked::send(int destination, int tag, b
 
 
 
-void peanoclaw::records::RepositoryStatePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void peanoclaw::records::RepositoryStatePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
    MPI_Status  status;
    const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -726,6 +752,8 @@ else {
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;

@@ -164,8 +164,8 @@ peanoclaw::statistics::ProcessStatisticsEntryPacked peanoclaw::statistics::Proce
       
    }
    
-   void peanoclaw::statistics::ProcessStatisticsEntry::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::statistics::ProcessStatisticsEntry::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -249,6 +249,8 @@ peanoclaw::statistics::ProcessStatisticsEntryPacked peanoclaw::statistics::Proce
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;
@@ -262,8 +264,8 @@ peanoclaw::statistics::ProcessStatisticsEntryPacked peanoclaw::statistics::Proce
    
    
    
-   void peanoclaw::statistics::ProcessStatisticsEntry::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::statistics::ProcessStatisticsEntry::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          MPI_Status  status;
          const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -341,6 +343,8 @@ peanoclaw::statistics::ProcessStatisticsEntryPacked peanoclaw::statistics::Proce
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;
@@ -544,8 +548,8 @@ peanoclaw::statistics::ProcessStatisticsEntry peanoclaw::statistics::ProcessStat
       
    }
    
-   void peanoclaw::statistics::ProcessStatisticsEntryPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::statistics::ProcessStatisticsEntryPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -629,6 +633,8 @@ peanoclaw::statistics::ProcessStatisticsEntry peanoclaw::statistics::ProcessStat
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;
@@ -642,8 +648,8 @@ peanoclaw::statistics::ProcessStatisticsEntry peanoclaw::statistics::ProcessStat
    
    
    
-   void peanoclaw::statistics::ProcessStatisticsEntryPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-      if (communicateBlocking) {
+   void peanoclaw::statistics::ProcessStatisticsEntryPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
       
          MPI_Status  status;
          const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -721,6 +727,8 @@ peanoclaw::statistics::ProcessStatisticsEntry peanoclaw::statistics::ProcessStat
                );
             }
             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
          }
          
          delete sendRequestHandle;

@@ -34,6 +34,7 @@ class peanoclaw::records::State {
   persistent packed parallelise bool hasErased;
   persistent packed parallelise bool hasTriggeredEraseForNextIteration;
   persistent packed parallelise bool hasChangedVertexOrCellState;
+  persistent packed parallelise bool hasModifiedGridInPreviousIteration;
 
   persistent parallelise bool   isTraversalInverted;
   

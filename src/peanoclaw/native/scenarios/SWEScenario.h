@@ -16,6 +16,9 @@
 #include "peanoclaw/native/scenarios/FullSWOF2DBoundaryCondition.h"
 #endif
 
+#include "peanoclaw/interSubgridCommunication/Interpolation.h"
+#include "peanoclaw/interSubgridCommunication/Restriction.h"
+
 #include "peano/utils/Dimensions.h"
 #include "tarch/la/Vector.h"
 #include "tarch/logging/Log.h"
@@ -72,6 +75,11 @@ public:
     virtual double getGlobalTimestepSize() const = 0;
     virtual double getEndTime() const = 0;
     virtual double getInitialTimestepSize() const;
+
+    virtual bool hasCustomInterpolation() const {return false;}
+    virtual peanoclaw::interSubgridCommunication::Interpolation* getCustomInterpolation() const { return 0; }
+    virtual bool hasCustomRestriction() const {return false;}
+    virtual peanoclaw::interSubgridCommunication::Restriction* getCustomRestriction() const { return 0; }
 
     #ifndef PEANOCLAW_SWE
     virtual float getWaterHeight(float x, float y) { return 10.0f; }

@@ -19,7 +19,10 @@ registerTest(peanoclaw::tests::StatisticsTest)
 #pragma optimize("",off)
 #endif
 
+tarch::logging::Log peanoclaw::tests::StatisticsTest::_log("peanoclaw::tests::StatisticsTest");
+
 void peanoclaw::tests::StatisticsTest::run() {
+  logInfo("run()", "Running StatisticsTest");
   testMethod(testGetNeighborPositionOnSameLevel);
   testMethod(testGetNeighborPositionOnDifferentLevel);
   testMethod(testGetNeighborPositionOnRectangularDomainWithOffset);
