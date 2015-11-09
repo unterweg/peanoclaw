@@ -326,9 +326,10 @@ void peanoclaw::interSubgridCommunication::aspects::AdjacentSubgrids::refineOnPa
 
     //Until now we just created the patches. Refactor this?
     CheckIntersectingParallelAndAdaptiveBoundaryFunctor functor(_vertex.getAdjacentRanks());
+    #ifdef Dim2
     peanoclaw::interSubgridCommunication::aspects::
       EdgeAdjacentPatchTraversal<CheckIntersectingParallelAndAdaptiveBoundaryFunctor>(patches, functor);
-    #ifdef Dim3
+    #elif Dim3
     peanoclaw::interSubgridCommunication::aspects::
       CornerAdjacentPatchTraversal<CheckIntersectingParallelAndAdaptiveBoundaryFunctor>(patches, functor);
     #endif
