@@ -310,7 +310,6 @@ void peanoclaw::parallel::NeighbourCommunicator::sendSubgridsForVertex(
       bool sentSubgrid = false;
       if(localSubgridRank == localRank && vertex.getAdjacentCellDescriptionIndexInPeanoOrder(i) != -1) {
         Patch           localSubgrid(vertex.getAdjacentCellDescriptionIndexInPeanoOrder(i));
-
         sentSubgrid = sendSubgrid(localSubgrid, vertex);
       }
 
