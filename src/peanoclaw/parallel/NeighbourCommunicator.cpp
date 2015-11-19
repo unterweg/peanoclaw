@@ -172,6 +172,7 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
         } else {
           _subgridCommunicator.deleteArraysFromSubgrid(localSubgrid);
           CellDescriptionHeap::getInstance().getData(localSubgrid.getCellDescriptionIndex()).at(0).setUIndex(_subgridCommunicator.receiveDataArray());
+          localSubgrid.reloadCellDescription();
         }
         assertion(localSubgrid.getUIndex() != -1);
     } else {
@@ -309,7 +310,6 @@ void peanoclaw::parallel::NeighbourCommunicator::sendSubgridsForVertex(
       bool sentSubgrid = false;
       if(localSubgridRank == localRank && vertex.getAdjacentCellDescriptionIndexInPeanoOrder(i) != -1) {
         Patch           localSubgrid(vertex.getAdjacentCellDescriptionIndexInPeanoOrder(i));
-
         sentSubgrid = sendSubgrid(localSubgrid, vertex);
       }
 

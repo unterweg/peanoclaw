@@ -20,6 +20,7 @@
 #include "peanoclaw/interSubgridCommunication/FluxCorrection.h"
 #include "peanoclaw/interSubgridCommunication/DefaultFluxCorrection.h"
 #include "peanoclaw/interSubgridCommunication/DefaultTransfer.h"
+#include "peanoclaw/interSubgridCommunication/NonOvershootingInterpolation.h"
 
 #include "peanoclaw/solver/fullswof2D/FluxCorrection.h"
 
@@ -73,6 +74,8 @@ peanoclaw::Numerics* peanoclaw::NumericsFactory::createPyClawNumerics(
   if(interpolationCallback == 0) {
     logInfo("createPyClawNumerics", "Using default interpolation.");
     interpolation = new peanoclaw::interSubgridCommunication::DefaultInterpolation();
+//    logInfo("createPyClawNumerics", "Using non-overshooting interpolation.");
+//    interpolation = new peanoclaw::interSubgridCommunication::NonOvershootingInterpolation();
   } else {
     logInfo("createPyClawNumerics", "Using PyClaw interpolation.");
     interpolation = new peanoclaw::pyclaw::InterpolationCallbackWrapper(interpolationCallback);
