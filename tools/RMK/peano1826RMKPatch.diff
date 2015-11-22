@@ -1,0 +1,1449 @@
+Index: src/peano/grid/Cell.cpph
+===================================================================
+--- src/peano/grid/Cell.cpph	(revision 1826)
++++ src/peano/grid/Cell.cpph	(working copy)
+@@ -7,6 +7,7 @@
+ 
+ #include <limits>
+ 
++#include "peano/parallel/MeshCommunication.h"
+ 
+ template <class CellData>
+ tarch::logging::Log peano::grid::Cell<CellData>::_log( "peano::grid::Cell<CellData>" );
+@@ -489,13 +490,35 @@
+   assertion4(MPIDatatypeContainer::Datatype!=0,destination,tag,toString(),tarch::parallel::Node::getInstance().getRank());
+ 
+   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
+-  _cellData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  //_cellData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  MPIDatatypeContainer temp = _cellData.convert();
++  MeshCommunication::sendAsynchronousAndBlocking(temp,destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
+   #else
+-  _cellData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  //_cellData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  MeshCommunication::sendAsynchronousAndBlocking(_cellData,destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
+   #endif
+ }
+ 
++ 
++template <class CellData>
++void peano::grid::Cell<CellData>::pack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel) {
++  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
++  MPIDatatypeContainer temp = _cellData.convert();
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Pack(&temp, 1, MPIDatatypeContainer::Datatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  } else {
++      MPI_Pack(&temp, 1, MPIDatatypeContainer::FullDatatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  }
++  #else
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Pack(&_cellData, 1, MPIDatatypeContainer::Datatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  } else {
++      MPI_Pack(&_cellData, 1, MPIDatatypeContainer::FullDatatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  }
++  #endif
++}
+ 
++
+ template <class CellData>
+ void peano::grid::Cell<CellData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
+   assertion4(MPIDatatypeContainer::Datatype!=0,source,tag,toString(),tarch::parallel::Node::getInstance().getRank());
+@@ -502,15 +525,37 @@
+ 
+   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
+   MPIDatatypeContainer receivedMessage;
+-  receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  //receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel);
++  MeshCommunication::receiveAsynchronousAndBlocking(receivedMessage,source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
+   _cellData = receivedMessage.convert();
+   #else
+-  _cellData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  //_cellData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel);
++  MeshCommunication::receiveAsynchronousAndBlocking(_cellData,source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
+   #endif
+ }
+ 
+ 
+ template <class CellData>
++void peano::grid::Cell<CellData>::unpack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel) {
++  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
++  MPIDatatypeContainer temp;
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Unpack(buffer, buffersize, position, &temp, 1, MPIDatatypeContainer::Datatype, MPI_COMM_WORLD);
++  } else {
++      MPI_Unpack(buffer, buffersize, position, &temp, 1, MPIDatatypeContainer::FullDatatype, MPI_COMM_WORLD);
++  }
++  _cellData = temp.convert();
++  #else
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Unpack(buffer, buffersize, position, &_cellData, 1, MPIDatatypeContainer::Datatype, MPI_COMM_WORLD);
++  } else {
++      MPI_Unpack(buffer, buffersize, position, &_cellData, 1, MPIDatatypeContainer::FullDatatype, MPI_COMM_WORLD);
++  }
++  #endif
++}
++
++
++template <class CellData>
+ bool peano::grid::Cell<CellData>::isCellAForkCandidate() const {
+   return _cellData.getCellIsAForkCandidate();
+ }
+Index: src/peano/grid/Cell.h
+===================================================================
+--- src/peano/grid/Cell.h	(revision 1826)
++++ src/peano/grid/Cell.h	(working copy)
+@@ -183,11 +183,15 @@
+      */
+     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking );
+ 
++    void pack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel);
++
+     /**
+      * Blocking receive. initDatatype() has to be called before.
+      */
+     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking );
+ 
++    void unpack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel);
++
+     void assignToRemoteNode( int rank );
+ 
+     int getRankOfRemoteNode() const;
+Index: src/peano/grid/Grid.cpph
+===================================================================
+--- src/peano/grid/Grid.cpph	(revision 1826)
++++ src/peano/grid/Grid.cpph	(working copy)
+@@ -7,6 +7,8 @@
+ #include "tarch/compiler/CompilerSpecificSettings.h"
+ #include "peano/utils/PeanoOptimisations.h"
+ 
++#include "peano/parallel/MeshCommunication.h"
++#include "peano/parallel/SerializationMap.h"
+ 
+ template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
+ tarch::logging::Log peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::_log( "peano::grid::Grid" );
+@@ -116,6 +118,8 @@
+   peano::performanceanalysis::Analysis::getInstance().endReleaseOfJoinData();
+   peano::parallel::SendReceiveBufferPool::getInstance().releaseMessages();
+   peano::performanceanalysis::Analysis::getInstance().endReleaseOfBoundaryData();
++
++  peano::parallel::SerializationMap::getInstance().exchangeDataWithNeighbors();
+   #endif
+ 
+   _state.resetStateAtEndOfIteration();
+Index: src/peano/grid/State.cpph
+===================================================================
+--- src/peano/grid/State.cpph	(revision 1826)
++++ src/peano/grid/State.cpph	(working copy)
+@@ -7,6 +7,9 @@
+ #include "tarch/parallel/NodePool.h"
+ #include "peano/parallel/SendReceiveBufferPool.h"
+ #include "peano/parallel/messages/LoadBalancingMessage.h"
++
++#include "peano/parallel/MeshCommunication.h"
++
+ #endif
+ 
+ 
+@@ -594,28 +597,73 @@
+   assertion(MPIDatatypeContainer::Datatype!=0);
+ 
+   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
+-  _stateData.convert().send(destination,tag,true,exchangeDataBlocking);
++  //_stateData.convert().send(destination,tag,true);
++  MPIDatatypeContainer temp = _stateData.convert();
++  MeshCommunication::sendAsynchronousAndBlocking(temp,destination,tag,true,exchangeDataBlocking);
+   #else
+-  _stateData.send(destination,tag,true,exchangeDataBlocking);
++  //_stateData.send(destination,tag,true);
++  MeshComunication::sendAsynchronousAndBlocking(_stateData,destination,tag,true,exchangeDataBlocking);
+   #endif
+ }
+ 
+ 
+ template <class StateData>
++void peano::grid::State<StateData>::pack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel) {
++  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
++  MPIDatatypeContainer temp = _stateData.convert();
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Pack(&temp, 1, MPIDatatypeContainer::Datatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  } else {
++      MPI_Pack(&temp, 1, MPIDatatypeContainer::FullDatatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  }
++  #else
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Pack(&_stateData, 1, MPIDatatypeContainer::Datatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  } else {
++      MPI_Pack(&_stateData, 1, MPIDatatypeContainer::FullDatatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  }
++  #endif
++}
++
++
++template <class StateData>
+ void peano::grid::State<StateData>::receive(int source, int tag, bool exchangeDataBlocking) {
+   assertion(MPIDatatypeContainer::Datatype!=0);
+ 
+   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
+   MPIDatatypeContainer receivedMessage;
+-  receivedMessage.receive(source,tag,true,exchangeDataBlocking);
++  //receivedMessage.receive(source,tag,true,exchangeDataBlocking);
++  MeshCommunication::receiveAsynchronousAndBlocking(receivedMessage,source,tag,true,exchangeDataBlocking);
+   _stateData = receivedMessage.convert();
+   #else
+-  _stateData.receive(source,tag,true,exchangeDataBlocking);
++  //_stateData.receive(source,tag,true,exchangeDataBlocking);
++  MeshCommunication::receiveAsynchronousAndBlocking(_stateData,source,tag,true,exchangeDataBlocking);
+   #endif
+ }
+ 
+ 
+ template <class StateData>
++void peano::grid::State<StateData>::unpack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel) {
++  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
++  MPIDatatypeContainer temp;
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Unpack(buffer, buffersize, position, &temp, 1, MPIDatatypeContainer::Datatype, MPI_COMM_WORLD);
++  } else {
++      MPI_Unpack(buffer, buffersize, position, &temp, 1, MPIDatatypeContainer::FullDatatype, MPI_COMM_WORLD);
++  }
++  _stateData = temp.convert();
++  #else
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Unpack(buffer, buffersize, position, &_stateData, 1, MPIDatatypeContainer::Datatype, MPI_COMM_WORLD);
++  } else {
++      MPI_Unpack(buffer, buffersize, position, &_stateData, 1, MPIDatatypeContainer::FullDatatype, MPI_COMM_WORLD);
++  }
++  #endif
++
++}
++
++
++template <class StateData>
+ void peano::grid::State<StateData>::joinWithRank( int rank ) {
+   assertion( rank!=tarch::parallel::Node::getInstance().getRank() );
+ 
+@@ -846,13 +894,9 @@
+   }
+   else if ( !isJoiningWithMaster() ) {
+     peano::parallel::messages::LoadBalancingMessage loadBalancingMessage;
+-    loadBalancingMessage.receive(
+-      tarch::parallel::NodePool::getInstance().getMasterRank(),
+-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-      true,
+-      ReceiveMasterMessagesBlocking
+-    );
+ 
++    MeshCommunication::receiveStateDataFromMaster(loadBalancingMessage, *this);
++
+     assertion(
+       loadBalancingMessage.getLoadBalancingFlag()!=peano::parallel::loadbalancing::Join ||
+       !peano::parallel::loadbalancing::Oracle::getInstance().hasWorkers()
+@@ -871,12 +915,6 @@
+       joinWithRank(tarch::parallel::NodePool::getInstance().getMasterRank());
+     }
+ 
+-    receive(
+-      tarch::parallel::NodePool::getInstance().getMasterRank(),
+-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-      ReceiveMasterMessagesBlocking
+-    );
+-
+     logDebug( "receiveStartupDataFromMaster()", "received state " << toString() );
+   }
+ 
+@@ -891,12 +929,8 @@
+   if ( reduceDataToMaster() ) {
+     // stupid workaround as send is non-const
+     State stateCopy(*this);
+-    stateCopy.send(
+-      tarch::parallel::NodePool::getInstance().getMasterRank(),
+-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-      SendWorkerMasterMessagesBlocking
+-    );
+-    logDebug( "sendStateToMaster()", "sent state " << stateCopy.toString() );
++
++    MeshCommunication::sendStateDataToMaster(stateCopy);
+   }
+ 
+   logTraceOut( "sendStateToMaster()" );
+Index: src/peano/grid/State.h
+===================================================================
+--- src/peano/grid/State.h	(revision 1826)
++++ src/peano/grid/State.h	(working copy)
+@@ -450,6 +450,8 @@
+      */
+     void send(int destination, int tag, bool exchangeDataBlocking );
+ 
++    void pack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel);
++
+     /**
+      * Blocking receive. initDatatype() has to be called before.
+      *
+@@ -465,6 +467,8 @@
+      * not be overwritten by the master's data, we restore it manually.
+      */
+     void receive(int source, int tag, bool exchangeDataBlocking );
++    
++	void unpack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel);
+ 
+     /**
+      * Notify state about join
+Index: src/peano/grid/Vertex.cpph
+===================================================================
+--- src/peano/grid/Vertex.cpph	(revision 1826)
++++ src/peano/grid/Vertex.cpph	(working copy)
+@@ -6,6 +6,7 @@
+ 
+ 
+ #include "peano/grid/SingleLevelEnumerator.h"
++#include "peano/parallel/MeshCommunication.h"
+ 
+ 
+ template <class VertexData>
+@@ -249,6 +250,7 @@
+ void peano::grid::Vertex<VertexData>::refine() {
+   assertion2( !_vertexData.getIsHangingNode(), toString(), "may not call refine on hanging node" );
+   assertion2( _vertexData.getRefinementControl()==VertexData::Unrefined, toString(), "tried to call refine on vertex that was already refined" );
++  assertion2(getLevel() < 3, getX(), getLevel());
+ 
+   _vertexData.setRefinementControl(VertexData::RefinementTriggered);
+   _vertexData.setAdjacentCellsHeight( peano::grid::NotStationary );
+@@ -497,28 +499,72 @@
+   assertion(MPIDatatypeContainer::Datatype!=0);
+ 
+   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
+-  _vertexData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  //_vertexData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  MPIDatatypeContainer temp = _vertexData.convert();
++  MeshCommunication::sendAsynchronousAndBlocking(temp,destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
+   #else
+-  _vertexData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  //_vertexData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  MeshCommunication::sendAsynchronousAndBlocking(_vertexData,destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
+   #endif
+ }
+ 
+ 
+ template <class VertexData>
++void peano::grid::Vertex<VertexData>::pack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel) const {
++  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
++  MPIDatatypeContainer temp = _vertexData.convert();
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Pack(&temp, 1, MPIDatatypeContainer::Datatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  } else {
++      MPI_Pack(&temp, 1, MPIDatatypeContainer::FullDatatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  }
++  #else
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Pack(&_vertexData, 1, MPIDatatypeContainer::Datatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  } else {
++      MPI_Pack(&_vertexData, 1, MPIDatatypeContainer::FullDatatype, buffer, buffersize, position, MPI_COMM_WORLD);
++  }
++  #endif
++}
++
++
++template <class VertexData>
+ void peano::grid::Vertex<VertexData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
+   assertion(MPIDatatypeContainer::Datatype!=0);
+ 
+   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
+   MPIDatatypeContainer receivedMessage;
+-  receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  //receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  MeshCommunication::receiveAsynchronousAndBlocking(receivedMessage,source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
+   _vertexData = receivedMessage.convert();
+   #else
+-  _vertexData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  //_vertexData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
++  MeshCommunication::receiveAsynchronousAndBlocking(_vertexData,source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
+   #endif
+ }
+ 
+ 
+ template <class VertexData>
++void peano::grid::Vertex<VertexData>::unpack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel) {
++  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
++  MPIDatatypeContainer temp;
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Unpack(buffer, buffersize, position, &temp, 1, MPIDatatypeContainer::Datatype, MPI_COMM_WORLD);
++  } else {
++      MPI_Unpack(buffer, buffersize, position, &temp, 1, MPIDatatypeContainer::FullDatatype, MPI_COMM_WORLD);
++  }
++  _vertexData = temp.convert();
++  #else
++  if (exchangeOnlyAttributesMarkedWithParallel) {
++      MPI_Unpack(buffer, buffersize, position, &_vertexData, 1, MPIDatatypeContainer::Datatype, MPI_COMM_WORLD);
++  } else {
++      MPI_Unpack(buffer, buffersize, position, &_vertexData, 1, MPIDatatypeContainer::FullDatatype, MPI_COMM_WORLD);
++  }
++  #endif
++}
++
++
++template <class VertexData>
+ void peano::grid::Vertex<VertexData>::setAdjacentRanks( const tarch::la::Vector<TWO_POWER_D,int>& ranks ) {
+   for(int i=0; i<TWO_POWER_D; i++) {
+     assertion2(ranks(i)>=peano::parallel::UndefinedNeighbour, ranks, toString() );
+Index: src/peano/grid/Vertex.h
+===================================================================
+--- src/peano/grid/Vertex.h	(revision 1826)
++++ src/peano/grid/Vertex.h	(working copy)
+@@ -596,11 +596,15 @@
+       */
+     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking );
+ 
++    void pack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel) const;
++
+     /**
+       * Blocking receive. initDatatype() has to be called before.
+      */
+     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking );
+ 
++    void unpack(char *buffer, int buffersize, int *position, bool exchangeOnlyAttributesMarkedWithParallel);
++
+     /**
+      * Does Vertex Belong to Parallel Boundary
+      *
+Index: src/peano/grid/nodes/Node.cpph
+===================================================================
+--- src/peano/grid/nodes/Node.cpph	(revision 1826)
++++ src/peano/grid/nodes/Node.cpph	(working copy)
+@@ -27,6 +27,7 @@
+ 
+ #include "peano/grid/aspects/VertexStateAnalysis.h"
+ 
++#include "peano/parallel/MeshCommunication.h"
+ 
+ template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
+ tarch::logging::Log peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::_log( "peano::grid::nodes::Node" );
+@@ -140,38 +141,29 @@
+       peano::parallel::loadbalancing::Oracle::getInstance().masterStartsToWaitForWorkers();
+ 
+       if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Skip) {
+-        receivedWorkerCell.receive(
+-          currentWorker,
+-          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-          true,
+-          false
+-        );
+-        for (int i=0; i<TWO_POWER_D; i++) {
+-          receivedWorkerVertices[i].receive(
+-            currentWorker,
+-            peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-            true,
+-            false
+-          );
++		  // NOTE: ROLAND: refactored part to allow independent analysis
++		  MeshCommunication::receiveMeshDataFromWorker(currentWorker, receivedWorkerCell, receivedWorkerVertices);
++	  
++		  // NOTE: ROLAND: refactored part to allow independent analysis
++		  // TODO: implement upload of load balancing information
++		  // If order of data packets seems strange, look in Grid.cpph: State is really sent last.
++		  // (again: some sort of stack ordering) 
++		  MeshCommunication::receiveStateDataFromWorker(currentWorker, workerState);
+ 
+-          #ifdef Debug
+-          assertionVectorNumericalEquals5(
+-            receivedWorkerVertices[i].getX(),
+-            fineGridVertices[ fineGridVerticesEnumerator(i) ].getX(),
+-            receivedWorkerVertices[i].toString(),
+-            fineGridVertices[ fineGridVerticesEnumerator(i) ].toString(),
+-            i,
+-            fineGridVerticesEnumerator.toString(),
+-            tarch::parallel::Node::getInstance().getRank()
+-          );
++ 
++		  #ifdef Debug
++		  for (int i=0; i<TWO_POWER_D; i++) {
++		    assertionVectorNumericalEquals5(
++		      receivedWorkerVertices[i].getX(),
++		      fineGridVertices[ fineGridVerticesEnumerator(i) ].getX(),
++		      receivedWorkerVertices[i].toString(),
++		      fineGridVertices[ fineGridVerticesEnumerator(i) ].toString(),
++		      i,
++		      fineGridVerticesEnumerator.toString(),
++		      tarch::parallel::Node::getInstance().getRank()
++		    );
++   		  }
+           #endif
+-        }
+-
+-        workerState.receive(
+-          currentWorker,
+-          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-          false
+-        );
+       }
+       state.mergeWithWorkerState(workerState);
+ 
+@@ -357,52 +349,17 @@
+       logInfo( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", "skip send of startup data to rank " << currentWorker );
+     }
+     else {
+-      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send balancing message " << loadBalancingMessage.toString() << " to rank " << currentWorker );
+-      loadBalancingMessage.send(
+-        currentWorker,
+-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-        true,
+-        SendMasterWorkerMessagesBlocking
+-      );
+-      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send state " << state.toString() << " to rank " << currentWorker );
+-      stateCopy.send(
+-        currentWorker,
+-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-        SendMasterWorkerMessagesBlocking
+-      );
+-      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send cell " << fineGridCell.toString() << " to rank " << currentWorker );
+-      coarseGridCell.send(
+-        currentWorker,
+-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-        true,
+-        SendMasterWorkerMessagesBlocking
+-      );
+-      dfor2(k)
+-        logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
+-
+-        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(
+-          currentWorker,
+-          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-          true,
+-          SendMasterWorkerMessagesBlocking
+-        );
+-      enddforx
+-      fineGridCell.send(
+-        currentWorker,
+-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-        true,
+-        SendMasterWorkerMessagesBlocking
+-      );
+-      dfor2(k)
+-        logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
+-        fineGridVertices[ fineGridVerticesEnumerator(k) ].send(
+-          currentWorker,
+-          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-          true,
+-          SendMasterWorkerMessagesBlocking
+-        );
+-        fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+-      enddforx
++		logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send balancing message " << loadBalancingMessage.toString() << " to rank " << currentWorker );
++		logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send state " << state.toString() << " to rank " << currentWorker );
++		 // NOTE: ROLAND: refactored part to allow independent analysis
++		MeshCommunication::sendStateDataToWorker(currentWorker, loadBalancingMessage, stateCopy);
++	  
++		// NOTE: ROLAND: refactored part to allow independent analysis
++		MeshCommunication::sendMeshDataToWorker(currentWorker, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridCell, fineGridVertices, fineGridVerticesEnumerator);
++		
++		dfor2(k)
++		  fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
++		enddforx
+     }
+     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
+   #endif
+@@ -445,8 +402,6 @@
+           fineGridVerticesEnumerator.getLevel()
+         );
+ 
+-        peano::parallel::JoinDataBufferPool::getInstance().sendCell(fineGridCell,adjacencyBitset,*p);
+-
+         dfor2(k)
+           if (adjacencyBitset[kScalar]) {
+             // I have to invalidate the information, as the store process might delete or switch to outside
+@@ -461,13 +416,15 @@
+               fineGridVerticesEnumerator.getCellSize(),
+               fineGridVerticesEnumerator.getLevel()
+             );
+-            peano::parallel::JoinDataBufferPool::getInstance().sendVertex(fineGridVertices[fineGridVerticesEnumerator(k)],*p);
+-            logDebug( "updateCellsParallelStateAfterLoadIfStateIsForking()", "due to fork sent vertex " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() << " to rank " << *p );
+-            // any destruction of a vertex due to a fork is done in StoreVertexLoopBody
+-            // as it should be destructed after 'all' forked nodes have received it, not
+-            // earlier
+           }
+         enddforx
++  
++        // TODO: probably a good place to decide if new child grid context is local or remote
++        // => set variables accordingly
++
++        // NOTE: ROLAND: refactored part to allow independent analysis
++        MeshCommunication::sendInitialMeshDataToWorker(*p, adjacencyBitset, fineGridCell, fineGridVertices, fineGridVerticesEnumerator);
++
+       }
+     }
+ 
+@@ -519,8 +476,20 @@
+ 
+       const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> localAdjacencyBitset(    peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator) );
+       if (localAdjacencyBitset.any()) {
+-        const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
++        // TODO: probably a good place to decide if child target grid context is local or remote
++        // => set variables accordingly
+ 
++        std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset;
++  
++        // NOTE: ROLAND: refactored part to allow independent analysis
++        Cell receivedCell;
++        Vertex receivedVertices[TWO_POWER_D];
++
++      #if defined(Debug)
++        int CellLevelFromStream =
++      #endif
++        MeshCommunication::receiveFinalMeshDataFromWorker(*p, receivedAdjacencyBitset, receivedCell, receivedVertices);
++
+         #if defined(Dim2)
+         // @todo Da wir einen Level stehenlassen, gibt es da u.U. einen Vertex, der
+         // auf -1,-1,-1,-1 gesetzt ist, weil alle vier adjazenten Knoten weggeforked
+@@ -552,7 +521,7 @@
+         #if defined(Debug) && defined(Dim2)
+         assertionEquals11(
+           fineGridCell.getLevel(),
+-          peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(*p),
++          CellLevelFromStream,
+           fineGridVerticesEnumerator.toString(),
+           *p,
+           receivedAdjacencyBitset,
+@@ -568,7 +537,7 @@
+         #elif defined(Debug)
+         assertionEquals3(
+           fineGridCell.getLevel(),
+-          peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(*p),
++          CellLevelFromStream,
+           fineGridVerticesEnumerator.toString(),
+           *p,
+           receivedAdjacencyBitset
+@@ -575,9 +544,7 @@
+         );
+         #endif
+         logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "received flag " << receivedAdjacencyBitset << " (vs. local flag " << localAdjacencyBitset << " due to join with worker");
+-        peano::parallel::JoinDataBufferPool::getInstance().removeCellMarkerFromStream(*p,true);
+ 
+-        const Cell receivedCell = peano::parallel::JoinDataBufferPool::getInstance().getCellFromStream<Cell>(*p);
+         if (
+           peano::grid::aspects::ParallelMerge::mergeWithJoinedCellFromWorker(
+             fineGridCell,
+@@ -599,13 +566,13 @@
+         }
+ 
+         _eventHandle.mergeWithRemoteDataDueToForkOrJoin(fineGridCell,receivedCell,*p,fineGridVerticesEnumerator.getCellCenter(),fineGridVerticesEnumerator.getCellSize(),fineGridVerticesEnumerator.getLevel());
+-        peano::parallel::JoinDataBufferPool::getInstance().removeCellFromStream(*p);
+         logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "received cell " << receivedCell.toString() << " and merged it into " << fineGridCell.toString()  << " due to join with worker");
+ 
+         dfor2(k)
+           if (receivedAdjacencyBitset[kScalar]) {
++            const Vertex& receivedVertex = receivedVertices[kScalar];
++
+             fineGridVertices[ fineGridVerticesEnumerator(k) ].invalidateAdjacentCellInformation();
+-            const Vertex receivedVertex = peano::parallel::JoinDataBufferPool::getInstance().getVertexFromStream<Vertex>(*p);
+             const peano::grid::aspects::ParallelMerge::MergeVertexDueToJoinEffect modifyVertex =
+               peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
+                 fineGridVertices[fineGridVerticesEnumerator(k)],
+@@ -643,7 +610,6 @@
+                 break;
+             }
+             _eventHandle.mergeWithRemoteDataDueToForkOrJoin(fineGridVertices[fineGridVerticesEnumerator(k)],receivedVertex,*p,fineGridVerticesEnumerator.getVertexPosition(k),fineGridVerticesEnumerator.getCellSize(),fineGridVerticesEnumerator.getLevel());
+-            peano::parallel::JoinDataBufferPool::getInstance().removeVertexFromStream(*p);
+             logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "received and merged vertex " << fineGridVertices[fineGridVerticesEnumerator(k)].toString()  << " due to join with worker");
+           }
+         enddforx
+@@ -669,8 +635,19 @@
+     logTraceInWith2Arguments( "updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(...)", state.toString(), fineGridCell.toString() );
+     const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> localAdjacencyBitset = peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(tarch::parallel::Node::getInstance().getRank(),fineGridVertices,fineGridVerticesEnumerator);
+     if (localAdjacencyBitset.any()) {
+-      const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> adjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(tarch::parallel::NodePool::getInstance().getMasterRank()) );
++      std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> adjacencyBitset;
+ 
++      // TODO: probably a good place to decide if parent target grid context is local or remote
++      // => set variables accordingly
++
++      // NOTE: ROLAND: refactored this part to analyse basic communication patterns independently
++      Cell receivedCell;
++      Vertex receivedVertices[TWO_POWER_D];
++      #if defined(Debug)
++        int CellLevelFromStream =
++      #endif
++      MeshCommunication::receiveInitialMeshDataFromMaster(adjacencyBitset, receivedCell,receivedVertices);
++
+       logDebug( "updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(...)", "receive fork data from master " );
+       logDebug( "updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(...)", "- adjacency flag: " << adjacencyBitset );
+       dfor2(k)
+@@ -680,7 +657,7 @@
+       #if defined(Debug)
+       assertionEquals2(
+         fineGridCell.getLevel(),
+-        peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(tarch::parallel::NodePool::getInstance().getMasterRank()),
++        CellLevelFromStream,
+         fineGridVerticesEnumerator.toString(),
+         tarch::parallel::NodePool::getInstance().getMasterRank()
+       );
+@@ -700,26 +677,23 @@
+       );
+ 
+       logDebug( "updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(...)", "received flag " << adjacencyBitset );
+-      peano::parallel::JoinDataBufferPool::getInstance().removeCellMarkerFromStream(tarch::parallel::NodePool::getInstance().getMasterRank(),false);
+ 
+-      const Cell receivedCell = peano::parallel::JoinDataBufferPool::getInstance().getCellFromStream<Cell>(tarch::parallel::NodePool::getInstance().getMasterRank());
+       peano::grid::aspects::ParallelMerge::mergeWithForkedCellFromMaster(
+         fineGridCell,
+         receivedCell
+       );
+       _eventHandle.mergeWithRemoteDataDueToForkOrJoin(fineGridCell,receivedCell,tarch::parallel::NodePool::getInstance().getMasterRank(),fineGridVerticesEnumerator.getCellCenter(),fineGridVerticesEnumerator.getCellSize(),fineGridVerticesEnumerator.getLevel());
+-      peano::parallel::JoinDataBufferPool::getInstance().removeCellFromStream(tarch::parallel::NodePool::getInstance().getMasterRank());
+       logDebug( "updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(...)", "received and merged cell " << fineGridCell.toString() );
+ 
+       dfor2(k)
+         if (adjacencyBitset[kScalar]) {
+-          const Vertex receivedVertex = peano::parallel::JoinDataBufferPool::getInstance().getVertexFromStream<Vertex>(tarch::parallel::NodePool::getInstance().getMasterRank());
++          const Vertex& receivedVertex = receivedVertices[kScalar];
++
+           peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
+             fineGridVertices[fineGridVerticesEnumerator(k)],
+             receivedVertex
+           );
+           _eventHandle.mergeWithRemoteDataDueToForkOrJoin(fineGridVertices[fineGridVerticesEnumerator(k)],receivedVertex,tarch::parallel::NodePool::getInstance().getMasterRank(),fineGridVerticesEnumerator.getVertexPosition(k),fineGridVerticesEnumerator.getCellSize(),fineGridVerticesEnumerator.getLevel());
+-          peano::parallel::JoinDataBufferPool::getInstance().removeVertexFromStream(tarch::parallel::NodePool::getInstance().getMasterRank());
+           logDebug( "updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(...)", "received and merged vertex " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() );
+         }
+       enddforx
+@@ -755,8 +729,11 @@
+         fineGridVerticesEnumerator.getCellSize(),
+         fineGridVerticesEnumerator.getLevel()
+       );
+-      peano::parallel::JoinDataBufferPool::getInstance().sendCell(fineGridCell,adjacencyBitset,tarch::parallel::NodePool::getInstance().getMasterRank());
+ 
++      // NOTE: ROLAND: refactored this part to analyse basic communication patterns independently,
++      // originally the cell was sent before the destroyCell event was called, so better make a copy here
++      Cell fineGridCellCopy = fineGridCell;
++
+       logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithMaster()", "due to join sent cell " << fineGridCell.toString() << " with flag (" << adjacencyBitset << ") to rank " << tarch::parallel::NodePool::getInstance().getMasterRank() );
+       dfor2(k)
+         if (adjacencyBitset[kScalar]) {
+@@ -768,10 +745,15 @@
+             fineGridVerticesEnumerator.getCellSize(),
+             fineGridVerticesEnumerator.getLevel()
+           );
+-          peano::parallel::JoinDataBufferPool::getInstance().sendVertex(fineGridVertices[fineGridVerticesEnumerator(k)],tarch::parallel::NodePool::getInstance().getMasterRank());
+-           logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithMaster()", "due to join sent vertex " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() << " to rank " << tarch::parallel::NodePool::getInstance().getMasterRank() );
+         }
+       enddforx
++  
++      // TODO: probably a good place to decide if parent target grid context is local or remote
++      // => set variables accordingly
++
++      // NOTE: ROLAND: refactored this part to analyse basic communication patterns independently.
++      // See above for reasoning behind the fact that we send a copy of the original cell
++      MeshCommunication::sendFinalMeshDataToMaster(adjacencyBitset, fineGridCellCopy, fineGridVertices, fineGridVerticesEnumerator);
+     }
+     logTraceOut( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithMaster(...)" );
+   #endif
+Index: src/peano/grid/nodes/Root.cpph
+===================================================================
+--- src/peano/grid/nodes/Root.cpph	(revision 1826)
++++ src/peano/grid/nodes/Root.cpph	(working copy)
+@@ -6,9 +6,11 @@
+ #include "peano/grid/Grid.h"
+ #include "peano/CommunicationSpecification.h"
+ #include "peano/grid/nodes/Constants.h"
++#include "peano/heap/AbstractHeap.h"
+ #include "peano/parallel/Partitioner.h"
+ #include "peano/utils/PeanoOptimisations.h"
+ 
++#include "peano/parallel/MeshCommunication.h"
+ 
+ #ifdef Parallel
+ #include "peano/heap/AbstractHeap.h"
+@@ -252,49 +254,14 @@
+       enddforx
+     }
+     else {
+-      coarseGridCellFromMaster.receive(
+-        tarch::parallel::NodePool::getInstance().getMasterRank(),
+-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-        true,
+-        ReceiveMasterMessagesBlocking
+-      );
+-      logDebug( "receiveCellAndVerticesFromMaster(...)", "received cell " << coarseGridCellFromMaster.toString() << " from master" );
+-      dfor2(i)
+-        coarseVertexFromMaster[iScalar].receive(
+-          tarch::parallel::NodePool::getInstance().getMasterRank(),
+-          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-          true,
+-          ReceiveMasterMessagesBlocking
+-        );
+-        logDebug(
+-          "receiveCellAndVerticesFromMaster(...)",
+-          "received vertex " << coarseVertexFromMaster[iScalar].toString() << " from master and stored it in coarseVertexFromMaster " << iScalar
+-        );
+-      }
++		// NOTE: ROLAND: refactored part to allow independent analysis
++		MeshCommunication::receiveMeshDataFromMaster(coarseGridCellFromMaster, coarseVertexFromMaster, _masterCell, _masterVertices);
+ 
+-      _masterCell.receive(
+-        tarch::parallel::NodePool::getInstance().getMasterRank(),
+-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-        true,
+-        ReceiveMasterMessagesBlocking
+-      );
+-      logDebug( "receiveCellAndVerticesFromMaster(...)", "received cell " << _masterCell.toString() << " from master" );
+-      dfor2(i)
+-        _masterVertices[iScalar].receive(
+-          tarch::parallel::NodePool::getInstance().getMasterRank(),
+-          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-          true,
+-          ReceiveMasterMessagesBlocking
+-        );
+-        logDebug(
+-          "receiveCellAndVerticesFromMaster(...)",
+-          "received vertex " << _masterVertices[iScalar].toString() << " from master and stored it in _masterVertex " << iScalar
+-        );
++		dfor2(i)
++		  _haveMergedMasterVertex[iScalar] = false;
++		enddforx
++	}
+ 
+-        _haveMergedMasterVertex[iScalar] = false;
+-      enddforx
+-    }
+-
+     Base::_eventHandle.receiveDataFromMaster(
+       _masterCell,
+       _masterVertices,
+@@ -398,17 +365,8 @@
+       _positionOfRootCellRelativeToCoarserCellOnMaster
+     );
+ 
+-    logDebug( "sendCellAndVerticesToMaster(...)", "send cell " << centralFineGridCell.toString() << " to master" );
+-
+     if (!skipMPICalls) {
+-      centralFineGridCell.send(
+-        tarch::parallel::NodePool::getInstance().getMasterRank(),
+-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-        true,
+-        SendWorkerMasterMessagesBlocking
+-      );
+       dfor2(k)
+-        logDebug( "sendCellAndVerticesToMaster(...)", "send vertex " << fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString() << " to master" );
+         // In principle, this assertion holds without the outside check.
+         // However, on the very first node, given a certain enforced level of
+         // regular refinement, we have vertices at the global boundary (at
+@@ -425,13 +383,10 @@
+           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet(),
+           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString()
+         );
+-        fineGridVertices[ centralFineGridVerticesEnumerator(k) ].send(
+-          tarch::parallel::NodePool::getInstance().getMasterRank(),
+-          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+-          true,
+-          SendWorkerMasterMessagesBlocking
+-        );
+       enddforx
++      
++      // NOTE: ROLAND: refactored this part to analyse basic communication patterns independently
++	  MeshCommunication::sendMeshDataToMaster(centralFineGridCell, fineGridVertices, centralFineGridVerticesEnumerator);
+     }
+   }
+   else {
+@@ -741,6 +696,7 @@
+           !tarch::parallel::Node::getInstance().isGlobalMaster()
+         ) {
+           assertion( Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Early );
++
+           state.sendStateToMaster();
+         }
+         #endif
+Index: src/peano/grid/nodes/loops/LoadVertexLoopBody.cpph
+===================================================================
+--- src/peano/grid/nodes/loops/LoadVertexLoopBody.cpph	(revision 1826)
++++ src/peano/grid/nodes/loops/LoadVertexLoopBody.cpph	(working copy)
+@@ -6,6 +6,7 @@
+ #include "tarch/multicore/BooleanSemaphore.h"
+ #include "tarch/multicore/Lock.h"
+ 
++#include "peano/parallel/MeshCommunication.h"
+ 
+ template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
+ tarch::logging::Log peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::_log( "peano::grid::nodes::loops::LoadVertexLoopBody" );
+@@ -139,9 +140,10 @@
+         p++
+       ) {
+         const int currentNeighbourRank = *p;
+-        if ( !_state.isForkingRank(currentNeighbourRank) ) {
+-          const Vertex receivedVertex = peano::parallel::SendReceiveBufferPool::getInstance().getVertex<Vertex>(currentNeighbourRank);
++        if ( !_state.isForkingRank(currentNeighbourRank) && currentNeighbourRank != 0 && !tarch::parallel::Node::getInstance().isGlobalMaster() ) {
++          Vertex receivedVertex;
+ 
++          MeshCommunication::receiveVertexFromNeighbour(currentNeighbourRank, receivedVertex);
+           if (peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData()) {
+             #ifdef Debug
+             assertionVectorNumericalEquals5(receivedVertex.getX(), _fineGridVertices[positionInVertexArray].getX(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), _state.toString(), *p, tarch::parallel::Node::getInstance().getRank());
+Index: src/peano/grid/nodes/loops/LoadVertexLoopBody.h
+===================================================================
+--- src/peano/grid/nodes/loops/LoadVertexLoopBody.h	(revision 1826)
++++ src/peano/grid/nodes/loops/LoadVertexLoopBody.h	(working copy)
+@@ -219,6 +219,11 @@
+     ) const;
+ 
+     void invalidateVertexIfGeometryHasChanged( int positionInVertexArray, const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell ) const;
++
++    tarch::la::Vector<TWO_POWER_D_TIMES_TWO_POWER_D,int> readAdjacencyLists(
++      const peano::grid::VertexEnumerator&  enumerator,
++      const Vertex* const                   vertices
++    ) const;
+   public:
+     LoadVertexLoopBody(
+       State&                                    state,
+Index: src/peano/grid/nodes/loops/StoreVertexLoopBody.cpph
+===================================================================
+--- src/peano/grid/nodes/loops/StoreVertexLoopBody.cpph	(revision 1826)
++++ src/peano/grid/nodes/loops/StoreVertexLoopBody.cpph	(working copy)
+@@ -3,6 +3,7 @@
+ #include "peano/geometry/GeometryHelper.h"
+ #include "peano/parallel/AdjacencyList.h"
+ 
++#include "peano/parallel/MeshCommunication.h"
+ 
+ template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator >
+ tarch::logging::Log peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle, CellFlagsFromEnumerator >::_log( "peano::grid::nodes::loops::StoreVertexLoopBody" );
+@@ -114,7 +115,7 @@
+           p != ranks.end();
+           p++
+         ) {
+-          if (!_state.isForkTriggeredForRank(*p) && !_state.isJoiningRank(*p) ) {
++          if (!_state.isForkTriggeredForRank(*p) && !_state.isJoiningRank(*p) && *p != 0 && !tarch::parallel::Node::getInstance().isGlobalMaster()) {
+             Vertex copy = _fineGridVertices[positionInVertexArray];
+             _threadLocalEventHandle.prepareSendToNeighbour(
+               copy,
+@@ -128,7 +129,8 @@
+             }
+ 
+             logDebug("exchangeVerticesDueToParallelisation(...)", "vertex at position " << positionInLocalCell << " belongs to parallel boundary. Send " << copy.toString() << " to rank " << *p );
+-            peano::parallel::SendReceiveBufferPool::getInstance().sendVertex(copy,*p,peano::parallel::SendReceiveBufferPool::LIFO);
++
++            MeshCommunication::sendVertexToNeighbour(*p, copy);
+           }
+         }
+       }
+Index: src/peano/heap/Heap.cpph
+===================================================================
+--- src/peano/heap/Heap.cpph	(revision 1826)
++++ src/peano/heap/Heap.cpph	(working copy)
+@@ -62,7 +62,7 @@
+ 
+ template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::deleteAllData() {
+-  for(typename std::map<int, std::vector<Data>*>::iterator i = _heapData.begin(); i != _heapData.end(); i++) {
++  for(typename HeapContainer::iterator i = _heapData.begin(); i != _heapData.end(); i++) {
+     assertionMsg((*i).second != 0, _name << ": Null-pointer was stored in heap data map.");
+     delete (*i).second;
+   }
+Index: src/peano/heap/Heap.h
+===================================================================
+--- src/peano/heap/Heap.h	(revision 1826)
++++ src/peano/heap/Heap.h	(working copy)
+@@ -4,6 +4,7 @@
+ #define _PEANO_HEAP_HEAP_H_
+ 
+ #include <map>
++#include <unordered_map>
+ #include <vector>
+ #include <list>
+ 
+@@ -273,6 +274,7 @@
+     static tarch::logging::Log _log;
+ 
+     typedef std::map<int, std::vector<Data>*>  HeapContainer;
++//    typedef std::unordered_map<int, std::vector<Data>*>  HeapContainer;
+ 
+     /**
+      * Map that holds all data that is stored on the heap
+Index: src/tarch/compiler/LinuxGCC.h
+===================================================================
+--- src/tarch/compiler/LinuxGCC.h	(revision 1826)
++++ src/tarch/compiler/LinuxGCC.h	(working copy)
+@@ -12,7 +12,7 @@
+ //#define CompilerDefinesMPIMaxNameString
+ //#define DaStGenPackedPadding 1      // 32 bit version
+ // #define DaStGenPackedPadding 2   // 64 bit version
+-#define SpecialiseVectorTemplatesForIntegers
++//#define SpecialiseVectorTemplatesForIntegers
+ 
+ #ifndef noMultipleThreadsMayTriggerMPICalls
+ #define MultipleThreadsMayTriggerMPICalls
+@@ -31,6 +31,8 @@
+ 
+ 
+ 
++
++
+ #ifndef noManualInlining
+ #define UseManualInlining
+ #endif
+Index: src/tarch/la/Vector.cpph
+===================================================================
+--- src/tarch/la/Vector.cpph	(revision 1826)
++++ src/tarch/la/Vector.cpph	(working copy)
+@@ -56,6 +56,9 @@
+   assertion(this != &toCopy);
+   #ifdef CompilerICC
+   #pragma ivdep
++  #elif CompilerCLX
++  #else
++  #pragma GCC ivdep
+   #endif
+   for (int i=0; i<Size; i++) {
+     _values[i] = toCopy._values[i];
+Index: src/tarch/la/VectorIntegerSpecialisation.cpp
+===================================================================
+--- src/tarch/la/VectorIntegerSpecialisation.cpp	(revision 1826)
++++ src/tarch/la/VectorIntegerSpecialisation.cpp	(working copy)
+@@ -1,314 +0,0 @@
+-#include "tarch/la/Vector.h"
+-
+-
+-#if defined(SpecialiseVectorTemplatesForIntegers)
+-
+-tarch::la::Vector<2,int>::Vector() {
+-}
+-
+-
+-tarch::la::Vector<3,int>::Vector() {
+-}
+-
+-
+-tarch::la::Vector<4,int>::Vector() {
+-}
+-
+-
+-tarch::la::Vector<2,int>&  tarch::la::Vector<2,int>::operator= (
+-  const Vector<2,int>&  toAssign
+-) {
+-  _values0 = toAssign._values0;
+-  _values1 = toAssign._values1;
+-  return *this;
+-}
+-
+-
+-tarch::la::Vector<3,int>&  tarch::la::Vector<3,int>::operator= (
+-  const Vector<3,int>&  toAssign
+-) {
+-  _values0 = toAssign._values0;
+-  _values1 = toAssign._values1;
+-  _values2 = toAssign._values2;
+-  return *this;
+-}
+-
+-
+-tarch::la::Vector<4,int>&  tarch::la::Vector<4,int>::operator= (
+-  const Vector<4,int>&  toAssign
+-) {
+-  _values0 = toAssign._values0;
+-  _values1 = toAssign._values1;
+-  _values2 = toAssign._values2;
+-  _values3 = toAssign._values3;
+-  return *this;
+-}
+-
+-
+-tarch::la::VectorAssignList<2,int> tarch::la::Vector<2,int>::operator=(
+-  const int& value
+-) {
+-  _values0 = value;
+-  return VectorAssignList<2,int>(*this,1);
+-}
+-
+-
+-tarch::la::VectorAssignList<3,int> tarch::la::Vector<3,int>::operator=(
+-  const int& value
+-) {
+-  _values0 = value;
+-  return VectorAssignList<3,int>(*this,1);
+-}
+-
+-
+-tarch::la::VectorAssignList<4,int> tarch::la::Vector<4,int>::operator=(
+-  const int& value
+-) {
+-  _values0 = value;
+-  return VectorAssignList<4,int>(*this,1);
+-}
+-
+-
+-tarch::la::Vector<2,int>::Vector (
+-  const Vector<2,int>& toCopy
+-):
+-  _values0( toCopy._values0 ),
+-  _values1( toCopy._values1 ) {
+-}
+-
+-
+-tarch::la::Vector<3,int>::Vector (
+-  const Vector<3,int>& toCopy
+-):
+-  _values0( toCopy._values0 ),
+-  _values1( toCopy._values1 ),
+-  _values2( toCopy._values2 ) {
+-}
+-
+-
+-tarch::la::Vector<4,int>::Vector (
+-  const Vector<4,int>& toCopy
+-):
+-  _values0( toCopy._values0 ),
+-  _values1( toCopy._values1 ),
+-  _values2( toCopy._values2 ),
+-  _values3( toCopy._values3 ) {
+-}
+-
+-
+-tarch::la::Vector<2,int>::Vector(
+-  const int& initialValue
+-):
+-  _values0(initialValue),
+-  _values1(initialValue)
+-{
+-}
+-
+-
+-tarch::la::Vector<3,int>::Vector(
+-  const int& initialValue
+-):
+-  _values0(initialValue),
+-  _values1(initialValue),
+-  _values2(initialValue)
+-{
+-}
+-
+-
+-tarch::la::Vector<4,int>::Vector(
+-  const int& initialValue
+-):
+-  _values0(initialValue),
+-  _values1(initialValue),
+-  _values2(initialValue),
+-  _values3(initialValue)
+-{
+-}
+-
+-
+-tarch::la::Vector<2,int>::Vector(
+-  const int& initialValue0,
+-  const int& initialValue1
+-): 
+-  _values0(initialValue0),
+-  _values1(initialValue1) {
+-}
+-
+-
+-tarch::la::Vector<3,int>::Vector(
+-  const int& initialValue0,
+-  const int& initialValue1,
+-  const int& initialValue2
+-):
+-  _values0(initialValue0),
+-  _values1(initialValue1),
+-  _values2(initialValue2) {
+-}
+-
+-
+-tarch::la::Vector<4,int>::Vector(
+-  const int& initialValue0,
+-  const int& initialValue1,
+-  const int& initialValue2,
+-  const int& initialValue3
+-):
+-  _values0(initialValue0),
+-  _values1(initialValue1),
+-  _values2(initialValue2),
+-  _values3(initialValue3) {
+-}
+-
+-
+-int tarch::la::Vector<2,int>::size() const {
+-  return 2;
+-}
+-
+-
+-int tarch::la::Vector<3,int>::size() const {
+-  return 3;
+-}
+-
+-
+-int tarch::la::Vector<4,int>::size() const {
+-  return 4;
+-}
+-
+-
+-const int& tarch::la::Vector<2,int>::operator[] ( int index ) const {
+-  assertion ( index >= 0 );
+-  assertion ( index < 2 );
+-  if (index==1) return _values1;
+-           else return _values0;
+-}
+-
+-
+-const int& tarch::la::Vector<3,int>::operator[] ( int index ) const {
+-  assertion ( index >= 0 );
+-  assertion ( index < 3 );
+-       if (index==2) return _values2;
+-  else if (index==1) return _values1;
+-                else return _values0;
+-}
+-
+-
+-const int& tarch::la::Vector<4,int>::operator[] ( int index ) const {
+-  assertion ( index >= 0 );
+-  assertion ( index < 4 );
+-       if (index==3) return _values3;
+-  else if (index==2) return _values2;
+-  else if (index==1) return _values1;
+-                else return _values0;
+-}
+-
+-
+-int& tarch::la::Vector<2,int>::operator[] ( int index ) {
+-  assertion ( index >= 0 );
+-  assertion ( index < 2 );
+-  if (index==1) return _values1;
+-           else return _values0;
+-}
+-
+-
+-int& tarch::la::Vector<3,int>::operator[] ( int index ) {
+-  assertion ( index >= 0 );
+-  assertion ( index < 3 );
+-       if (index==2) return _values2;
+-  else if (index==1) return _values1;
+-                else return _values0;
+-}
+-
+-
+-int& tarch::la::Vector<4,int>::operator[] ( int index ) {
+-  assertion ( index >= 0 );
+-  assertion ( index < 4 );
+-       if (index==3) return _values3;
+-  else if (index==2) return _values2;
+-  else if (index==1) return _values1;
+-                else return _values0;
+-}
+-
+-
+-const int& tarch::la::Vector<2,int>::operator() ( int index ) const {
+-  assertion ( index >= 0 );
+-  assertion ( index < 2 );
+-  if (index==1) return _values1;
+-           else return _values0;
+-}
+-
+-
+-const int& tarch::la::Vector<3,int>::operator() ( int index ) const {
+-  assertion ( index >= 0 );
+-  assertion ( index < 3 );
+-       if (index==2) return _values2;
+-  else if (index==1) return _values1;
+-                else return _values0;
+-}
+-
+-
+-const int& tarch::la::Vector<4,int>::operator() ( int index ) const {
+-  assertion ( index >= 0 );
+-  assertion ( index < 4 );
+-       if (index==3) return _values3;
+-  else if (index==2) return _values2;
+-  else if (index==1) return _values1;
+-                else return _values0;
+-}
+-
+-
+-int& tarch::la::Vector<2,int>::operator() ( int index ) {
+-  assertion ( index >= 0 );
+-  assertion ( index < 2 );
+-  if (index==1) return _values1;
+-           else return _values0;
+-}
+-
+-
+-int& tarch::la::Vector<3,int>::operator() ( int index ) {
+-  assertion ( index >= 0 );
+-  assertion ( index < 3 );
+-       if (index==2) return _values2;
+-  else if (index==1) return _values1;
+-                else return _values0;
+-}
+-
+-
+-int& tarch::la::Vector<4,int>::operator() ( int index ) {
+-  assertion ( index >= 0 );
+-  assertion ( index < 4 );
+-       if (index==3) return _values3;
+-  else if (index==2) return _values2;
+-  else if (index==1) return _values1;
+-                else return _values0;
+-}
+-
+-
+-std::string tarch::la::Vector<2,int>::toString() const {
+-  std::ostringstream os;
+-  os << "["  << _values0
+-     << "," << _values1
+-     << "]";
+-  return os.str();
+-}
+-
+-
+-std::string tarch::la::Vector<3,int>::toString() const {
+-  std::ostringstream os;
+-  os << "["  << _values0
+-     << "," << _values1
+-     << "," << _values2
+-     << "]";
+-  return os.str();
+-}
+-
+-
+-std::string tarch::la::Vector<4,int>::toString() const {
+-  std::ostringstream os;
+-  os << "["  << _values0
+-     << "," << _values1
+-     << "," << _values2
+-     << "," << _values3
+-     << "]";
+-  return os.str();
+-}
+-
+-#endif
+Index: src/tarch/la/VectorVectorOperations.cpph
+===================================================================
+--- src/tarch/la/VectorVectorOperations.cpph	(revision 1826)
++++ src/tarch/la/VectorVectorOperations.cpph	(working copy)
+@@ -10,6 +10,9 @@
+   #ifdef CompilerICC
+   #pragma forceinline recursive
+   #pragma ivdep
++  #elif CompilerCLX
++  #else
++  #pragma GCC ivdep
+   #endif
+   for ( int i=0; i < Size; i++ ) {
+     lhs(i) += rhs(i);
+@@ -26,6 +29,9 @@
+   #ifdef CompilerICC
+   #pragma forceinline recursive
+   #pragma ivdep
++  #elif CompilerCLX
++  #else
++  #pragma GCC ivdep
+   #endif
+   for ( int i=0; i < Size; i++ ) {
+     lhs(i) -= rhs(i);
+@@ -43,6 +49,9 @@
+   #ifdef CompilerICC
+   #pragma forceinline recursive
+   #pragma ivdep
++  #elif CompilerCLX
++  #else
++  #pragma GCC ivdep
+   #endif
+   for ( int i=0; i < Size; i++ ) {
+     result(i) =  rhs(i) + lhs(i);
+@@ -60,6 +69,9 @@
+   #ifdef CompilerICC
+   #pragma forceinline recursive
+   #pragma ivdep
++  #elif CompilerCLX
++  #else
++  #pragma GCC ivdep
+   #endif
+   for ( int i=0; i < Size; i++ ) {
+     result(i) =  lhs(i) - rhs(i);
+@@ -77,6 +89,9 @@
+   #ifdef CompilerICC
+   #pragma forceinline recursive
+   #pragma ivdep
++  #elif CompilerCLX
++  #else
++  #pragma GCC ivdep
+   #endif
+   for ( int i=0; i < Size; i++ ) {
+     result(i) =  lhs(i) * rhs(i);
+@@ -256,7 +271,7 @@
+   const Scalar                tolerance
+ ) {
+   for ( int i=0; i < Size; i++ ) {
+-    if ( lhs(i) - rhs(i) > -tolerance ) {
++    if ( lhs(i) - rhs(i) > tolerance ) {
+       return false;
+     }
+   }
+Index: src/tarch/logging/CommandLineLogger.cpp
+===================================================================
+--- src/tarch/logging/CommandLineLogger.cpp	(revision 1826)
++++ src/tarch/logging/CommandLineLogger.cpp	(working copy)
+@@ -273,10 +273,10 @@
+     tarch::multicore::Lock lockCout( _semaphore );
+     out().flush();
+     #ifdef CompilerCLX
+-    if(out()!=std::cout) {
+-      std::cout << outputMessage;
+-      std::cout.flush();
+-    }
++    //if(out()!=std::cout) {
++    //  std::cout << outputMessage;
++    //  std::cout.flush();
++    //}
+     #else
+     std::cerr << outputMessage;
+     std::cerr.flush();
+@@ -299,10 +299,10 @@
+     tarch::multicore::Lock lockCout( _semaphore );
+     out().flush();
+     #ifdef CompilerCLX
+-    if(out()!=std::cout) {
+-      std::cout << outputMessage;
+-      std::cout.flush();
+-    }
++    //if(out()!=std::cout) {
++    //  std::cout << outputMessage;
++    //  std::cout.flush();
++    //}
+     #else
+     std::cerr << outputMessage;
+     std::cerr.flush();
+Index: src/tarch/parallel/Node.cpp
+===================================================================
+--- src/tarch/parallel/Node.cpp	(revision 1826)
++++ src/tarch/parallel/Node.cpp	(working copy)
+@@ -30,14 +30,14 @@
+ 
+   // I protect the tag manually (not via log filter), as many tags are actually
+   // grabbed before most applications initialise their log filters properly.
+-  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+-    tarch::logging::Log _log("tarch::parallel::Node<static>");
+-    logInfo(
+-      "reserveFreeTag()",
+-      "assigned message " << fullQualifiedMessageName
+-       << " the free tag " << result
+-    );
+-  }
++//  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
++//    tarch::logging::Log _log("tarch::parallel::Node<static>");
++//    logInfo(
++//      "reserveFreeTag()",
++//      "assigned message " << fullQualifiedMessageName
++//       << " the free tag " << result
++//    );
++//  }
+ 
+   return result;
+ }
+Index: src/tarch/parallel/NodePool.cpp
+===================================================================
+--- src/tarch/parallel/NodePool.cpp	(revision 1826)
++++ src/tarch/parallel/NodePool.cpp	(working copy)
+@@ -437,7 +437,7 @@
+     message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+     logDebug(  "replyToRegistrationMessages()", "got registration from rank " << message.getSenderRank() );
+     _strategy->addNode( message );
+-    assertion1( !_strategy->isIdleNode(message.getSenderRank()), message.toString() );
++    assertion2( !_strategy->isIdleNode(message.getSenderRank()), message.toString(), message.getSenderRank() );
+   }
+ 
+   logTraceOut( "replyToRegistrationMessages()" );
