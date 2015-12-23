@@ -17,6 +17,11 @@ namespace peanoclaw {
 class peanoclaw::native::scenarios::BreakingDamSWEScenario
     : public peanoclaw::native::scenarios::SWEScenario {
   private:
+    enum RefinementCriterion {
+      GradientBased,
+      Predefined
+    };
+
     tarch::la::Vector<DIMENSIONS, double> _domainOffset;
     tarch::la::Vector<DIMENSIONS, double> _domainSize;
     tarch::la::Vector<DIMENSIONS, double> _minimalMeshWidth;
@@ -24,6 +29,7 @@ class peanoclaw::native::scenarios::BreakingDamSWEScenario
     tarch::la::Vector<DIMENSIONS, int>    _subdivisionFactor;
     double                                _globalTimestepSize;
     double                                _endTime;
+    RefinementCriterion                   _refinementCriterion;
 
   public:
       BreakingDamSWEScenario(

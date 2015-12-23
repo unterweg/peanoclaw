@@ -13,6 +13,7 @@
 #include "peanoclaw/interSubgridCommunication/GridLevelTransfer.h"
 #include "peanoclaw/interSubgridCommunication/DefaultRestriction.h"
 #include "peanoclaw/interSubgridCommunication/aspects/AdjacentSubgrids.h"
+#include "peanoclaw/statistics/SubgridStatistics.h"
 #include "peanoclaw/ParallelSubgrid.h"
 #include "peanoclaw/Patch.h"
 #include "peanoclaw/Vertex.h"
@@ -302,7 +303,8 @@ void peanoclaw::tests::GridLevelTransferTest::testOverlappingRegionWithTouchingP
   tarch::la::Vector<DIMENSIONS, double> size2(1.0);
 
   peanoclaw::tests::NumericsTestStump numerics;
-  peanoclaw::interSubgridCommunication::GridLevelTransfer gridLevelTransfer(false, numerics);
+  peanoclaw::statistics::SubgridStatistics subgridStatistics;
+  peanoclaw::interSubgridCommunication::GridLevelTransfer gridLevelTransfer(false, numerics, subgridStatistics);
 
   //peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<2> defaultRestriction;
   validateNumericalEquals( peanoclaw::interSubgridCommunication::calculateOverlappingRegion(position1, size1, position2, size2), 0.0);
@@ -457,7 +459,8 @@ void peanoclaw::tests::GridLevelTransferTest::testRestrictionToVirtualPatch() {
 
   //GridLevelTransfer
   NumericsTestStump numerics;
-  peanoclaw::interSubgridCommunication::GridLevelTransfer gridLevelTransfer(false, numerics);
+  peanoclaw::statistics::SubgridStatistics subgridStatistics;
+  peanoclaw::interSubgridCommunication::GridLevelTransfer gridLevelTransfer(false, numerics, subgridStatistics);
   TestVertexEnumerator enumerator(1.0);
 
   //Virtual patch

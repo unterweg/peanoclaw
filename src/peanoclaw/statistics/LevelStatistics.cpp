@@ -5,7 +5,7 @@ peanoclaw::statistics::LevelStatistics::PersistentRecords::PersistentRecords() {
 }
 
 
-peanoclaw::statistics::LevelStatistics::PersistentRecords::PersistentRecords(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize):
+peanoclaw::statistics::LevelStatistics::PersistentRecords::PersistentRecords(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize, const double& numberOfInterpolatedCells, const double& numberOfRestrictedCells):
 _area(area),
 _level(level),
 _numberOfPatches(numberOfPatches),
@@ -19,7 +19,9 @@ _patchesSkippingIteration(patchesSkippingIteration),
 _patchesCoarsening(patchesCoarsening),
 _estimatedNumberOfRemainingIterationsToGlobalTimestep(estimatedNumberOfRemainingIterationsToGlobalTimestep),
 _averageTimestepSize(averageTimestepSize),
-_minimalTimestepSize(minimalTimestepSize) {
+_minimalTimestepSize(minimalTimestepSize),
+_numberOfInterpolatedCells(numberOfInterpolatedCells),
+_numberOfRestrictedCells(numberOfRestrictedCells) {
    
 }
 
@@ -29,13 +31,13 @@ peanoclaw::statistics::LevelStatistics::LevelStatistics() {
 
 
 peanoclaw::statistics::LevelStatistics::LevelStatistics(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._area, persistentRecords._level, persistentRecords._numberOfPatches, persistentRecords._numberOfCells, persistentRecords._numberOfCellUpdates, persistentRecords._createdPatches, persistentRecords._destroyedPatches, persistentRecords._patchesBlockedDueToNeighbors, persistentRecords._patchesBlockedDueToGlobalTimestep, persistentRecords._patchesSkippingIteration, persistentRecords._patchesCoarsening, persistentRecords._estimatedNumberOfRemainingIterationsToGlobalTimestep, persistentRecords._averageTimestepSize, persistentRecords._minimalTimestepSize) {
+_persistentRecords(persistentRecords._area, persistentRecords._level, persistentRecords._numberOfPatches, persistentRecords._numberOfCells, persistentRecords._numberOfCellUpdates, persistentRecords._createdPatches, persistentRecords._destroyedPatches, persistentRecords._patchesBlockedDueToNeighbors, persistentRecords._patchesBlockedDueToGlobalTimestep, persistentRecords._patchesSkippingIteration, persistentRecords._patchesCoarsening, persistentRecords._estimatedNumberOfRemainingIterationsToGlobalTimestep, persistentRecords._averageTimestepSize, persistentRecords._minimalTimestepSize, persistentRecords._numberOfInterpolatedCells, persistentRecords._numberOfRestrictedCells) {
    
 }
 
 
-peanoclaw::statistics::LevelStatistics::LevelStatistics(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize):
-_persistentRecords(area, level, numberOfPatches, numberOfCells, numberOfCellUpdates, createdPatches, destroyedPatches, patchesBlockedDueToNeighbors, patchesBlockedDueToGlobalTimestep, patchesSkippingIteration, patchesCoarsening, estimatedNumberOfRemainingIterationsToGlobalTimestep, averageTimestepSize, minimalTimestepSize) {
+peanoclaw::statistics::LevelStatistics::LevelStatistics(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize, const double& numberOfInterpolatedCells, const double& numberOfRestrictedCells):
+_persistentRecords(area, level, numberOfPatches, numberOfCells, numberOfCellUpdates, createdPatches, destroyedPatches, patchesBlockedDueToNeighbors, patchesBlockedDueToGlobalTimestep, patchesSkippingIteration, patchesCoarsening, estimatedNumberOfRemainingIterationsToGlobalTimestep, averageTimestepSize, minimalTimestepSize, numberOfInterpolatedCells, numberOfRestrictedCells) {
    
 }
 
@@ -79,6 +81,10 @@ void peanoclaw::statistics::LevelStatistics::toString (std::ostream& out) const 
    out << "averageTimestepSize:" << getAverageTimestepSize();
    out << ",";
    out << "minimalTimestepSize:" << getMinimalTimestepSize();
+   out << ",";
+   out << "numberOfInterpolatedCells:" << getNumberOfInterpolatedCells();
+   out << ",";
+   out << "numberOfRestrictedCells:" << getNumberOfRestrictedCells();
    out <<  ")";
 }
 
@@ -102,7 +108,9 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
       getPatchesCoarsening(),
       getEstimatedNumberOfRemainingIterationsToGlobalTimestep(),
       getAverageTimestepSize(),
-      getMinimalTimestepSize()
+      getMinimalTimestepSize(),
+      getNumberOfInterpolatedCells(),
+      getNumberOfRestrictedCells()
    );
 }
 
@@ -117,7 +125,7 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
       {
          LevelStatistics dummyLevelStatistics[2];
          
-         const int Attributes = 15;
+         const int Attributes = 17;
          MPI_Datatype subtypes[Attributes] = {
             MPI_DOUBLE,		 //area
             MPI_INT,		 //level
@@ -133,6 +141,8 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
             MPI_DOUBLE,		 //estimatedNumberOfRemainingIterationsToGlobalTimestep
             MPI_DOUBLE,		 //averageTimestepSize
             MPI_DOUBLE,		 //minimalTimestepSize
+            MPI_DOUBLE,		 //numberOfInterpolatedCells
+            MPI_DOUBLE,		 //numberOfRestrictedCells
             MPI_UB		 // end/displacement flag
          };
          
@@ -151,6 +161,8 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
             1,		 //estimatedNumberOfRemainingIterationsToGlobalTimestep
             1,		 //averageTimestepSize
             1,		 //minimalTimestepSize
+            1,		 //numberOfInterpolatedCells
+            1,		 //numberOfRestrictedCells
             1		 // end/displacement flag
          };
          
@@ -172,7 +184,9 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._estimatedNumberOfRemainingIterationsToGlobalTimestep))), 		&disp[11] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._averageTimestepSize))), 		&disp[12] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._minimalTimestepSize))), 		&disp[13] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[1]._persistentRecords._area))), 		&disp[14] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._numberOfInterpolatedCells))), 		&disp[14] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._numberOfRestrictedCells))), 		&disp[15] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[1]._persistentRecords._area))), 		&disp[16] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -187,7 +201,7 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
       {
          LevelStatistics dummyLevelStatistics[2];
          
-         const int Attributes = 15;
+         const int Attributes = 17;
          MPI_Datatype subtypes[Attributes] = {
             MPI_DOUBLE,		 //area
             MPI_INT,		 //level
@@ -203,6 +217,8 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
             MPI_DOUBLE,		 //estimatedNumberOfRemainingIterationsToGlobalTimestep
             MPI_DOUBLE,		 //averageTimestepSize
             MPI_DOUBLE,		 //minimalTimestepSize
+            MPI_DOUBLE,		 //numberOfInterpolatedCells
+            MPI_DOUBLE,		 //numberOfRestrictedCells
             MPI_UB		 // end/displacement flag
          };
          
@@ -221,6 +237,8 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
             1,		 //estimatedNumberOfRemainingIterationsToGlobalTimestep
             1,		 //averageTimestepSize
             1,		 //minimalTimestepSize
+            1,		 //numberOfInterpolatedCells
+            1,		 //numberOfRestrictedCells
             1		 // end/displacement flag
          };
          
@@ -242,7 +260,9 @@ peanoclaw::statistics::LevelStatisticsPacked peanoclaw::statistics::LevelStatist
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._estimatedNumberOfRemainingIterationsToGlobalTimestep))), 		&disp[11] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._averageTimestepSize))), 		&disp[12] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._minimalTimestepSize))), 		&disp[13] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[1]._persistentRecords._area))), 		&disp[14] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._numberOfInterpolatedCells))), 		&disp[14] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[0]._persistentRecords._numberOfRestrictedCells))), 		&disp[15] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatistics[1]._persistentRecords._area))), 		&disp[16] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -489,7 +509,7 @@ peanoclaw::statistics::LevelStatisticsPacked::PersistentRecords::PersistentRecor
 }
 
 
-peanoclaw::statistics::LevelStatisticsPacked::PersistentRecords::PersistentRecords(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize):
+peanoclaw::statistics::LevelStatisticsPacked::PersistentRecords::PersistentRecords(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize, const double& numberOfInterpolatedCells, const double& numberOfRestrictedCells):
 _area(area),
 _level(level),
 _numberOfPatches(numberOfPatches),
@@ -503,7 +523,9 @@ _patchesSkippingIteration(patchesSkippingIteration),
 _patchesCoarsening(patchesCoarsening),
 _estimatedNumberOfRemainingIterationsToGlobalTimestep(estimatedNumberOfRemainingIterationsToGlobalTimestep),
 _averageTimestepSize(averageTimestepSize),
-_minimalTimestepSize(minimalTimestepSize) {
+_minimalTimestepSize(minimalTimestepSize),
+_numberOfInterpolatedCells(numberOfInterpolatedCells),
+_numberOfRestrictedCells(numberOfRestrictedCells) {
    
 }
 
@@ -513,13 +535,13 @@ peanoclaw::statistics::LevelStatisticsPacked::LevelStatisticsPacked() {
 
 
 peanoclaw::statistics::LevelStatisticsPacked::LevelStatisticsPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._area, persistentRecords._level, persistentRecords._numberOfPatches, persistentRecords._numberOfCells, persistentRecords._numberOfCellUpdates, persistentRecords._createdPatches, persistentRecords._destroyedPatches, persistentRecords._patchesBlockedDueToNeighbors, persistentRecords._patchesBlockedDueToGlobalTimestep, persistentRecords._patchesSkippingIteration, persistentRecords._patchesCoarsening, persistentRecords._estimatedNumberOfRemainingIterationsToGlobalTimestep, persistentRecords._averageTimestepSize, persistentRecords._minimalTimestepSize) {
+_persistentRecords(persistentRecords._area, persistentRecords._level, persistentRecords._numberOfPatches, persistentRecords._numberOfCells, persistentRecords._numberOfCellUpdates, persistentRecords._createdPatches, persistentRecords._destroyedPatches, persistentRecords._patchesBlockedDueToNeighbors, persistentRecords._patchesBlockedDueToGlobalTimestep, persistentRecords._patchesSkippingIteration, persistentRecords._patchesCoarsening, persistentRecords._estimatedNumberOfRemainingIterationsToGlobalTimestep, persistentRecords._averageTimestepSize, persistentRecords._minimalTimestepSize, persistentRecords._numberOfInterpolatedCells, persistentRecords._numberOfRestrictedCells) {
    
 }
 
 
-peanoclaw::statistics::LevelStatisticsPacked::LevelStatisticsPacked(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize):
-_persistentRecords(area, level, numberOfPatches, numberOfCells, numberOfCellUpdates, createdPatches, destroyedPatches, patchesBlockedDueToNeighbors, patchesBlockedDueToGlobalTimestep, patchesSkippingIteration, patchesCoarsening, estimatedNumberOfRemainingIterationsToGlobalTimestep, averageTimestepSize, minimalTimestepSize) {
+peanoclaw::statistics::LevelStatisticsPacked::LevelStatisticsPacked(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize, const double& numberOfInterpolatedCells, const double& numberOfRestrictedCells):
+_persistentRecords(area, level, numberOfPatches, numberOfCells, numberOfCellUpdates, createdPatches, destroyedPatches, patchesBlockedDueToNeighbors, patchesBlockedDueToGlobalTimestep, patchesSkippingIteration, patchesCoarsening, estimatedNumberOfRemainingIterationsToGlobalTimestep, averageTimestepSize, minimalTimestepSize, numberOfInterpolatedCells, numberOfRestrictedCells) {
    
 }
 
@@ -563,6 +585,10 @@ void peanoclaw::statistics::LevelStatisticsPacked::toString (std::ostream& out) 
    out << "averageTimestepSize:" << getAverageTimestepSize();
    out << ",";
    out << "minimalTimestepSize:" << getMinimalTimestepSize();
+   out << ",";
+   out << "numberOfInterpolatedCells:" << getNumberOfInterpolatedCells();
+   out << ",";
+   out << "numberOfRestrictedCells:" << getNumberOfRestrictedCells();
    out <<  ")";
 }
 
@@ -586,7 +612,9 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
       getPatchesCoarsening(),
       getEstimatedNumberOfRemainingIterationsToGlobalTimestep(),
       getAverageTimestepSize(),
-      getMinimalTimestepSize()
+      getMinimalTimestepSize(),
+      getNumberOfInterpolatedCells(),
+      getNumberOfRestrictedCells()
    );
 }
 
@@ -601,7 +629,7 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
       {
          LevelStatisticsPacked dummyLevelStatisticsPacked[2];
          
-         const int Attributes = 15;
+         const int Attributes = 17;
          MPI_Datatype subtypes[Attributes] = {
             MPI_DOUBLE,		 //area
             MPI_INT,		 //level
@@ -617,6 +645,8 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
             MPI_DOUBLE,		 //estimatedNumberOfRemainingIterationsToGlobalTimestep
             MPI_DOUBLE,		 //averageTimestepSize
             MPI_DOUBLE,		 //minimalTimestepSize
+            MPI_DOUBLE,		 //numberOfInterpolatedCells
+            MPI_DOUBLE,		 //numberOfRestrictedCells
             MPI_UB		 // end/displacement flag
          };
          
@@ -635,6 +665,8 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
             1,		 //estimatedNumberOfRemainingIterationsToGlobalTimestep
             1,		 //averageTimestepSize
             1,		 //minimalTimestepSize
+            1,		 //numberOfInterpolatedCells
+            1,		 //numberOfRestrictedCells
             1		 // end/displacement flag
          };
          
@@ -656,7 +688,9 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._estimatedNumberOfRemainingIterationsToGlobalTimestep))), 		&disp[11] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._averageTimestepSize))), 		&disp[12] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._minimalTimestepSize))), 		&disp[13] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[1]._persistentRecords._area))), 		&disp[14] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._numberOfInterpolatedCells))), 		&disp[14] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._numberOfRestrictedCells))), 		&disp[15] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[1]._persistentRecords._area))), 		&disp[16] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -671,7 +705,7 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
       {
          LevelStatisticsPacked dummyLevelStatisticsPacked[2];
          
-         const int Attributes = 15;
+         const int Attributes = 17;
          MPI_Datatype subtypes[Attributes] = {
             MPI_DOUBLE,		 //area
             MPI_INT,		 //level
@@ -687,6 +721,8 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
             MPI_DOUBLE,		 //estimatedNumberOfRemainingIterationsToGlobalTimestep
             MPI_DOUBLE,		 //averageTimestepSize
             MPI_DOUBLE,		 //minimalTimestepSize
+            MPI_DOUBLE,		 //numberOfInterpolatedCells
+            MPI_DOUBLE,		 //numberOfRestrictedCells
             MPI_UB		 // end/displacement flag
          };
          
@@ -705,6 +741,8 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
             1,		 //estimatedNumberOfRemainingIterationsToGlobalTimestep
             1,		 //averageTimestepSize
             1,		 //minimalTimestepSize
+            1,		 //numberOfInterpolatedCells
+            1,		 //numberOfRestrictedCells
             1		 // end/displacement flag
          };
          
@@ -726,7 +764,9 @@ peanoclaw::statistics::LevelStatistics peanoclaw::statistics::LevelStatisticsPac
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._estimatedNumberOfRemainingIterationsToGlobalTimestep))), 		&disp[11] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._averageTimestepSize))), 		&disp[12] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._minimalTimestepSize))), 		&disp[13] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[1]._persistentRecords._area))), 		&disp[14] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._numberOfInterpolatedCells))), 		&disp[14] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[0]._persistentRecords._numberOfRestrictedCells))), 		&disp[15] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLevelStatisticsPacked[1]._persistentRecords._area))), 		&disp[16] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );

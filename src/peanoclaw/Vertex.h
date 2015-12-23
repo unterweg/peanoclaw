@@ -18,6 +18,9 @@ namespace peanoclaw {
   class Numerics;
   class Patch;
   class Vertex;
+  namespace statistics {
+    class SubgridStatistics;
+  }
 }
 
 
@@ -119,6 +122,7 @@ class peanoclaw::Vertex: public peano::grid::Vertex< peanoclaw::records::Vertex 
       bool useDimensionalSplitting,
       peanoclaw::Numerics& numerics,
       const tarch::la::Vector<DIMENSIONS, double>& position,
+      peanoclaw::statistics::SubgridStatistics& subgridStatistics,
       int destinationPatch = -1
     ) const;
 
@@ -131,7 +135,8 @@ class peanoclaw::Vertex: public peano::grid::Vertex< peanoclaw::records::Vertex 
      */
     void applyFluxCorrection(
       peanoclaw::Numerics& numerics,
-      int sourceSubgridIndex
+      int sourceSubgridIndex,
+      peanoclaw::statistics::SubgridStatistics& subgridStatistics
     ) const;
 
     void setShouldRefine(bool shouldRefine);

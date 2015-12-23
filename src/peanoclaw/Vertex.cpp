@@ -61,6 +61,7 @@ void peanoclaw::Vertex::fillAdjacentGhostLayers(
   bool useDimensionalSplitting,
   peanoclaw::Numerics& numerics,
   const tarch::la::Vector<DIMENSIONS, double>& position,
+  peanoclaw::statistics::SubgridStatistics& subgridStatistics,
   int destinationPatch
 ) const {
   assertionNumericalEquals(getX(), position);
@@ -121,7 +122,7 @@ void peanoclaw::Vertex::fillAdjacentGhostLayers(
   }
   #endif
 
-  interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor(patches, level, numerics, useDimensionalSplitting);
+  interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor(patches, level, numerics, useDimensionalSplitting, subgridStatistics);
 
   ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(destinationPatch);
   ghostLayerCompositor.updateGhostlayerBounds();
@@ -144,7 +145,8 @@ void peanoclaw::Vertex::fillAdjacentGhostLayers(
 
 void peanoclaw::Vertex::applyFluxCorrection(
   peanoclaw::Numerics& numerics,
-  int sourceSubgridIndex
+  int sourceSubgridIndex,
+  peanoclaw::statistics::SubgridStatistics& subgridStatistics
 ) const {
   // Retrieve cell descriptions indices
   CellDescription* cellDescriptions[TWO_POWER_D];
@@ -165,7 +167,7 @@ void peanoclaw::Vertex::applyFluxCorrection(
   enddforx
 
   //Apply coarse grid correction
-  interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor(patches, 0, numerics, false);
+  interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor(patches, 0, numerics, false, subgridStatistics);
 
   ghostLayerCompositor.applyFluxCorrection(sourceSubgridIndex);
 }

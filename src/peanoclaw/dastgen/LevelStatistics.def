@@ -22,5 +22,7 @@ class peanoclaw::statistics::LevelStatistics {
   parallelise persistent double patchesCoarsening;
   parallelise persistent double estimatedNumberOfRemainingIterationsToGlobalTimestep;
   parallelise persistent double averageTimestepSize;
-  parallelise persistent double minimalTimestepSize; 
+  parallelise persistent double minimalTimestepSize;
+  parallelise persistent double numberOfInterpolatedCells;
+  parallelise persistent double numberOfRestrictedCells;
 };

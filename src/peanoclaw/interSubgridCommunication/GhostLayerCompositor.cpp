@@ -52,7 +52,8 @@ double peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillGhostlaye
     //Faces
     FillGhostlayerFaceFunctor faceFunctor(
       *this,
-      destinationSubgridIndex
+      destinationSubgridIndex,
+      _subgridStatistics
     );
     //TODO unterweg debug: Not working currently for adaptive grids
     peanoclaw::interSubgridCommunication::aspects::FaceAdjacentPatchTraversal<FillGhostlayerFaceFunctor>(
@@ -67,7 +68,8 @@ double peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillGhostlaye
       *this,
       extrapolation,
       fillFromNeighbor,
-      destinationSubgridIndex
+      destinationSubgridIndex,
+      _subgridStatistics
     );
     peanoclaw::interSubgridCommunication::aspects::EdgeAdjacentPatchTraversal<FillGhostlayerEdgeFunctor>(
         _patches,
@@ -81,7 +83,8 @@ double peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillGhostlaye
       *this,
       extrapolation,
       fillFromNeighbor,
-      destinationSubgridIndex
+      destinationSubgridIndex,
+      _subgridStatistics
     );
     peanoclaw::interSubgridCommunication::aspects::CornerAdjacentPatchTraversal<FillGhostlayerCornerFunctor>(
         _patches,
@@ -165,12 +168,14 @@ peanoclaw::interSubgridCommunication::GhostLayerCompositor::GhostLayerCompositor
   peanoclaw::Patch patches[TWO_POWER_D],
   int level,
   peanoclaw::Numerics& numerics,
-  bool useDimensionalSplittingExtrapolation
+  bool useDimensionalSplittingExtrapolation,
+  peanoclaw::statistics::SubgridStatistics& subgridStatistics
 ) :
   _patches(patches),
   _level(level),
   _numerics(numerics),
-  _useDimensionalSplittingExtrapolation(useDimensionalSplittingExtrapolation)
+  _useDimensionalSplittingExtrapolation(useDimensionalSplittingExtrapolation),
+  _subgridStatistics(subgridStatistics)
 {
 }
 

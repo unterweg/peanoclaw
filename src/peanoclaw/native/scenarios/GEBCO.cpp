@@ -214,6 +214,7 @@ void peanoclaw::native::scenarios::GEBCO::getMinAndMaxBathymetry(
   double& minBathymetry,
   double& maxBathymetry
 ) const {
+  #ifdef Dim2
   tarch::la::Vector<2,int> lowerBound = mapToGEBCO(offset);
   tarch::la::Vector<2,int> upperBound = mapToGEBCO(offset + size - tarch::la::Vector<2,double>(1e-8))
                                         + tarch::la::Vector<2,int>(1);
@@ -226,6 +227,7 @@ void peanoclaw::native::scenarios::GEBCO::getMinAndMaxBathymetry(
     minBathymetry = std::min(minBathymetry, bathymetry);
     maxBathymetry = std::max(maxBathymetry, bathymetry);
   }
+  #endif
 }
 
 void peanoclaw::native::scenarios::GEBCO::getMinAndMaxBathymetry(

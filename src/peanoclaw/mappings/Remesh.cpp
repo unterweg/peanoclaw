@@ -7,6 +7,7 @@
 #include "peanoclaw/interSubgridCommunication/GridLevelTransfer.h"
 #include "peanoclaw/parallel/NeighbourCommunicator.h"
 #include "peanoclaw/parallel/MasterWorkerAndForkJoinCommunicator.h"
+#include "peanoclaw/statistics/MemoryInformation.h"
 
 #include "peano/grid/aspects/VertexStateAnalysis.h"
 
@@ -1236,9 +1237,11 @@ void peanoclaw::mappings::Remesh::beginIteration(
   _useDimensionalSplittingExtrapolation = solverState.useDimensionalSplittingExtrapolation();
   _state = &solverState;
 
+  peanoclaw::statistics::SubgridStatistics dummyStatistics;
   _gridLevelTransfer = new peanoclaw::interSubgridCommunication::GridLevelTransfer(
                               _useDimensionalSplittingExtrapolation,
-                              *_numerics
+                              *_numerics,
+                              dummyStatistics
                            );
 
   //Reset touched for all hanging vertex descriptions
