@@ -88,6 +88,8 @@ private:
 
   bool _useDimensionalSplittingExtrapolation;
 
+  peanoclaw::statistics::SubgridStatistics& _subgridStatistics;
+
   /**
    * Updates the maximum allowed timestep size for a patch dependent on the
    * time interval spanned by a neighboring patch.
@@ -156,7 +158,8 @@ public:
     peanoclaw::Patch patches[TWO_POWER_D],
     int level,
     peanoclaw::Numerics& numerics,
-    bool useDimensionalSplittingExtrapolation
+    bool useDimensionalSplittingExtrapolation,
+    peanoclaw::statistics::SubgridStatistics& subgridStatistics
   );
 
   ~GhostLayerCompositor();

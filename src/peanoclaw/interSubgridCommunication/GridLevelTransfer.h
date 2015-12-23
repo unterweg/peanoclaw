@@ -141,6 +141,8 @@ class peanoclaw::interSubgridCommunication::GridLevelTransfer {
      */
     bool _useDimensionalSplitting;
 
+    peanoclaw::statistics::SubgridStatistics& _subgridStatistics;
+
     /**
      * Vetos the coarsening on adjacent vertices if necessary and
      * triggers the synchronization of subgrids.
@@ -229,7 +231,8 @@ class peanoclaw::interSubgridCommunication::GridLevelTransfer {
   public:
     GridLevelTransfer(
       bool useDimensionalSplitting,
-      peanoclaw::Numerics& numerics
+      peanoclaw::Numerics& numerics,
+      peanoclaw::statistics::SubgridStatistics& subgridStatistics
     );
 
     virtual ~GridLevelTransfer();

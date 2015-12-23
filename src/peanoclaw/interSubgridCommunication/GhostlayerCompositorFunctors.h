@@ -11,6 +11,8 @@
 #include "peano/utils/Globals.h"
 #include "tarch/la/Vector.h"
 
+#include "peanoclaw/statistics/SubgridStatistics.h"
+
 namespace peanoclaw {
 
   class Numerics;
@@ -44,14 +46,16 @@ namespace peanoclaw {
  */
 class peanoclaw::interSubgridCommunication::FillGhostlayerFaceFunctor {
   private:
-    GhostLayerCompositor& _ghostlayerCompositor;
-    int                   _destinationPatchIndex;
-    int                   _maximumLinearError;
+    GhostLayerCompositor&                     _ghostlayerCompositor;
+    int                                       _destinationPatchIndex;
+    int                                       _maximumLinearError;
+    peanoclaw::statistics::SubgridStatistics& _subgridStatistics;
 
   public:
     FillGhostlayerFaceFunctor(
       GhostLayerCompositor& ghostlayerCompositor,
-      int                   destinationPatchIndex
+      int                   destinationPatchIndex,
+      peanoclaw::statistics::SubgridStatistics& subgridStatistics
     );
 
     void operator() (
@@ -68,18 +72,20 @@ class peanoclaw::interSubgridCommunication::FillGhostlayerFaceFunctor {
  */
 class peanoclaw::interSubgridCommunication::FillGhostlayerEdgeFunctor {
   private:
-    GhostLayerCompositor& _ghostlayerCompositor;
-    Extrapolation&        _extrapolation;
-    bool                  _fillFromNeighbor;
-    int                   _destinationPatchIndex;
-    int                   _maximumLinearError;
+    GhostLayerCompositor&                     _ghostlayerCompositor;
+    Extrapolation&                            _extrapolation;
+    bool                                      _fillFromNeighbor;
+    int                                       _destinationPatchIndex;
+    int                                       _maximumLinearError;
+    peanoclaw::statistics::SubgridStatistics& _subgridStatistics;
 
   public:
     FillGhostlayerEdgeFunctor(
       GhostLayerCompositor& ghostlayerCompositor,
       Extrapolation&        extrapolation,
       bool                  fillFromNeighbor,
-      int                   destinationPatchIndex
+      int                   destinationPatchIndex,
+      peanoclaw::statistics::SubgridStatistics& subgridStatistics
     );
 
     void operator() (
@@ -99,18 +105,20 @@ class peanoclaw::interSubgridCommunication::FillGhostlayerEdgeFunctor {
  */
 class peanoclaw::interSubgridCommunication::FillGhostlayerCornerFunctor {
   private:
-  GhostLayerCompositor& _ghostlayerCompositor;
-  Extrapolation&        _extrapolation;
-  bool                  _fillFromNeighbor;
-  int                   _destinationPatchIndex;
-  int                   _maximumLinearError;
+  GhostLayerCompositor&                     _ghostlayerCompositor;
+  Extrapolation&                            _extrapolation;
+  bool                                      _fillFromNeighbor;
+  int                                       _destinationPatchIndex;
+  int                                       _maximumLinearError;
+  peanoclaw::statistics::SubgridStatistics& _subgridStatistics;
 
   public:
   FillGhostlayerCornerFunctor(
     GhostLayerCompositor& ghostlayerCompositor,
     Extrapolation&        extrapolation,
     bool                  fillFromNeighbor,
-    int                   destinationPatchIndex
+    int                   destinationPatchIndex,
+    peanoclaw::statistics::SubgridStatistics& subgridStatistics
   );
 
   void operator() (

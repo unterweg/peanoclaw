@@ -192,6 +192,16 @@ class peanoclaw::statistics::SubgridStatistics {
     void processSubgridAfterUpdate(const Patch& patch, int parentIndex);
 
     /**
+     * Adds the given number of interpolated cells to the level statistics.
+     */
+    void addInterpolatedCells(int numberOfInterpolatedCells, int level);
+
+    /**
+     * Adds the given number of restricted cells to the level statistics.
+     */
+    void addRestrictedCells(int numberOfRestrictedCells, int level);
+
+    /**
      * Updates the reason for the minimal subgrid to be blocked for
      * timestepping.
      */

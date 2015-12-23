@@ -102,12 +102,14 @@ void peanoclaw::tests::GhostLayerCompositorTest::testTimesteppingVeto2D() {
     }
 
     peanoclaw::tests::NumericsTestStump numerics;
+    peanoclaw::statistics::SubgridStatistics subgridStatistics;
     peanoclaw::interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor
       = peanoclaw::interSubgridCommunication::GhostLayerCompositor(
           patches,
           0,
           numerics,
-          false
+          false,
+          subgridStatistics
           );
     ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(-1);
 
@@ -197,11 +199,13 @@ void peanoclaw::tests::GhostLayerCompositorTest::testInterpolationFromCoarseToFi
 
   //Fill left ghostlayer
   peanoclaw::tests::NumericsTestStump numerics;
+  peanoclaw::statistics::SubgridStatistics subgridStatistics;
   peanoclaw::interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor(
     patches,
     1,
     numerics,
-    false
+    false,
+    subgridStatistics
   );
   ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(-1);
 
@@ -288,11 +292,13 @@ void peanoclaw::tests::GhostLayerCompositorTest::testInterpolationFromCoarseToFi
 
   //Fill left ghostlayer
   peanoclaw::tests::NumericsTestStump numerics;
+  peanoclaw::statistics::SubgridStatistics subgridStatistics;
   peanoclaw::interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor(
     patches,
     1,
     numerics,
-    false
+    false,
+    subgridStatistics
   );
   ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(-1);
 
@@ -606,12 +612,14 @@ void peanoclaw::tests::GhostLayerCompositorTest::testInterpolationInTime() {
   patches[2] = destinationPatch;
 
   peanoclaw::tests::NumericsTestStump numerics;
+  peanoclaw::statistics::SubgridStatistics statistics;
   peanoclaw::interSubgridCommunication::GhostLayerCompositor ghostLayerCompositor
     = peanoclaw::interSubgridCommunication::GhostLayerCompositor(
         patches,
         0,
         numerics,
-        true
+        true,
+        statistics
       );
   //TODO Add a test for filling only one adjacent patch? (i.e. parameter != -1)
   ghostLayerCompositor.fillGhostLayersAndUpdateNeighborTimes(-1);

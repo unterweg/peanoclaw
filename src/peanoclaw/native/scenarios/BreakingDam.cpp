@@ -1,5 +1,7 @@
 #include "BreakingDam.h"
 
+#include <cmath>
+
 peanoclaw::native::scenarios::BreakingDamSWEScenario::BreakingDamSWEScenario(
   const tarch::la::Vector<DIMENSIONS, double>& domainOffset,
   const tarch::la::Vector<DIMENSIONS, double>& domainSize,
@@ -14,7 +16,8 @@ peanoclaw::native::scenarios::BreakingDamSWEScenario::BreakingDamSWEScenario(
     _maximalMeshWidth(-1),
     _subdivisionFactor(subdivisionFactor),
     _globalTimestepSize(globalTimestepSize),
-    _endTime(endTime)
+    _endTime(endTime),
+    _refinementCriterion(GradientBased)
 {
   _minimalMeshWidth
     = tarch::la::multiplyComponents(domainSize, tarch::la::invertEntries(finestSubgridTopology.convertScalar<double>()));
@@ -29,8 +32,8 @@ peanoclaw::native::scenarios::BreakingDamSWEScenario::BreakingDamSWEScenario(
   std::vector<std::string> arguments
 ) : _domainOffset(0),
     _domainSize(1){
-  if(arguments.size() != 5) {
-    std::cerr << "Expected arguments for Scenario 'BreakingDam': finestSubgridTopology coarsestSubgridTopology subdivisionFactor endTime globalTimestepSize" << std::endl
+  if(arguments.size() != 6) {
+    std::cerr << "Expected arguments for Scenario 'BreakingDam': finestSubgridTopology coarsestSubgridTopology subdivisionFactor endTime globalTimestepSize refinementCriterion" << std::endl
         << "\tGot " << arguments.size() << " arguments." << std::endl;
     throw "";
   }
@@ -46,6 +49,8 @@ peanoclaw::native::scenarios::BreakingDamSWEScenario::BreakingDamSWEScenario(
   _endTime = atof(arguments[3].c_str());
 
   _globalTimestepSize = atof(arguments[4].c_str());
+
+  _refinementCriterion = atoi(arguments[5].c_str()) == 0 ? GradientBased : Predefined;
 }
 
 peanoclaw::native::scenarios::BreakingDamSWEScenario::~BreakingDamSWEScenario() {}
@@ -86,15 +91,16 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BreakingDamSW
   peanoclaw::Patch& patch,
   bool isInitializing
 ) {
-  if(tarch::la::equals(_minimalMeshWidth, _maximalMeshWidth)) {
-    return _minimalMeshWidth;
-  }
-
+  if(_refinementCriterion == GradientBased)
+  {
+    if(tarch::la::equals(_minimalMeshWidth, _maximalMeshWidth)) {
+      return _minimalMeshWidth;
+    }
 
     double max_gradient = 0.0;
     const tarch::la::Vector<DIMENSIONS, double> meshWidth = patch.getSubcellSize();
     peanoclaw::grid::SubgridAccessor& accessor = patch.getAccessor();
-    
+
     tarch::la::Vector<DIMENSIONS, int> this_subcellIndex;
     tarch::la::Vector<DIMENSIONS, int> next_subcellIndex_x;
     tarch::la::Vector<DIMENSIONS, int> next_subcellIndex_y;
@@ -102,13 +108,13 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BreakingDamSW
         for (int xi = 0; xi < patch.getSubdivisionFactor()(0)-1; xi++) {
             this_subcellIndex(0) = xi;
             this_subcellIndex(1) = yi;
-  
+
             next_subcellIndex_x(0) = xi+1;
             next_subcellIndex_x(1) = yi;
-  
+
             next_subcellIndex_y(0) = xi;
             next_subcellIndex_y(1) = yi+1;
- 
+
             double q0 =  accessor.getValueUNew(this_subcellIndex, 0);
             double q0_x =  (accessor.getValueUNew(next_subcellIndex_x, 0) - q0) / meshWidth(0);
             double q0_y =  (accessor.getValueUNew(next_subcellIndex_y, 0) - q0) / meshWidth(1);
@@ -116,7 +122,7 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BreakingDamSW
             max_gradient = fmax(max_gradient, sqrt(fabs(q0_x)*fabs(q0_x) + fabs(q0_y)*fabs(q0_y)));
         }
     }
-  
+
     tarch::la::Vector<DIMENSIONS,double> demandedMeshWidth;
     if (max_gradient > 0.1) {
         //demandedMeshWidth = 1.0/243;
@@ -129,13 +135,40 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BreakingDamSW
     } else {
       demandedMeshWidth = patch.getSubcellSize();
     }
-
-//    if(isInitializing) {
-//      return 10.0/6/9;
-//    } else {
-//      return demandedMeshWidth;
-//    }
+  
+  //  if(isInitializing) {
+  //    return 10.0/6/9;
+  //  } else {
+  //    return demandedMeshWidth;
+  //  }
     return demandedMeshWidth;
+  } else {
+    double radius0 = 0.25 + patch.getTimeIntervals().getCurrentTime() * 0.75 / 0.5;
+    double radius1 = 0.25 - patch.getTimeIntervals().getCurrentTime() * 0.5 / 0.5;
+    double radius2 = 0.25 - patch.getTimeIntervals().getCurrentTime() * 0.7 / 0.5;
+
+    double distanceToCenter = tarch::la::norm2(patch.getPosition() + patch.getSize() / 2.0 - tarch::la::Vector<DIMENSIONS, double>(0.5));
+    double distanceToCircle0 = abs(distanceToCenter - radius0);
+    double distanceToCircle1 = abs(distanceToCenter - radius1);
+    double distanceToCircle2 = abs(distanceToCenter - radius2);
+
+    double subgridDiagonal = tarch::la::norm2(patch.getSize());
+    tarch::la::Vector<DIMENSIONS,double> demandedMeshWidth;
+    if(distanceToCircle0 < subgridDiagonal / 2.0
+       || distanceToCircle1 < subgridDiagonal / 2.0
+       || distanceToCircle2 < subgridDiagonal / 2.0)
+    {
+      demandedMeshWidth = _minimalMeshWidth;
+    } else if(distanceToCircle0 >= subgridDiagonal / 2.0
+              || distanceToCircle1 >= subgridDiagonal / 2.0
+              || distanceToCircle2 >= subgridDiagonal / 2.0)
+    {
+      demandedMeshWidth = _maximalMeshWidth;
+    } else {
+      demandedMeshWidth = patch.getSubcellSize();
+    }
+    return demandedMeshWidth;
+  }
 }
 
 tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BreakingDamSWEScenario::getDomainOffset() const {

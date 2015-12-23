@@ -13,10 +13,12 @@
 
 peanoclaw::interSubgridCommunication::FillGhostlayerFaceFunctor::FillGhostlayerFaceFunctor(
   GhostLayerCompositor& ghostlayerCompositor,
-  int                   destinationPatchIndex
+  int                   destinationPatchIndex,
+  peanoclaw::statistics::SubgridStatistics& subgridStatistics
 ) : _ghostlayerCompositor(ghostlayerCompositor),
     _destinationPatchIndex(destinationPatchIndex),
-    _maximumLinearError(0)
+    _maximumLinearError(0),
+    _subgridStatistics(subgridStatistics)
 {
 }
 
@@ -67,6 +69,7 @@ void peanoclaw::interSubgridCommunication::FillGhostlayerFaceFunctor::operator()
         false,
         true
       );
+      _subgridStatistics.addInterpolatedCells(tarch::la::volume(faceSize), destination.getLevel());
     }
   }
 }
@@ -75,12 +78,14 @@ peanoclaw::interSubgridCommunication::FillGhostlayerEdgeFunctor::FillGhostlayerE
   GhostLayerCompositor& ghostlayerCompositor,
   Extrapolation&        extrapolation,
   bool                  fillFromNeighbor,
-  int                   destinationPatchIndex
+  int                   destinationPatchIndex,
+  peanoclaw::statistics::SubgridStatistics& subgridStatistics
 ) : _ghostlayerCompositor(ghostlayerCompositor),
     _extrapolation(extrapolation),
     _fillFromNeighbor(fillFromNeighbor),
     _destinationPatchIndex(destinationPatchIndex),
-    _maximumLinearError(0)
+    _maximumLinearError(0),
+    _subgridStatistics(subgridStatistics)
 {
 }
 
@@ -143,6 +148,7 @@ void peanoclaw::interSubgridCommunication::FillGhostlayerEdgeFunctor::operator()
         false,
         true
       );
+      _subgridStatistics.addInterpolatedCells(tarch::la::volume(edgeSize), destination.getLevel());
     }
   }
 }
@@ -155,12 +161,14 @@ peanoclaw::interSubgridCommunication::FillGhostlayerCornerFunctor::FillGhostlaye
   GhostLayerCompositor& ghostlayerCompositor,
   Extrapolation&        extrapolation,
   bool                  fillFromNeighbor,
-  int                   destinationPatchIndex
+  int                   destinationPatchIndex,
+  peanoclaw::statistics::SubgridStatistics& subgridStatistics
 ) : _ghostlayerCompositor(ghostlayerCompositor),
     _extrapolation(extrapolation),
     _fillFromNeighbor(fillFromNeighbor),
     _destinationPatchIndex(destinationPatchIndex),
-    _maximumLinearError(0)
+    _maximumLinearError(0),
+    _subgridStatistics(subgridStatistics)
 {
 }
 
@@ -212,6 +220,7 @@ void peanoclaw::interSubgridCommunication::FillGhostlayerCornerFunctor::operator
         false,
         true
       );
+      _subgridStatistics.addInterpolatedCells(tarch::la::volume(cornerSize), destination.getLevel());
     }
   }
 }

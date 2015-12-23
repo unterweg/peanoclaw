@@ -684,7 +684,7 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
         if (_correctFluxes) {
           _numerics->computeFluxes(subgrid);
           for (int i = 0; i < TWO_POWER_D; i++) {
-            fineGridVertices[fineGridVerticesEnumerator(i)].applyFluxCorrection(*_numerics, i);
+            fineGridVertices[fineGridVerticesEnumerator(i)].applyFluxCorrection(*_numerics, i, _subgridStatistics);
           }
         }
 

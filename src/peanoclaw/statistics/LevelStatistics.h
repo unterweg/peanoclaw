@@ -32,7 +32,7 @@ namespace peanoclaw {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   24/10/2015 20:24
+ * @date   09/12/2015 21:45
  */
 class peanoclaw::statistics::LevelStatistics { 
    
@@ -55,6 +55,8 @@ class peanoclaw::statistics::LevelStatistics {
          double _estimatedNumberOfRemainingIterationsToGlobalTimestep;
          double _averageTimestepSize;
          double _minimalTimestepSize;
+         double _numberOfInterpolatedCells;
+         double _numberOfRestrictedCells;
          /**
           * Generated
           */
@@ -63,7 +65,7 @@ class peanoclaw::statistics::LevelStatistics {
          /**
           * Generated
           */
-         PersistentRecords(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize);
+         PersistentRecords(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize, const double& numberOfInterpolatedCells, const double& numberOfRestrictedCells);
          
          
          inline double getArea() const 
@@ -346,6 +348,46 @@ class peanoclaw::statistics::LevelStatistics {
          
          
          
+         inline double getNumberOfInterpolatedCells() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _numberOfInterpolatedCells;
+         }
+         
+         
+         
+         inline void setNumberOfInterpolatedCells(const double& numberOfInterpolatedCells) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _numberOfInterpolatedCells = numberOfInterpolatedCells;
+         }
+         
+         
+         
+         inline double getNumberOfRestrictedCells() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            return _numberOfRestrictedCells;
+         }
+         
+         
+         
+         inline void setNumberOfRestrictedCells(const double& numberOfRestrictedCells) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+            _numberOfRestrictedCells = numberOfRestrictedCells;
+         }
+         
+         
+         
       };
       
    private: 
@@ -365,7 +407,7 @@ class peanoclaw::statistics::LevelStatistics {
       /**
        * Generated
        */
-      LevelStatistics(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize);
+      LevelStatistics(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize, const double& numberOfInterpolatedCells, const double& numberOfRestrictedCells);
       
       /**
        * Generated
@@ -652,6 +694,46 @@ class peanoclaw::statistics::LevelStatistics {
       }
       
       
+      
+      inline double getNumberOfInterpolatedCells() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+         return _persistentRecords._numberOfInterpolatedCells;
+      }
+      
+      
+      
+      inline void setNumberOfInterpolatedCells(const double& numberOfInterpolatedCells) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+         _persistentRecords._numberOfInterpolatedCells = numberOfInterpolatedCells;
+      }
+      
+      
+      
+      inline double getNumberOfRestrictedCells() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+         return _persistentRecords._numberOfRestrictedCells;
+      }
+      
+      
+      
+      inline void setNumberOfRestrictedCells(const double& numberOfRestrictedCells) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+         _persistentRecords._numberOfRestrictedCells = numberOfRestrictedCells;
+      }
+      
+      
       /**
        * Generated
        */
@@ -715,7 +797,7 @@ class peanoclaw::statistics::LevelStatistics {
           *
           * 		   build date: 09-02-2014 14:40
           *
-          * @date   24/10/2015 20:24
+          * @date   09/12/2015 21:45
           */
          class peanoclaw::statistics::LevelStatisticsPacked { 
             
@@ -736,6 +818,8 @@ class peanoclaw::statistics::LevelStatistics {
                   double _estimatedNumberOfRemainingIterationsToGlobalTimestep;
                   double _averageTimestepSize;
                   double _minimalTimestepSize;
+                  double _numberOfInterpolatedCells;
+                  double _numberOfRestrictedCells;
                   /**
                    * Generated
                    */
@@ -744,7 +828,7 @@ class peanoclaw::statistics::LevelStatistics {
                   /**
                    * Generated
                    */
-                  PersistentRecords(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize);
+                  PersistentRecords(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize, const double& numberOfInterpolatedCells, const double& numberOfRestrictedCells);
                   
                   
                   inline double getArea() const 
@@ -1027,6 +1111,46 @@ class peanoclaw::statistics::LevelStatistics {
                   
                   
                   
+                  inline double getNumberOfInterpolatedCells() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _numberOfInterpolatedCells;
+                  }
+                  
+                  
+                  
+                  inline void setNumberOfInterpolatedCells(const double& numberOfInterpolatedCells) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _numberOfInterpolatedCells = numberOfInterpolatedCells;
+                  }
+                  
+                  
+                  
+                  inline double getNumberOfRestrictedCells() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     return _numberOfRestrictedCells;
+                  }
+                  
+                  
+                  
+                  inline void setNumberOfRestrictedCells(const double& numberOfRestrictedCells) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                     _numberOfRestrictedCells = numberOfRestrictedCells;
+                  }
+                  
+                  
+                  
                };
                
             private: 
@@ -1046,7 +1170,7 @@ class peanoclaw::statistics::LevelStatistics {
                /**
                 * Generated
                 */
-               LevelStatisticsPacked(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize);
+               LevelStatisticsPacked(const double& area, const int& level, const double& numberOfPatches, const double& numberOfCells, const double& numberOfCellUpdates, const double& createdPatches, const double& destroyedPatches, const double& patchesBlockedDueToNeighbors, const double& patchesBlockedDueToGlobalTimestep, const double& patchesSkippingIteration, const double& patchesCoarsening, const double& estimatedNumberOfRemainingIterationsToGlobalTimestep, const double& averageTimestepSize, const double& minimalTimestepSize, const double& numberOfInterpolatedCells, const double& numberOfRestrictedCells);
                
                /**
                 * Generated
@@ -1330,6 +1454,46 @@ class peanoclaw::statistics::LevelStatistics {
  #endif 
  {
                   _persistentRecords._minimalTimestepSize = minimalTimestepSize;
+               }
+               
+               
+               
+               inline double getNumberOfInterpolatedCells() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  return _persistentRecords._numberOfInterpolatedCells;
+               }
+               
+               
+               
+               inline void setNumberOfInterpolatedCells(const double& numberOfInterpolatedCells) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  _persistentRecords._numberOfInterpolatedCells = numberOfInterpolatedCells;
+               }
+               
+               
+               
+               inline double getNumberOfRestrictedCells() const 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  return _persistentRecords._numberOfRestrictedCells;
+               }
+               
+               
+               
+               inline void setNumberOfRestrictedCells(const double& numberOfRestrictedCells) 
+ #ifdef UseManualInlining
+ __attribute__((always_inline))
+ #endif 
+ {
+                  _persistentRecords._numberOfRestrictedCells = numberOfRestrictedCells;
                }
                
                

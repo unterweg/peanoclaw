@@ -244,10 +244,11 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::finalizeVirtualSub
       _useDimensionalSplitting,
       _numerics,
       #ifdef PEANOCLAW_USE_ASCEND_FOR_RESTRICTION
-      tarch::la::multiplyComponents(peano::utils::dDelinearised(i, 2).convertScalar<double>(), subgrid.getSize()) + subgrid.getPosition()
+      tarch::la::multiplyComponents(peano::utils::dDelinearised(i, 2).convertScalar<double>(), subgrid.getSize()) + subgrid.getPosition(),
       #else
-      fineGridVerticesEnumerator.getVertexPosition(i)
+      fineGridVerticesEnumerator.getVertexPosition(i),
       #endif
+      _subgridStatistics
     );
   }
 
@@ -288,11 +289,13 @@ tarch::la::Vector<DIMENSIONS_PLUS_ONE, double> peanoclaw::interSubgridCommunicat
 
 peanoclaw::interSubgridCommunication::GridLevelTransfer::GridLevelTransfer(
   bool useDimensionalSplitting,
-  peanoclaw::Numerics& numerics
+  peanoclaw::Numerics& numerics,
+  peanoclaw::statistics::SubgridStatistics& subgridStatistics
 ) :
   _numerics(numerics),
   _maximumNumberOfSimultaneousVirtualPatches(0),
-  _useDimensionalSplitting(useDimensionalSplitting)
+  _useDimensionalSplitting(useDimensionalSplitting),
+  _subgridStatistics(subgridStatistics)
 {
 }
 
@@ -385,6 +388,7 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepDown(
       _useDimensionalSplitting,
       _numerics,
       fineGridVerticesEnumerator.getVertexPosition(peano::utils::dDelinearised(i, 2)),
+      _subgridStatistics,
 //      fineGridVerticesEnumerator.getVertexPosition(i),
       i
     );
@@ -449,10 +453,11 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::stepUp(
           _useDimensionalSplitting,
           _numerics,
           #ifdef PEANOCLAW_USE_ASCEND_FOR_RESTRICTION
-          tarch::la::multiplyComponents(peano::utils::dDelinearised(i, 2).convertScalar<double>(), finePatch.getSize()) + finePatch.getPosition()
+          tarch::la::multiplyComponents(peano::utils::dDelinearised(i, 2).convertScalar<double>(), finePatch.getSize()) + finePatch.getPosition(),
           #else
-          fineGridVerticesEnumerator.getVertexPosition(i)
+          fineGridVerticesEnumerator.getVertexPosition(i),
           #endif
+          _subgridStatistics
         );
       }
 

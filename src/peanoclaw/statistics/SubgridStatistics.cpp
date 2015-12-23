@@ -456,6 +456,22 @@ void peanoclaw::statistics::SubgridStatistics::processSubgridAfterUpdate(const p
   #endif
 }
 
+void peanoclaw::statistics::SubgridStatistics::addInterpolatedCells(int numberOfInterpolatedCells, int level) {
+  std::vector<LevelStatistics>& allLevelStatistics = LevelStatisticsHeap::getInstance().getData(_levelStatisticsIndex);
+  addLevelToLevelStatistics(level, allLevelStatistics);
+  peanoclaw::statistics::LevelStatistics& levelStatistics = allLevelStatistics[level-1];
+
+  levelStatistics.setNumberOfInterpolatedCells(levelStatistics.getNumberOfInterpolatedCells() + numberOfInterpolatedCells);
+}
+
+void peanoclaw::statistics::SubgridStatistics::addRestrictedCells(int numberOfRestrictedCells, int level) {
+  std::vector<LevelStatistics>& allLevelStatistics = LevelStatisticsHeap::getInstance().getData(_levelStatisticsIndex);
+  addLevelToLevelStatistics(level, allLevelStatistics);
+  peanoclaw::statistics::LevelStatistics& levelStatistics = allLevelStatistics[level-1];
+
+  levelStatistics.setNumberOfRestrictedCells(levelStatistics.getNumberOfRestrictedCells() + numberOfRestrictedCells);
+}
+
 void peanoclaw::statistics::SubgridStatistics::updateMinimalSubgridBlockReason(
   const peanoclaw::Patch&              subgrid,
   peanoclaw::Vertex * const            coarseGridVertices,
@@ -678,6 +694,9 @@ void peanoclaw::statistics::SubgridStatistics::merge(const SubgridStatistics& su
     thisLevel.setEstimatedNumberOfRemainingIterationsToGlobalTimestep(
       std::max(thisLevel.getEstimatedNumberOfRemainingIterationsToGlobalTimestep(), otherLevel.getEstimatedNumberOfRemainingIterationsToGlobalTimestep())
     );
+    thisLevel.setNumberOfInterpolatedCells(thisLevel.getNumberOfInterpolatedCells() + otherLevel.getNumberOfInterpolatedCells());
+    thisLevel.setNumberOfRestrictedCells(thisLevel.getNumberOfRestrictedCells() + otherLevel.getNumberOfRestrictedCells());
+
   }
 
   //Merge process statistics
