@@ -145,6 +145,10 @@ tarch::la::Vector<DIMENSIONS_TIMES_TWO, bool> peanoclaw::mappings::SolveTimestep
 peanoclaw::mappings::SolveTimestep::SolveTimestep()
   : _numerics(0),
     _globalTimestepEndTime(0),
+    _domainOffset(0),
+    _domainSize(0),
+    _subgridStatistics(0),
+    _initialMaximalSubgridSize(0),
     _useDimensionalSplittingExtrapolation(true),
     _collectSubgridStatistics(true),
     _correctFluxes(true),
@@ -292,7 +296,7 @@ void peanoclaw::mappings::SolveTimestep::destroyCell(
 ) {
   logTraceInWith4Arguments( "destroyCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
-  _subgridStatistics.destroyedSubgrid(fineGridCell.getCellDescriptionIndex());
+  _subgridStatistics->destroyedSubgrid(fineGridCell.getCellDescriptionIndex());
 
   logTraceOutWith1Argument( "destroyCell(...)", fineGridCell );
 }
@@ -416,7 +420,7 @@ bool peanoclaw::mappings::SolveTimestep::prepareSendToWorker(
 
       bool reduceStateFromWorker = true;
       if (_estimatedRemainingIterationsUntilGlobalTimestep[worker] > 1) {
-        _subgridStatistics.restrictionFromWorkerSkipped();
+        _subgridStatistics->restrictionFromWorkerSkipped();
         reduceStateFromWorker = false;
       }
 
@@ -446,10 +450,10 @@ void peanoclaw::mappings::SolveTimestep::prepareSendToMaster(
 //  std::cout << "Estimated on worker: " << _subgridStatistics.getEstimatedIterationsUntilGlobalTimestep() << std::endl;
 
   _iterationWatch.stopTimer();
-  _subgridStatistics.setWallclockTimeForIteration(
+  _subgridStatistics->setWallclockTimeForIteration(
       _iterationWatch.getCalendarTime());
   if (_collectSubgridStatistics) {
-    _subgridStatistics.sendToMaster(
+    _subgridStatistics->sendToMaster(
         tarch::parallel::NodePool::getInstance().getMasterRank());
   }
 
@@ -480,7 +484,7 @@ void peanoclaw::mappings::SolveTimestep::mergeWithMaster(
 
   if (_collectSubgridStatistics) {
     peanoclaw::statistics::SubgridStatistics workerSubgridStatistics(worker);
-    _subgridStatistics.merge(workerSubgridStatistics);
+    _subgridStatistics->merge(workerSubgridStatistics);
   }
 
   //Reduction of reduction ;-)
@@ -684,14 +688,14 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
         if (_correctFluxes) {
           _numerics->computeFluxes(subgrid);
           for (int i = 0; i < TWO_POWER_D; i++) {
-            fineGridVertices[fineGridVerticesEnumerator(i)].applyFluxCorrection(*_numerics, i, _subgridStatistics);
+            fineGridVertices[fineGridVerticesEnumerator(i)].applyFluxCorrection(*_numerics, i, *_subgridStatistics);
           }
         }
 
         //Statistics
         assertion1(tarch::la::greater(subgrid.getTimeIntervals().getTimestepSize(), 0.0), subgrid);
         assertion1(subgrid.getTimeIntervals().getTimestepSize() != std::numeric_limits<double>::infinity(), subgrid);
-        _subgridStatistics.processSubgridAfterUpdate(subgrid, coarseGridCell.getCellDescriptionIndex());
+        _subgridStatistics->processSubgridAfterUpdate(subgrid, coarseGridCell.getCellDescriptionIndex());
 
         //Probes
         for (std::vector<peanoclaw::statistics::Probe>::iterator i = _probeList.begin(); i != _probeList.end(); i++) {
@@ -704,8 +708,8 @@ void peanoclaw::mappings::SolveTimestep::enterCell(
         subgrid.reduceGridIterationsToBeSkipped();
 
         //Statistics
-        _subgridStatistics.processSubgrid(subgrid, coarseGridCell.getCellDescriptionIndex());
-        _subgridStatistics.updateMinimalSubgridBlockReason(subgrid, coarseGridVertices, coarseGridVerticesEnumerator, _globalTimestepEndTime);
+        _subgridStatistics->processSubgrid(subgrid, coarseGridCell.getCellDescriptionIndex());
+        _subgridStatistics->updateMinimalSubgridBlockReason(subgrid, coarseGridVertices, coarseGridVerticesEnumerator, _globalTimestepEndTime);
       }
 
       assertion2(!tarch::la::smaller(subgrid.getTimeIntervals().getCurrentTime(), startTime), subgrid, startTime);
@@ -828,6 +832,7 @@ void peanoclaw::mappings::SolveTimestep::beginIteration(
   logTraceInWith1Argument( "beginIteration(State)", solverState );
 
   _workerIterations++;
+  _subgridStatistics = solverState.getSubgridStatistics();
   _collectSubgridStatistics = solverState.shouldRestrictStatistics();
   _correctFluxes = solverState.isFluxCorrectionEnabled();
   _reduceReductions = solverState.shouldReduceReductions();
@@ -848,8 +853,6 @@ void peanoclaw::mappings::SolveTimestep::beginIteration(
   _initialMaximalSubgridSize = solverState.getInitialMaximalSubgridSize();
   _probeList = solverState.getProbeList();
   _useDimensionalSplittingExtrapolation = solverState.useDimensionalSplittingExtrapolation();
-  peanoclaw::statistics::SubgridStatistics subgridStatistics(solverState);
-  _subgridStatistics = subgridStatistics;
   _estimateNeighborInducedMaximumTimestep = solverState.estimateNeighborInducedMaximumTimestep();
 
 #ifdef Parallel
@@ -874,13 +877,13 @@ void peanoclaw::mappings::SolveTimestep::endIteration(
   logTraceInWith1Argument( "endIteration(State)", solverState );
 #ifdef Parallel
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    _subgridStatistics.setWallclockTimeForIteration(_iterationWatch.getCalendarTime());
+    _subgridStatistics->setWallclockTimeForIteration(_iterationWatch.getCalendarTime());
 //    if (_collectSubgridStatistics) {
-//      _subgridStatistics.sendToMaster(tarch::parallel::NodePool::getInstance().getMasterRank());
+//      _subgridStatistics->sendToMaster(tarch::parallel::NodePool::getInstance().getMasterRank());
 //    }
   }
 
-  solverState.setEstimatedNumberOfIterationsToGlobalTimestep(_subgridStatistics.getEstimatedIterationsUntilGlobalTimestep());
+  solverState.setEstimatedNumberOfIterationsToGlobalTimestep(_subgridStatistics->getEstimatedIterationsUntilGlobalTimestep());
   for(std::map<int,int>::iterator i = _estimatedRemainingIterationsUntilGlobalTimestep.begin();
       i != _estimatedRemainingIterationsUntilGlobalTimestep.end();
       i++) {
@@ -890,7 +893,7 @@ void peanoclaw::mappings::SolveTimestep::endIteration(
   }
 #endif
 
-  _subgridStatistics.finalizeIteration(solverState);
+  solverState.finalizeGridIteration();
   _sharedMemoryStatistics.logStatistics();
 
 //  LevelStatisticsHeap::getInstance().finishedToSendBoundaryData(solverState.isTraversalInverted());

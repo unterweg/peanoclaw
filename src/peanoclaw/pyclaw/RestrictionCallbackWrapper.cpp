@@ -16,7 +16,7 @@ peanoclaw::pyclaw::RestrictionCallbackWrapper::RestrictionCallbackWrapper(
 
 }
 
-void peanoclaw::pyclaw::RestrictionCallbackWrapper::restrictSolution (
+int peanoclaw::pyclaw::RestrictionCallbackWrapper::restrictSolution (
   peanoclaw::Patch& source,
   peanoclaw::Patch& destination,
   bool restrictOnlyOverlappedRegions
@@ -81,6 +81,7 @@ void peanoclaw::pyclaw::RestrictionCallbackWrapper::restrictSolution (
     source.getUnknownsPerSubcell(),
     source.getNumberOfParametersWithoutGhostlayerPerSubcell()
   );
+  return tarch::la::volume(source.getSubdivisionFactor());
 }
 
 

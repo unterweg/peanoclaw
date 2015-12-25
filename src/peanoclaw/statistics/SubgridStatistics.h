@@ -140,12 +140,12 @@ class peanoclaw::statistics::SubgridStatistics {
      * Constructor for creating copies of a SubgridStatistics object
      * for shared-memory parallelization
      */
-    SubgridStatistics(double globalTimestepEndTime);
+    //SubgridStatistics(double globalTimestepEndTime);
 
     /**
      * Constructor to instantiate a new statistics object.
      */
-    SubgridStatistics(const peanoclaw::State& state);
+    //SubgridStatistics(const peanoclaw::State& state);
 
     /**
      * Constructor to build a SubgridStatistics from given levelStatistics.
@@ -178,6 +178,11 @@ class peanoclaw::statistics::SubgridStatistics {
      * Destructor.
      */
     ~SubgridStatistics();
+
+    /**
+     * Sets the end time of the current global time step.
+     */
+    void setGlobalTimestepEndTime(double globalTimestepEndTime);
 
     /**
      * Called after processing a subgrid. Registers the

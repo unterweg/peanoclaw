@@ -60,7 +60,7 @@ class peanoclaw::mappings::SolveTimestep {
 
     tarch::la::Vector<DIMENSIONS, double> _domainSize;
 
-    peanoclaw::statistics::SubgridStatistics _subgridStatistics;
+    peanoclaw::statistics::SubgridStatistics* _subgridStatistics;
 
     peanoclaw::statistics::SharedMemoryStatistics _sharedMemoryStatistics;
 

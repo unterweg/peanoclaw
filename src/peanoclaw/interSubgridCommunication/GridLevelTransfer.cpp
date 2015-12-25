@@ -12,6 +12,7 @@
 #include "peanoclaw/Patch.h"
 #include "peanoclaw/Numerics.h"
 #include "peanoclaw/Vertex.h"
+#include "peanoclaw/statistics/SubgridStatistics.h"
 
 #include "peano/grid/VertexEnumerator.h"
 #include "peanoclaw/Heap.h"
@@ -195,7 +196,9 @@ void peanoclaw::interSubgridCommunication::GridLevelTransfer::restrictToOverlapp
           && !tarch::la::oneGreater(subgrid.getPosition() + subgrid.getSize(), virtualSubgrid.getPosition() + virtualSubgrid.getSize()),
           subgrid.toString(), virtualSubgrid.toString());
 
-      _numerics.restrictSolution(subgrid, virtualSubgrid, !virtualSubgrid.willCoarsen());
+      int numberOfRestrictedCells
+       = _numerics.restrictSolution(subgrid, virtualSubgrid, !virtualSubgrid.willCoarsen());
+      _subgridStatistics.addRestrictedCells(numberOfRestrictedCells, subgrid.getLevel());
 
       virtualSubgrid.getTimeIntervals().setEstimatedNextTimestepSize(
         subgrid.getTimeIntervals().getEstimatedNextTimestepSize()

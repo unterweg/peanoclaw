@@ -9,7 +9,10 @@
 tarch::logging::Log peanoclaw::State::_log("peanoclaw::State");
 
 peanoclaw::State::State():
-  Base(), _numerics(0) {
+  Base(),
+  _numerics(0),
+  _subgridStatistics(new peanoclaw::statistics::SubgridStatistics)
+{
   resetGlobalTimeIntervals();
   resetMinimalTimestep();
   resetTotalNumberOfCellUpdates();
@@ -144,6 +147,7 @@ std::vector<peanoclaw::statistics::Probe>& peanoclaw::State::getProbeList() {
 
 void peanoclaw::State::setGlobalTimestepEndTime(double globalTimestepEndTime) {
   _stateData.setGlobalTimestepEndTime(globalTimestepEndTime);
+  _subgridStatistics->setGlobalTimestepEndTime(globalTimestepEndTime);
 }
 
 double peanoclaw::State::getGlobalTimestepEndTime() const {
@@ -235,10 +239,20 @@ double peanoclaw::State::getMinimalTimestep() const {
   return _stateData.getMinimalTimestep();
 }
 
-void peanoclaw::State::setSubgridStatisticsForLastGridIteration (
-  peanoclaw::statistics::SubgridStatistics& subgridStatistics
-) {
-  _subgridStatisticsHistory.push_back(subgridStatistics);
+void peanoclaw::State::finalizeGridIteration () {
+  if(_subgridStatistics.get() != 0)
+  {
+    _subgridStatistics->finalizeIteration(*this);
+    if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
+      _subgridStatisticsHistory.push_back(*_subgridStatistics);
+    }
+  }
+  _subgridStatistics.reset(new peanoclaw::statistics::SubgridStatistics);
+  _subgridStatistics->setGlobalTimestepEndTime(_stateData.getGlobalTimestepEndTime());
+}
+
+peanoclaw::statistics::SubgridStatistics* peanoclaw::State::getSubgridStatistics() const {
+  return _subgridStatistics.get();
 }
 
 std::list<peanoclaw::statistics::SubgridStatistics> peanoclaw::State::getSubgridStatisticsHistory() const {

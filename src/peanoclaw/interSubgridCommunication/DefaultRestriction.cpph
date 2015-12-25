@@ -106,7 +106,7 @@ void peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<NumberOfUn
 }
 
 template<int NumberOfUnknowns>
-void peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<NumberOfUnknowns>::restrictSolution(
+int peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<NumberOfUnknowns>::restrictSolution(
   peanoclaw::Patch& source,
   peanoclaw::Patch&       destination,
   bool restrictOnlyOverlappedRegions
@@ -118,6 +118,7 @@ void peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<NumberOfUn
   peanoclaw::grid::SubgridIterator<NumberOfUnknowns> destinationIterator
     = destinationAccessor.getSubgridIterator<NumberOfUnknowns>(tarch::la::Vector<DIMENSIONS, int>(0), destination.getSubdivisionFactor());
 
+  int numberOfRestrictedCells = 0;
   if(restrictOnlyOverlappedRegions) {
     peanoclaw::geometry::Region regions[DIMENSIONS_TIMES_TWO];
     int numberOfRegionsToProcess = peanoclaw::geometry::Region::getRegionsOverlappedByNeighboringGhostlayers(
@@ -138,6 +139,7 @@ void peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<NumberOfUn
       logDebug("restrictSolution(...)", "Restricting region [" << regions[i]._offset << "], [" << regions[i]._size << "]");
       if(tarch::la::allGreater(regions[i]._size, tarch::la::Vector<DIMENSIONS, int>(0))) {
         restrictRegion(source, destination, sourceIterator, destinationIterator, regions[i]);
+        numberOfRestrictedCells += tarch::la::volume(regions[i]._size);
       }
     }
   } else {
@@ -146,7 +148,9 @@ void peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<NumberOfUn
     region._offset = tarch::la::Vector<DIMENSIONS, int>(0);
     region._size = source.getSubdivisionFactor();
     restrictRegion(source, destination, sourceIterator, destinationIterator, region);
+    numberOfRestrictedCells += tarch::la::volume(region._size);
   }
+  return numberOfRestrictedCells;
 }
 
 

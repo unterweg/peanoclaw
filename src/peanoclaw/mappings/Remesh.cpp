@@ -1237,11 +1237,10 @@ void peanoclaw::mappings::Remesh::beginIteration(
   _useDimensionalSplittingExtrapolation = solverState.useDimensionalSplittingExtrapolation();
   _state = &solverState;
 
-  peanoclaw::statistics::SubgridStatistics dummyStatistics;
   _gridLevelTransfer = new peanoclaw::interSubgridCommunication::GridLevelTransfer(
                               _useDimensionalSplittingExtrapolation,
                               *_numerics,
-                              dummyStatistics
+                              *solverState.getSubgridStatistics()
                            );
 
   //Reset touched for all hanging vertex descriptions

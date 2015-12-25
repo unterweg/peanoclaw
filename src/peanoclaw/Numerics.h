@@ -88,8 +88,9 @@ private:
      * Performs the restriction between the given source and destination
      * by means of the restriction method implemented in Python. I.e. this
      * method can only be called if providesRestriction() returns <tt>true</tt>.
+     * This method returns the number of restricted cells.
      */
-    virtual void restrictSolution (
+    virtual int restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch& destination,
       bool              restrictOnlyOverlappedRegions

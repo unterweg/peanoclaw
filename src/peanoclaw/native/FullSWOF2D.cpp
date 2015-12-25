@@ -815,7 +815,7 @@ void peanoclaw::native::FullSWOF2D::interpolateSolution (
   transformToRelativeWaterHeightAndVelocities(destination, destinationRegion, interpolateToUOld);
 }
 
-void peanoclaw::native::FullSWOF2D::restrictSolution (
+int peanoclaw::native::FullSWOF2D::restrictSolution (
   peanoclaw::Patch& source,
   peanoclaw::Patch& destination,
   bool              restrictOnlyOverlappedRegions
@@ -825,7 +825,7 @@ void peanoclaw::native::FullSWOF2D::restrictSolution (
   transformToAbsoluteWaterHeightAndMomenta(source, sourceRegion, true); //UOld
   transformToAbsoluteWaterHeightAndMomenta(source, sourceRegion, false); //UNew
 
-  Numerics::restrictSolution(
+  int numberOfRestrictedCells = Numerics::restrictSolution(
     source,
     destination,
     restrictOnlyOverlappedRegions
@@ -833,6 +833,8 @@ void peanoclaw::native::FullSWOF2D::restrictSolution (
 
   transformToRelativeWaterHeightAndVelocities(source, sourceRegion, true); //UOld
   transformToRelativeWaterHeightAndVelocities(source, sourceRegion, false); //UNew
+
+  return numberOfRestrictedCells;
 }
 
 void peanoclaw::native::FullSWOF2D::postProcessRestriction(
