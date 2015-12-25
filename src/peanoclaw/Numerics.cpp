@@ -63,12 +63,12 @@ void peanoclaw::Numerics::interpolateSolution (
   );
 }
 
-void peanoclaw::Numerics::restrictSolution (
+int peanoclaw::Numerics::restrictSolution (
   peanoclaw::Patch& source,
   peanoclaw::Patch& destination,
   bool              restrictOnlyOverlappedRegions
 ) const {
-  _restriction->restrictSolution(
+  return _restriction->restrictSolution(
     source,
     destination,
     restrictOnlyOverlappedRegions

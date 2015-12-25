@@ -273,20 +273,21 @@ void peanoclaw::native::SWEKernel::interpolateSolution (
   }
 }
 
-void peanoclaw::native::SWEKernel::restrictSolution (
+int peanoclaw::native::SWEKernel::restrictSolution (
   peanoclaw::Patch& source,
   peanoclaw::Patch& destination,
   bool              restrictOnlyOverlappedRegions
 ) const {
+  int numberOfRestrictedCells = 0;
   if(_scenario.hasCustomRestriction()) {
-    Numerics::restrictSolution(source, destination, restrictOnlyOverlappedRegions);
+    numberOfRestrictedCells = Numerics::restrictSolution(source, destination, restrictOnlyOverlappedRegions);
   } else {
     peanoclaw::geometry::Region sourceRegion(tarch::la::Vector<DIMENSIONS,int>(0), source.getSubdivisionFactor());
 
     transformWaterHeight(source, sourceRegion, true, false); //UOld
     transformWaterHeight(source, sourceRegion, false, false); //UNew
 
-    Numerics::restrictSolution(
+    numberOfRestrictedCells = Numerics::restrictSolution(
       source,
       destination,
       restrictOnlyOverlappedRegions
@@ -295,6 +296,7 @@ void peanoclaw::native::SWEKernel::restrictSolution (
     transformWaterHeight(source, sourceRegion, true, true); //UOld
     transformWaterHeight(source, sourceRegion, false, true); //UNew
   }
+  return numberOfRestrictedCells;
 }
 
 void peanoclaw::native::SWEKernel::postProcessRestriction(

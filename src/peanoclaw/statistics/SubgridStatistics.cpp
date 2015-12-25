@@ -194,7 +194,7 @@ peanoclaw::statistics::SubgridStatistics::SubgridStatistics()
   _startMinimumLocalTimeInterval(-std::numeric_limits<double>::max()),
   _endMinimumLocalTimeInterval(std::numeric_limits<double>::max()),
   _minimalTimestep(std::numeric_limits<double>::max()),
-  _allPatchesEvolvedToGlobalTimestep(true),
+  _allPatchesEvolvedToGlobalTimestep(false),
   _averageGlobalTimeInterval(0.0),
   _globalTimestepEndTime(-1.0),
   _timeAveragedEstimatedIterationsToGlobalTimestep(0.0),
@@ -206,54 +206,54 @@ peanoclaw::statistics::SubgridStatistics::SubgridStatistics()
   #endif
 }
 
-peanoclaw::statistics::SubgridStatistics::SubgridStatistics(
-  double globalTimestepEndTime
-): _levelStatisticsIndex(-1),
-   _processStatisticsIndex(-1),
-   _minimalPatchIndex(-1),
-   _minimalPatchParentIndex(-1),
-   _minimalPatchTime(std::numeric_limits<double>::max()),
-   _startMaximumLocalTimeInterval(std::numeric_limits<double>::max()),
-   _endMaximumLocalTimeInterval(-std::numeric_limits<double>::max()),
-   _startMinimumLocalTimeInterval(-std::numeric_limits<double>::max()),
-   _endMinimumLocalTimeInterval(std::numeric_limits<double>::max()),
-   _minimalTimestep(std::numeric_limits<double>::max()),
-   _allPatchesEvolvedToGlobalTimestep(true),
-   _averageGlobalTimeInterval(0.0),
-   _globalTimestepEndTime(globalTimestepEndTime),
-   _timeAveragedEstimatedIterationsToGlobalTimestep(0.0),
-   _minimalPatchBlockedDueToCoarsening(false),
-   _minimalPatchBlockedDueToGlobalTimestep(false),
-   _isFinalized(false) {
-  #ifndef SharedMemoryParallelisation
-  initializeLevelAndProcessStatistics();
-  #endif
-}
+//peanoclaw::statistics::SubgridStatistics::SubgridStatistics(
+//  double globalTimestepEndTime
+//): _levelStatisticsIndex(-1),
+//   _processStatisticsIndex(-1),
+//   _minimalPatchIndex(-1),
+//   _minimalPatchParentIndex(-1),
+//   _minimalPatchTime(std::numeric_limits<double>::max()),
+//   _startMaximumLocalTimeInterval(std::numeric_limits<double>::max()),
+//   _endMaximumLocalTimeInterval(-std::numeric_limits<double>::max()),
+//   _startMinimumLocalTimeInterval(-std::numeric_limits<double>::max()),
+//   _endMinimumLocalTimeInterval(std::numeric_limits<double>::max()),
+//   _minimalTimestep(std::numeric_limits<double>::max()),
+//   _allPatchesEvolvedToGlobalTimestep(true),
+//   _averageGlobalTimeInterval(0.0),
+//   _globalTimestepEndTime(globalTimestepEndTime),
+//   _timeAveragedEstimatedIterationsToGlobalTimestep(0.0),
+//   _minimalPatchBlockedDueToCoarsening(false),
+//   _minimalPatchBlockedDueToGlobalTimestep(false),
+//   _isFinalized(false) {
+//  #ifndef SharedMemoryParallelisation
+//  initializeLevelAndProcessStatistics();
+//  #endif
+//}
 
-peanoclaw::statistics::SubgridStatistics::SubgridStatistics(const peanoclaw::State& state)
- : _levelStatisticsIndex(-1),
-   //_levelStatistics(0),
-   _processStatisticsIndex(-1),
-   //_processStatistics(0),
-   _minimalPatchIndex(-1),
-   _minimalPatchParentIndex(-1),
-   _minimalPatchTime(std::numeric_limits<double>::max()),
-   _startMaximumLocalTimeInterval(std::numeric_limits<double>::max()),
-   _endMaximumLocalTimeInterval(-std::numeric_limits<double>::max()),
-   _startMinimumLocalTimeInterval(-std::numeric_limits<double>::max()),
-   _endMinimumLocalTimeInterval(std::numeric_limits<double>::max()),
-   _minimalTimestep(std::numeric_limits<double>::max()),
-   _allPatchesEvolvedToGlobalTimestep(state.getAllPatchesEvolvedToGlobalTimestep()),
-   _averageGlobalTimeInterval(0.0),
-   _globalTimestepEndTime(state.getGlobalTimestepEndTime()),
-   _timeAveragedEstimatedIterationsToGlobalTimestep(0.0),
-   _minimalPatchBlockedDueToCoarsening(false),
-   _minimalPatchBlockedDueToGlobalTimestep(false),
-   _isFinalized(false) {
-  #ifndef SharedMemoryParallelisation
-  initializeLevelAndProcessStatistics();
-  #endif
-}
+//peanoclaw::statistics::SubgridStatistics::SubgridStatistics(const peanoclaw::State& state)
+// : _levelStatisticsIndex(-1),
+//   //_levelStatistics(0),
+//   _processStatisticsIndex(-1),
+//   //_processStatistics(0),
+//   _minimalPatchIndex(-1),
+//   _minimalPatchParentIndex(-1),
+//   _minimalPatchTime(std::numeric_limits<double>::max()),
+//   _startMaximumLocalTimeInterval(std::numeric_limits<double>::max()),
+//   _endMaximumLocalTimeInterval(-std::numeric_limits<double>::max()),
+//   _startMinimumLocalTimeInterval(-std::numeric_limits<double>::max()),
+//   _endMinimumLocalTimeInterval(std::numeric_limits<double>::max()),
+//   _minimalTimestep(std::numeric_limits<double>::max()),
+//   _allPatchesEvolvedToGlobalTimestep(state.getAllPatchesEvolvedToGlobalTimestep()),
+//   _averageGlobalTimeInterval(0.0),
+//   _globalTimestepEndTime(state.getGlobalTimestepEndTime()),
+//   _timeAveragedEstimatedIterationsToGlobalTimestep(0.0),
+//   _minimalPatchBlockedDueToCoarsening(false),
+//   _minimalPatchBlockedDueToGlobalTimestep(false),
+//   _isFinalized(false) {
+//  #ifndef SharedMemoryParallelisation
+//  initializeLevelAndProcessStatistics();
+//  #endif
+//}
 
 peanoclaw::statistics::SubgridStatistics::SubgridStatistics(
   const std::vector<LevelStatistics>& otherLevelStatistics
@@ -406,6 +406,10 @@ peanoclaw::statistics::SubgridStatistics::~SubgridStatistics() {
   deleteData();
 }
 
+void peanoclaw::statistics::SubgridStatistics::setGlobalTimestepEndTime(double globalTimestepEndTime) {
+  _globalTimestepEndTime = globalTimestepEndTime;
+}
+
 void peanoclaw::statistics::SubgridStatistics::processSubgrid(
   const peanoclaw::Patch& patch,
   int parentIndex
@@ -530,10 +534,6 @@ void peanoclaw::statistics::SubgridStatistics::finalizeIteration(peanoclaw::Stat
     i->setAverageTimestepSize(i->getAverageTimestepSize() / i->getNumberOfPatches() * i->getNumberOfCells() / i->getNumberOfCellUpdates());
   }
   #endif
- 
-  if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    state.setSubgridStatisticsForLastGridIteration(*this);
-  }
 
   _isFinalized = true;
 
@@ -554,6 +554,8 @@ void peanoclaw::statistics::SubgridStatistics::logLevelStatistics(std::string de
   double totalSkippingPatches = 0.0;
   double totalCoarseningPatches = 0.0;
   double totalEstimatedIterationsToGlobalTimestep = 0.0;
+  double totalNumberOfInterpolatedCells = 0.0;
+  double totalNumberOfRestrictedCells = 0.0;
 
   for(size_t i = 0; i < levelStatistics.size(); i++) {
     const LevelStatistics& level = levelStatistics.at(i);
@@ -571,10 +573,14 @@ void peanoclaw::statistics::SubgridStatistics::logLevelStatistics(std::string de
     totalSkippingPatches += level.getPatchesSkippingIteration();
     totalCoarseningPatches += level.getPatchesCoarsening();
     totalEstimatedIterationsToGlobalTimestep = std::max(level.getEstimatedNumberOfRemainingIterationsToGlobalTimestep(), totalEstimatedIterationsToGlobalTimestep);
+    totalNumberOfInterpolatedCells += level.getNumberOfInterpolatedCells();
+    totalNumberOfRestrictedCells += level.getNumberOfRestrictedCells();
   }
   logInfo("logLevelStatistics",
     "Sum: max. " << totalNumberOfPatches << " patches (area=" << totalRegion <<  "), max. "
     << totalNumberOfCells << " cells, " << totalNumberOfCellUpdates << " cell updates, "
+    << totalNumberOfInterpolatedCells << " interpolated cells, "
+    << totalNumberOfRestrictedCells << " restricted cells, "
     << totalEstimatedIterationsToGlobalTimestep << " remaining iterations. "
     << " Blocking: " << totalBlockedPatchesDueToNeighbors << ", " << totalBlockedPatchesDueToGlobalTimestep
     << ", " << totalSkippingPatches << ", " << totalCoarseningPatches

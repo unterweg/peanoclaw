@@ -57,7 +57,7 @@ class peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate {
     );
 
   public:
-    void restrictSolution (
+    int restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch&       destination,
       bool restrictOnlyOverlappedRegions
@@ -70,7 +70,7 @@ class peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate {
 class peanoclaw::interSubgridCommunication::DefaultRestriction
     : public peanoclaw::interSubgridCommunication::Restriction {
   public:
-    void restrictSolution (
+    int restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch&       destination,
       bool restrictOnlyOverlappedRegions
@@ -78,44 +78,34 @@ class peanoclaw::interSubgridCommunication::DefaultRestriction
       switch(source.getUnknownsPerSubcell()) {
         case 1:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<1> transfer1;
-          transfer1.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer1.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 2:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<2> transfer2;
-          transfer2.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer2.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 3:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<3> transfer3;
-          transfer3.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer3.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 4:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<4> transfer4;
-          transfer4.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer4.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 5:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<5> transfer5;
-          transfer5.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer5.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 6:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<6> transfer6;
-          transfer6.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer6.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 7:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<7> transfer7;
-          transfer7.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer7.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 8:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<8> transfer8;
-          transfer8.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer8.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 9:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<9> transfer9;
-          transfer9.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer9.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         case 10:
           peanoclaw::interSubgridCommunication::DefaultRestrictionTemplate<10> transfer10;
-          transfer10.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
-          break;
+          return transfer10.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         default:
           assertionFail("Number of unknowns " << source.getUnknownsPerSubcell() << " not supported!");
       }

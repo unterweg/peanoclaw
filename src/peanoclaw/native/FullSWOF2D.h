@@ -212,7 +212,7 @@ public:
    * Modifies the source subgrid so that not the water height above
    * the seafloor is restricted but the absolute water height.
    */
-  virtual void restrictSolution (
+  virtual int restrictSolution (
     peanoclaw::Patch& source,
     peanoclaw::Patch& destination,
     bool              restrictOnlyOverlappedRegions

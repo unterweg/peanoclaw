@@ -61,8 +61,9 @@ class peanoclaw::interSubgridCommunication::Restriction {
 
     /**
      * Restricts data from a fine patch to a coarse patch.
+     * Returns the number of restricted cells.
      */
-    virtual void restrictSolution (
+    virtual int restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch& destination,
       bool              restrictOnlyOverlappedRegions

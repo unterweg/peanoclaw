@@ -106,7 +106,7 @@ peanoclaw::interSubgridCommunication::BathymetryRestriction::BathymetryRestricti
 }
 
 
-void peanoclaw::interSubgridCommunication::BathymetryRestriction::restrictSolution (
+int peanoclaw::interSubgridCommunication::BathymetryRestriction::restrictSolution (
   peanoclaw::Patch& source,
   peanoclaw::Patch& destination,
   bool              restrictOnlyOverlappedRegions
@@ -125,6 +125,7 @@ void peanoclaw::interSubgridCommunication::BathymetryRestriction::restrictSoluti
   transformation.transformWaterHeight(source, sourceRegion, true, false); //UOld
   transformation.transformWaterHeight(source, sourceRegion, false, false); //UNew
 
+  int numberOfRestrictedCells = 0;
   if(restrictOnlyOverlappedRegions) {
     peanoclaw::geometry::Region regions[DIMENSIONS_TIMES_TWO];
     int numberOfRegionsToProcess = peanoclaw::geometry::Region::getRegionsOverlappedByNeighboringGhostlayers(
@@ -145,6 +146,7 @@ void peanoclaw::interSubgridCommunication::BathymetryRestriction::restrictSoluti
       logDebug("restrictSolution(...)", "Restricting region [" << regions[i]._offset << "], [" << regions[i]._size << "]");
       if(tarch::la::allGreater(regions[i]._size, tarch::la::Vector<DIMENSIONS, int>(0))) {
         restrictRegion(source, regions[i], sourceIterator, destination, destinationIterator);
+        numberOfRestrictedCells += tarch::la::volume(regions[i]._size);
       }
     }
   } else {
@@ -153,6 +155,7 @@ void peanoclaw::interSubgridCommunication::BathymetryRestriction::restrictSoluti
     region._offset = tarch::la::Vector<DIMENSIONS, int>(0);
     region._size = source.getSubdivisionFactor();
     restrictRegion(source, region, sourceIterator, destination, destinationIterator);
+    numberOfRestrictedCells += tarch::la::volume(region._size);
   }
 
   transformation.transformWaterHeight(source, sourceRegion, true, true); //UOld

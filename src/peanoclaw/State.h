@@ -16,6 +16,7 @@
 #include "statistics/Probe.h"
 
 #include <list>
+#include <memory>
 
 namespace peanoclaw { 
       class State;
@@ -67,8 +68,7 @@ class peanoclaw::State: public peano::grid::State< peanoclaw::records::State > {
 
     std::vector<peanoclaw::statistics::Probe>  _probeList;
 
-    //std::vector<LevelStatistics>               _levelStatisticsForLastGridIteration;
-    //std::list< std::vector<LevelStatistics> >  _levelStatisticsHistory;
+    std::auto_ptr<peanoclaw::statistics::SubgridStatistics> _subgridStatistics;
 
     std::list< peanoclaw::statistics::SubgridStatistics >  _subgridStatisticsHistory;
 
@@ -214,9 +214,14 @@ class peanoclaw::State: public peano::grid::State< peanoclaw::records::State > {
       double getMinimalTimestep() const;
 
       /**
-       * Sets the subgrid statistics for the last grid iteration.
+       * Finalizes the grid iteration and prepares the state for the next.
        */
-      void setSubgridStatisticsForLastGridIteration(peanoclaw::statistics::SubgridStatistics& subgridStatistics);
+      void finalizeGridIteration();
+
+      /**
+       * Returns the subgrid statistics for the current grid iteration.
+       */
+      peanoclaw::statistics::SubgridStatistics* getSubgridStatistics() const;
 
       /**
        * Returns the history of subgrid statistics over all iterations.

@@ -41,7 +41,7 @@ class peanoclaw::interSubgridCommunication::BathymetryRestriction : public Restr
     /**
      * Restricts data from a fine patch to a coarse patch.
      */
-    void restrictSolution (
+    int restrictSolution (
       peanoclaw::Patch& source,
       peanoclaw::Patch& destination,
       bool              restrictOnlyOverlappedRegions
