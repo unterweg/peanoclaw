@@ -94,7 +94,7 @@ class peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator {
         const Cell& localCell,
         const tarch::la::Vector<DIMENSIONS, double>& position,
         const tarch::la::Vector<DIMENSIONS, double>& size,
-        const State state
+        const State& state
     );
 
     /**

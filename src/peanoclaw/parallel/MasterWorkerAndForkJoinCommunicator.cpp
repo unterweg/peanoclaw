@@ -116,7 +116,7 @@ void peanoclaw::parallel::MasterWorkerAndForkJoinCommunicator::sendCellDuringFor
   const Cell& localCell,
   const tarch::la::Vector<DIMENSIONS, double>& position,
   const tarch::la::Vector<DIMENSIONS, double>& size,
-  const State state
+  const State& state
 ) {
   #ifdef Parallel
   bool isForking = tarch::parallel::Node::getInstance().isGlobalMaster()
