@@ -68,7 +68,7 @@ class peanoclaw::State: public peano::grid::State< peanoclaw::records::State > {
 
     std::vector<peanoclaw::statistics::Probe>  _probeList;
 
-    std::auto_ptr<peanoclaw::statistics::SubgridStatistics> _subgridStatistics;
+    peanoclaw::statistics::SubgridStatistics* _subgridStatistics;
 
     std::list< peanoclaw::statistics::SubgridStatistics >  _subgridStatisticsHistory;
 

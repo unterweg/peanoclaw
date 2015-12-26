@@ -28,12 +28,17 @@ peanoclaw::State::State():
   _stateData.setCouldNotEraseDueToDecompositionFlag(false);
   _stateData.setSubWorkerIsInvolvedInJoinOrFork(false);
   #endif
+  assertion(_subgridStatistics != 0);
 }
 
 
 peanoclaw::State::State(const Base::PersistentState& argument):
-  Base(argument), _numerics(0) {
+  Base(argument),
+  _numerics(0),
+  _subgridStatistics(new peanoclaw::statistics::SubgridStatistics)
+{
   // @todo Insert your code here
+  assertion(_subgridStatistics != 0);
 }
 
 
@@ -147,6 +152,7 @@ std::vector<peanoclaw::statistics::Probe>& peanoclaw::State::getProbeList() {
 
 void peanoclaw::State::setGlobalTimestepEndTime(double globalTimestepEndTime) {
   _stateData.setGlobalTimestepEndTime(globalTimestepEndTime);
+  assertion(_subgridStatistics != 0);
   _subgridStatistics->setGlobalTimestepEndTime(globalTimestepEndTime);
 }
 
@@ -240,19 +246,20 @@ double peanoclaw::State::getMinimalTimestep() const {
 }
 
 void peanoclaw::State::finalizeGridIteration () {
-  if(_subgridStatistics.get() != 0)
+  if(_subgridStatistics != 0)
   {
     _subgridStatistics->finalizeIteration(*this);
     if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
       _subgridStatisticsHistory.push_back(*_subgridStatistics);
     }
+    delete _subgridStatistics;
   }
-  _subgridStatistics.reset(new peanoclaw::statistics::SubgridStatistics);
+  _subgridStatistics = new peanoclaw::statistics::SubgridStatistics;
   _subgridStatistics->setGlobalTimestepEndTime(_stateData.getGlobalTimestepEndTime());
 }
 
 peanoclaw::statistics::SubgridStatistics* peanoclaw::State::getSubgridStatistics() const {
-  return _subgridStatistics.get();
+  return _subgridStatistics;
 }
 
 std::list<peanoclaw::statistics::SubgridStatistics> peanoclaw::State::getSubgridStatisticsHistory() const {

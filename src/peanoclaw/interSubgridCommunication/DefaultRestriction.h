@@ -108,6 +108,7 @@ class peanoclaw::interSubgridCommunication::DefaultRestriction
           return transfer10.restrictSolution(source, destination, restrictOnlyOverlappedRegions);
         default:
           assertionFail("Number of unknowns " << source.getUnknownsPerSubcell() << " not supported!");
+          return 0;
       }
     }
 

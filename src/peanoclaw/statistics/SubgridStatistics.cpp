@@ -193,7 +193,7 @@ peanoclaw::statistics::SubgridStatistics::SubgridStatistics()
   _startMinimumLocalTimeInterval(-std::numeric_limits<double>::max()),
   _endMinimumLocalTimeInterval(std::numeric_limits<double>::max()),
   _minimalTimestep(std::numeric_limits<double>::max()),
-  _allPatchesEvolvedToGlobalTimestep(false),
+  _allPatchesEvolvedToGlobalTimestep(true),
   _averageGlobalTimeInterval(0.0),
   _globalTimestepEndTime(-1.0),
   _timeAveragedEstimatedIterationsToGlobalTimestep(0.0),
@@ -560,6 +560,8 @@ void peanoclaw::statistics::SubgridStatistics::logLevelStatistics(std::string de
     const LevelStatistics& level = levelStatistics.at(i);
     logInfo("logLevelStatistics", "\tLevel " << i << ": " << level.getNumberOfPatches() << " patches (area=" << level.getArea() <<  "), "
         << level.getNumberOfCells() << " cells, " << level.getNumberOfCellUpdates() << "cell updates, "
+        << level.getNumberOfInterpolatedCells() << " interpolated cells, "
+        << level.getNumberOfRestrictedCells() << " restricted cells, "
         << totalEstimatedIterationsToGlobalTimestep << " remaining iterations. "
         << "minDt=" << level.getMinimalTimestepSize() << " averageDt=" << level.getAverageTimestepSize());
 
