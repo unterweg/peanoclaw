@@ -148,9 +148,9 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BreakingDamSW
     double radius2 = 0.25 - patch.getTimeIntervals().getCurrentTime() * 0.7 * 0.5;
 
     double distanceToCenter = tarch::la::norm2(patch.getPosition() + patch.getSize() * 0.5 - tarch::la::Vector<DIMENSIONS, double>(0.5));
-    double distanceToCircle0 = abs(distanceToCenter - radius0);
-    double distanceToCircle1 = abs(distanceToCenter - radius1);
-    double distanceToCircle2 = abs(distanceToCenter - radius2);
+    double distanceToCircle0 = std::abs(distanceToCenter - radius0);
+    double distanceToCircle1 = std::abs(distanceToCenter - radius1);
+    double distanceToCircle2 = std::abs(distanceToCenter - radius2);
 
     double subgridDiagonal = tarch::la::norm2(patch.getSize());
     tarch::la::Vector<DIMENSIONS,double> demandedMeshWidth;
