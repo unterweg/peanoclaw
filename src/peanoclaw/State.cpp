@@ -39,6 +39,7 @@ peanoclaw::State::State(const Base::PersistentState& argument):
 {
   // @todo Insert your code here
   assertion(_subgridStatistics != 0);
+  _subgridStatistics->setGlobalTimestepEndTime(argument.getGlobalTimestepEndTime());
 }
 
 
@@ -245,17 +246,21 @@ double peanoclaw::State::getMinimalTimestep() const {
   return _stateData.getMinimalTimestep();
 }
 
+void peanoclaw::State::prepareGridIteration () {
+  delete _subgridStatistics;
+  _subgridStatistics = new peanoclaw::statistics::SubgridStatistics;
+  _subgridStatistics->setGlobalTimestepEndTime(_stateData.getGlobalTimestepEndTime());
+}
+
 void peanoclaw::State::finalizeGridIteration () {
   if(_subgridStatistics != 0)
   {
     _subgridStatistics->finalizeIteration(*this);
+    _subgridStatistics->setGlobalTimestepEndTime(_stateData.getGlobalTimestepEndTime());
     if(tarch::parallel::Node::getInstance().isGlobalMaster()) {
       _subgridStatisticsHistory.push_back(*_subgridStatistics);
     }
-    delete _subgridStatistics;
   }
-  _subgridStatistics = new peanoclaw::statistics::SubgridStatistics;
-  _subgridStatistics->setGlobalTimestepEndTime(_stateData.getGlobalTimestepEndTime());
 }
 
 peanoclaw::statistics::SubgridStatistics* peanoclaw::State::getSubgridStatistics() const {
