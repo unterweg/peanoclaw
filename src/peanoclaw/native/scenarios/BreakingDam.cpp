@@ -143,11 +143,11 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BreakingDamSW
   //  }
     return demandedMeshWidth;
   } else {
-    double radius0 = 0.25 + patch.getTimeIntervals().getCurrentTime() * 0.75 / 0.5;
-    double radius1 = 0.25 - patch.getTimeIntervals().getCurrentTime() * 0.5 / 0.5;
-    double radius2 = 0.25 - patch.getTimeIntervals().getCurrentTime() * 0.7 / 0.5;
+    double radius0 = 0.25 + patch.getTimeIntervals().getCurrentTime() * 0.75 * 0.5;
+    double radius1 = 0.25 - patch.getTimeIntervals().getCurrentTime() * 0.5 * 0.5;
+    double radius2 = 0.25 - patch.getTimeIntervals().getCurrentTime() * 0.7 * 0.5;
 
-    double distanceToCenter = tarch::la::norm2(patch.getPosition() + patch.getSize() / 2.0 - tarch::la::Vector<DIMENSIONS, double>(0.5));
+    double distanceToCenter = tarch::la::norm2(patch.getPosition() + patch.getSize() * 0.5 - tarch::la::Vector<DIMENSIONS, double>(0.5));
     double distanceToCircle0 = abs(distanceToCenter - radius0);
     double distanceToCircle1 = abs(distanceToCenter - radius1);
     double distanceToCircle2 = abs(distanceToCenter - radius2);
@@ -159,9 +159,9 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BreakingDamSW
        || distanceToCircle2 < subgridDiagonal / 2.0)
     {
       demandedMeshWidth = _minimalMeshWidth;
-    } else if(distanceToCircle0 >= subgridDiagonal / 2.0
-              || distanceToCircle1 >= subgridDiagonal / 2.0
-              || distanceToCircle2 >= subgridDiagonal / 2.0)
+    } else if(distanceToCircle0 >= subgridDiagonal
+              && distanceToCircle1 >= subgridDiagonal
+              && distanceToCircle2 >= subgridDiagonal)
     {
       demandedMeshWidth = _maximalMeshWidth;
     } else {
