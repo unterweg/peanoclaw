@@ -830,6 +830,9 @@ void peanoclaw::mappings::SolveTimestep::leaveCell(
 void peanoclaw::mappings::SolveTimestep::beginIteration(
     peanoclaw::State& solverState) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
+  assertion1(tarch::la::greaterEquals(solverState.getGlobalTimestepEndTime(), 0.0), solverState.getGlobalTimestepEndTime());
+
+  solverState.prepareGridIteration();
 
   _workerIterations++;
   _subgridStatistics = solverState.getSubgridStatistics();

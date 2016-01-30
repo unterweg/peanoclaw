@@ -214,6 +214,11 @@ class peanoclaw::State: public peano::grid::State< peanoclaw::records::State > {
       double getMinimalTimestep() const;
 
       /**
+       * Prepares the next grid iteration.
+       */
+      void prepareGridIteration();
+
+      /**
        * Finalizes the grid iteration and prepares the state for the next.
        */
       void finalizeGridIteration();

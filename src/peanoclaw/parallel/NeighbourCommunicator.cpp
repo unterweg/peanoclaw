@@ -120,7 +120,7 @@ bool peanoclaw::parallel::NeighbourCommunicator::sendSubgrid(
 void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubgrid) {
   #ifdef Parallel
   logTraceInWith1Argument("receiveSubgrid(Subgrid)", localSubgrid);
-
+  
   std::vector<CellDescription> remoteCellDescriptionVector = _subgridCommunicator.receiveCellDescription();
   logDebug("receiveSubgrid(Subgrid)", "Receiving subgrid from rank " << _remoteRank
       << " at " << localSubgrid.getPosition() << " on level " << localSubgrid.getLevel() << " #cellDescriptions=" << remoteCellDescriptionVector.size());
@@ -209,6 +209,8 @@ void peanoclaw::parallel::NeighbourCommunicator::receiveSubgrid(Patch& localSubg
         assertion1(recvbuffer.isBlockAvailable(), "cannot read heap data from Serialization Buffer - not enough blocks");
 
         Serialization::Block block = recvbuffer.nextBlock();
+        #else
+        assertionFail("No RMK available!");
         #endif
     } else {
         DataHeap::getInstance().receiveData(_remoteRank, _position, _level, peano::heap::NeighbourCommunication);
