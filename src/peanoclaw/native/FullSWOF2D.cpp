@@ -122,8 +122,7 @@ peanoclaw::native::FullSWOF2D::FullSWOF2D(
   peanoclaw::interSubgridCommunication::FluxCorrection* fluxCorrection
 ) : Numerics(transfer, interpolation, restriction, fluxCorrection),
 _totalSolverCallbackTime(0.0),
-_scenario(scenario),
-_wrapperScheme(0)
+_scenario(scenario)
 {
   //import_array();
 
@@ -189,24 +188,34 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
           domainBoundaryFlags[1] ? _scenario.getBoundaryCondition(0, true) : _interSubgridBoundaryCondition,
           domainBoundaryFlags[2] ? _scenario.getBoundaryCondition(1, false) : _interSubgridBoundaryCondition,
           domainBoundaryFlags[3] ? _scenario.getBoundaryCondition(1, true) : _interSubgridBoundaryCondition
-//          _interSubgridBoundaryCondition,
-//          _interSubgridBoundaryCondition,
-//          _interSubgridBoundaryCondition,
-//          _interSubgridBoundaryCondition
-//              _scenario.getBoundaryCondition(0, false),
-//              _scenario.getBoundaryCondition(0, true),
-//              _scenario.getBoundaryCondition(1, false),
-//              _scenario.getBoundaryCondition(1, true)
       );
-      //std::cout << "parameters read (meshwidth): " << par.get_dx() << " vs " << meshwidth(0) << " and " << par.get_dy() << " vs " << meshwidth(1) << std::endl;
-      //std::cout << "parameters read (cells): " << par.get_Nxcell() << " vs " << subdivisionFactor(0) << " and " << par.get_Nycell() << " vs " << subdivisionFactor(1) << std::endl;
 
       #define REUSE_SCHEME_FOR_ROLLBACK
 
       #ifdef REUSE_SCHEME_FOR_ROLLBACK
       //Reuse scheme for rollback
-      Choice_scheme* wrapperScheme = new Choice_scheme(par);
-      Scheme* scheme = wrapperScheme->getInternalScheme();
+
+      if(
+        _cachedSubdivisionFactor != subgrid.getSubdivisionFactor()
+        || _cachedGhostlayerWidth != subgrid.getGhostlayerWidth()
+      ) {
+        _wrapperScheme.reset(new Choice_scheme(par));
+        _cachedSubdivisionFactor = subgrid.getSubdivisionFactor();
+        _cachedGhostlayerWidth = subgrid.getGhostlayerWidth();
+      }
+      #ifdef SharedMemoryParallelisation
+      _wrapperScheme.reset(new Choice_scheme(par));
+      #else
+      if(
+        _cachedSubdivisionFactor != subgrid.getSubdivisionFactor()
+        || _cachedGhostlayerWidth != subgrid.getGhostlayerWidth()
+      ) {
+        _wrapperScheme.reset(new Choice_scheme(par));
+        _cachedSubdivisionFactor = subgrid.getSubdivisionFactor();
+        _cachedGhostlayerWidth = subgrid.getGhostlayerWidth();
+      }
+      #endif
+      Scheme* scheme = _wrapperScheme->getInternalScheme();
       #else
       //Recreate scheme for rollback
       Scheme *scheme = 0;
@@ -236,7 +245,7 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
         struct timeval start;
         gettimeofday(&start, NULL);
 
-        wrapperScheme->calcul();
+        _wrapperScheme->calcul();
 
         struct timeval stop;
         gettimeofday(&stop, NULL);
@@ -272,8 +281,6 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
       //estimatedNextTimestepSize = 0.00001;
 
       //std::cout << "\nComputation finished!" << endl;
-      delete wrapperScheme;
-      wrapperScheme = 0;
       // computation is done -> back to peanoclaw 
   }
 #endif
@@ -374,10 +381,6 @@ void peanoclaw::native::FullSWOF2D::fillBoundaryLayer(Patch& subgrid, int dimens
   }
 #endif
 
-   //std::cout << "++++++" << std::endl;
-   //std::cout << patch.toStringUOldWithGhostLayer() << std::endl;
-   //std::cout << "||||||" << std::endl;
-
   //Fill scenario boundary condition
   peanoclaw::grid::aspects::BoundaryIterator<peanoclaw::native::scenarios::SWEScenario> scenarioBoundaryIterator(_scenario);
   scenarioBoundaryIterator.iterate(subgrid, accessor, dimension, setUpper);
@@ -397,14 +400,12 @@ void peanoclaw::native::FullSWOF2D::copyPatchToScheme(Patch& patch, Scheme* sche
 
   // FullSWOF2D has a mixture of 0->nxcell+1 and 1->nxcell
   int ghostlayerWidth = patch.getGhostlayerWidth();
-  int fullswof2DGhostlayerWidth = 1;
+  //int fullswof2DGhostlayerWidth = 1;
 
   TAB& h = scheme->getH();
   TAB& u = scheme->getU();
   TAB& v = scheme->getV();
   TAB& z = scheme->getZ();
-//  for (int x = -ghostlayerWidth; x < subdivisionFactor(0)+ghostlayerWidth; x++) {
-//        for (int y = -ghostlayerWidth; y < subdivisionFactor(1)+ghostlayerWidth; y++) {
   for (int x = 0; x < subdivisionFactor(0)+2*ghostlayerWidth-margin[0]-margin[1]; x++) {
     for (int y = 0; y < subdivisionFactor(1)+2*ghostlayerWidth-margin[2]-margin[3]; y++) {
       subcellIndex(0) = x - ghostlayerWidth + margin[0];
@@ -455,7 +456,7 @@ void peanoclaw::native::FullSWOF2D::copySchemeToPatch(Scheme* scheme, Patch& pat
   tarch::la::Vector<DIMENSIONS,int> fullswof2DSubcellIndex;
 
   int peanoClawGhostlayerWidth = patch.getGhostlayerWidth();
-  int fullswof2DGhostlayerWidth = 1;
+  //int fullswof2DGhostlayerWidth = 1;
 
   //Copy inner part of subgrid
   TAB& h = scheme->getH();
@@ -468,10 +469,6 @@ void peanoclaw::native::FullSWOF2D::copySchemeToPatch(Scheme* scheme, Patch& pat
       subcellIndex(1) = y;
       fullswof2DSubcellIndex(0) = x + peanoClawGhostlayerWidth - margin[0];
       fullswof2DSubcellIndex(1) = y + peanoClawGhostlayerWidth - margin[2];
-
-      //TODO unterweg debug
-//      std::cout << "Copying " << fullswof2DSubcellIndex[0] << "," << fullswof2DSubcellIndex[1] << ":" << h[fullswof2DSubcellIndex[0]][fullswof2DSubcellIndex[1]]
-//         << " to " << subcellIndex << std::endl;
 
       /** Water height after one step of the scheme.*/
       patch.getAccessor().setValueUNew(subcellIndex, 0, h[fullswof2DSubcellIndex[0]][fullswof2DSubcellIndex[1]]);

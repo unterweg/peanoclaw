@@ -51,8 +51,11 @@ private:
 
   peanoclaw::native::scenarios::SWEScenario& _scenario;
 
+  tarch::la::Vector<DIMENSIONS,int> _cachedSubdivisionFactor;
+  int _cachedGhostlayerWidth;
+
   #ifdef PEANOCLAW_FULLSWOF2D
-  Choice_scheme* _wrapperScheme;
+  std::auto_ptr<Choice_scheme> _wrapperScheme;
   #endif
 
   /**
