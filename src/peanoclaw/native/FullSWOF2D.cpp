@@ -122,7 +122,9 @@ peanoclaw::native::FullSWOF2D::FullSWOF2D(
   peanoclaw::interSubgridCommunication::FluxCorrection* fluxCorrection
 ) : Numerics(transfer, interpolation, restriction, fluxCorrection),
 _totalSolverCallbackTime(0.0),
-_scenario(scenario)
+_scenario(scenario),
+_cachedSubdivisionFactor(-1),
+_cachedGhostlayerWidth(-1)
 {
   //import_array();
 
@@ -192,17 +194,6 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
 
       #define REUSE_SCHEME_FOR_ROLLBACK
 
-      #ifdef REUSE_SCHEME_FOR_ROLLBACK
-      //Reuse scheme for rollback
-
-      if(
-        _cachedSubdivisionFactor != subgrid.getSubdivisionFactor()
-        || _cachedGhostlayerWidth != subgrid.getGhostlayerWidth()
-      ) {
-        _wrapperScheme.reset(new Choice_scheme(par));
-        _cachedSubdivisionFactor = subgrid.getSubdivisionFactor();
-        _cachedGhostlayerWidth = subgrid.getGhostlayerWidth();
-      }
       #ifdef SharedMemoryParallelisation
       _wrapperScheme.reset(new Choice_scheme(par));
       #else
@@ -215,6 +206,9 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
         _cachedGhostlayerWidth = subgrid.getGhostlayerWidth();
       }
       #endif
+
+      #ifdef REUSE_SCHEME_FOR_ROLLBACK
+      //Reuse scheme for rollback
       Scheme* scheme = _wrapperScheme->getInternalScheme();
       #else
       //Recreate scheme for rollback
@@ -223,10 +217,7 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
 
       do {
         #ifndef REUSE_SCHEME_FOR_ROLLBACK
-        if(wrapperScheme != 0) {
-          delete wrapperScheme;
-        }
-        wrapperScheme = new Choice_scheme(par);
+        _wrapperScheme.reset(new Choice_scheme(par));
         scheme = wrapperScheme->getInternalScheme();
         #endif
 
@@ -776,7 +767,7 @@ void peanoclaw::native::FullSWOF2D::interpolateSolution (
   peanoclaw::geometry::Region destinationRegion(destinationOffset, destinationSize);
   //TODO unterweg debug
 //  peanoclaw::geometry::Region sourceRegion = destinationRegion.mapToPatch(destination, source);
-  peanoclaw::geometry::Region sourceRegion(tarch::la::Vector<DIMENSIONS,int>(0), source.getSubdivisionFactor());
+  peanoclaw::geometry::Region sourceRegion(tarch::la::Vector<DIMENSIONS,int>(0), sourceSubdivisionFactor);
 
   //TODO unterweg debug
 //  //Increase sourceRegion by one cell in each direction.
