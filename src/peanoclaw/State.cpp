@@ -250,6 +250,9 @@ void peanoclaw::State::prepareGridIteration () {
   delete _subgridStatistics;
   _subgridStatistics = new peanoclaw::statistics::SubgridStatistics;
   _subgridStatistics->setGlobalTimestepEndTime(_stateData.getGlobalTimestepEndTime());
+  resetGlobalTimeIntervals();
+  resetMinimalTimestep();
+  setAllPatchesEvolvedToGlobalTimestep(true);
 }
 
 void peanoclaw::State::finalizeGridIteration () {

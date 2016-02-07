@@ -506,9 +506,7 @@ void peanoclaw::runners::PeanoClawLibraryRunner::runNextPossibleTimestep() {
         << " and minimum global time interval (" << _repository->getState().getStartMinimumGlobalTimeInterval() << ", " << _repository->getState().getEndMinimumGlobalTimeInterval() << ")");
     _iterationTimer.startTimer();
 
-    _repository->getState().resetGlobalTimeIntervals();
-    _repository->getState().resetMinimalTimestep();
-    _repository->getState().setAllPatchesEvolvedToGlobalTimestep(true);
+    _repository->getState().prepareGridIteration();
 
     iterateSolveTimestep(plotSubsteps);
 

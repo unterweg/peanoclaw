@@ -241,12 +241,8 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
         struct timeval stop;
         gettimeofday(&stop, NULL);
 
-//        double time = (stop.tv_sec - start.tv_sec) + (stop.tv_usec - start.tv_usec) / 1000000.0;
-        //std::cout << "calculation took " << time << std::endl;
-
         if (scheme->getVerif() == 0) {
             std::cout << "scheme retry activated!" << std::endl;
-//            throw "";
             scheme->setMaxTimestep(scheme->getTimestep());
             maximumTimestepSize = scheme->getTimestep();
         }
@@ -319,12 +315,6 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
     subgrid.getTimeIntervals().setTimestepSize(dt);
   }
   subgrid.getTimeIntervals().setEstimatedNextTimestepSize(estimatedNextTimestepSize);
-
-  //TODO unterweg debug
-//  std::cout << "Timestep" << std::endl;
-//  std::cout << domainBoundaryFlags << " " << subgrid.toString() << std::endl;
-//  std::cout << "UOld" << std::endl << subgrid.toStringUOldWithGhostLayer() << std::endl << "UNew" << std::endl << subgrid.toStringUNew() << std::endl;
-//  throw "";
 
   #endif
   logTraceOut( "solveTimestep(...)");
