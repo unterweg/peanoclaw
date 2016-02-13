@@ -156,6 +156,23 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
   #ifdef PEANOCLAW_FULLSWOF2D
   assertion2(tarch::la::greater(maximumTimestepSize, 0.0), "Timestepsize == 0 should be checked outside.", subgrid.getTimeIntervals().getMinimalNeighborTimeConstraint());
 
+//  for(int unknown = 0; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
+//    dfor(subcellIndex, subgrid.getSubdivisionFactor()) {
+//      peanoclaw::grid::SubgridAccessor& accessor = subgrid.getAccessor();
+//      double newValue = 0.0;
+//      for(int dimension = 0; dimension < DIMENSIONS; dimension++)
+//      {
+//        for(int direction = -1; direction < 2; direction+=2) {
+//          tarch::la::Vector<DIMENSIONS, int> neighbor = subcellIndex;
+//          subcellIndex[dimension] += direction;
+//          newValue += accessor.getValueUOld(neighbor, unknown) / DIMENSIONS / 2.0;
+//        }
+//      }
+//      accessor.setValueUNew(subcellIndex, unknown, newValue);
+//    }
+//  }
+//  return;
+
   tarch::timing::Watch fullswof2dWatch("", "", false);
   fullswof2dWatch.startTimer();
 //  double dtAndEstimatedNextDt[2];
