@@ -242,8 +242,8 @@ void peanoclaw::interSubgridCommunication::UpdateNeighborTimeFunctor::operator()
   const tarch::la::Vector<DIMENSIONS, int>& direction
 ) {
   if(updatedPatch.isValid() && neighborPatch.isValid()) {
-    peanoclaw::grid::TimeIntervals updatedTimeIntervals = updatedPatch.getTimeIntervals();
-    peanoclaw::grid::TimeIntervals neighborTimeIntervals = neighborPatch.getTimeIntervals();
+    peanoclaw::grid::TimeIntervals& updatedTimeIntervals = updatedPatch.getTimeIntervals();
+    peanoclaw::grid::TimeIntervals& neighborTimeIntervals = neighborPatch.getTimeIntervals();
 
     double neighborTimeConstraint = neighborTimeIntervals.getTimeConstraint();
     updatedTimeIntervals.updateMinimalNeighborTimeConstraint(
