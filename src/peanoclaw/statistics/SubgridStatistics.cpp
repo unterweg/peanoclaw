@@ -108,7 +108,7 @@ void peanoclaw::statistics::SubgridStatistics::addSubgridToLevelStatistics(
   std::vector<LevelStatistics>& levelStatistics = LevelStatisticsHeap::getInstance().getData(_levelStatisticsIndex);
   addLevelToLevelStatistics(subgrid.getLevel(), levelStatistics);
 
-  peanoclaw::statistics::LevelStatistics& level = levelStatistics[subgrid.getLevel()-1];
+  peanoclaw::statistics::LevelStatistics& level = levelStatistics[subgrid.getLevel()];
   if(subgrid.isLeaf()) {
     level.setNumberOfPatches(level.getNumberOfPatches() + 1);
     level.setNumberOfCells(level.getNumberOfCells() + (tarch::la::volume(subgrid.getSubdivisionFactor())));
