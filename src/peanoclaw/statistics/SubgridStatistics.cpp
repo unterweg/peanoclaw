@@ -460,19 +460,25 @@ void peanoclaw::statistics::SubgridStatistics::processSubgridAfterUpdate(const p
 }
 
 void peanoclaw::statistics::SubgridStatistics::addInterpolatedCells(int numberOfInterpolatedCells, int level) {
-  std::vector<LevelStatistics>& allLevelStatistics = LevelStatisticsHeap::getInstance().getData(_levelStatisticsIndex);
-  addLevelToLevelStatistics(level, allLevelStatistics);
-  peanoclaw::statistics::LevelStatistics& levelStatistics = allLevelStatistics[level-1];
+  if(LevelStatisticsHeap::getInstance().isValidIndex(_levelStatisticsIndex))
+  {
+    std::vector<LevelStatistics>& allLevelStatistics = LevelStatisticsHeap::getInstance().getData(_levelStatisticsIndex);
+    addLevelToLevelStatistics(level, allLevelStatistics);
+    peanoclaw::statistics::LevelStatistics& levelStatistics = allLevelStatistics[level-1];
 
-  levelStatistics.setNumberOfInterpolatedCells(levelStatistics.getNumberOfInterpolatedCells() + numberOfInterpolatedCells);
+    levelStatistics.setNumberOfInterpolatedCells(levelStatistics.getNumberOfInterpolatedCells() + numberOfInterpolatedCells);
+  }
 }
 
 void peanoclaw::statistics::SubgridStatistics::addRestrictedCells(int numberOfRestrictedCells, int level) {
-  std::vector<LevelStatistics>& allLevelStatistics = LevelStatisticsHeap::getInstance().getData(_levelStatisticsIndex);
-  addLevelToLevelStatistics(level, allLevelStatistics);
-  peanoclaw::statistics::LevelStatistics& levelStatistics = allLevelStatistics[level-1];
+  if(LevelStatisticsHeap::getInstance().isValidIndex(_levelStatisticsIndex))
+  {
+    std::vector<LevelStatistics>& allLevelStatistics = LevelStatisticsHeap::getInstance().getData(_levelStatisticsIndex);
+    addLevelToLevelStatistics(level, allLevelStatistics);
+    peanoclaw::statistics::LevelStatistics& levelStatistics = allLevelStatistics[level-1];
 
-  levelStatistics.setNumberOfRestrictedCells(levelStatistics.getNumberOfRestrictedCells() + numberOfRestrictedCells);
+    levelStatistics.setNumberOfRestrictedCells(levelStatistics.getNumberOfRestrictedCells() + numberOfRestrictedCells);
+  }
 }
 
 void peanoclaw::statistics::SubgridStatistics::updateMinimalSubgridBlockReason(
