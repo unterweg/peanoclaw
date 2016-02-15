@@ -155,8 +155,7 @@ double peanoclaw::grid::TimeIntervals::getMinimalLeafNeighborTimeConstraint() co
 
 void peanoclaw::grid::TimeIntervals::updateMinimalNeighborTimeConstraint(
     double neighborTimeConstraint, int neighborIndex) {
-  if (tarch::la::smaller(neighborTimeConstraint,
-      _cellDescription->getMinimalNeighborTimeConstraint())) {
+  if (neighborTimeConstraint < _cellDescription->getMinimalNeighborTimeConstraint()) {
     _cellDescription->setMinimalNeighborTimeConstraint(neighborTimeConstraint);
     _cellDescription->setConstrainingNeighborIndex(neighborIndex);
   }
@@ -164,8 +163,7 @@ void peanoclaw::grid::TimeIntervals::updateMinimalNeighborTimeConstraint(
 
 void peanoclaw::grid::TimeIntervals::updateMinimalLeafNeighborTimeConstraint(
     double leafNeighborTime) {
-  if (tarch::la::smaller(leafNeighborTime,
-      _cellDescription->getMinimalLeafNeighborTimeConstraint())) {
+  if (leafNeighborTime < _cellDescription->getMinimalLeafNeighborTimeConstraint()) {
     _cellDescription->setMinimalLeafNeighborTimeConstraint(leafNeighborTime);
   }
 }
