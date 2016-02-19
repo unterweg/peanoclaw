@@ -266,25 +266,6 @@ void peanoclaw::interSubgridCommunication::GhostLayerCompositor::updateUpperGhos
           << _patches[updatedPatchIndex].getUpperNeighboringGhostlayerBounds()(dimension));
 }
 
-void peanoclaw::interSubgridCommunication::GhostLayerCompositor::updateNeighborTime(int updatedPatchIndex, int neighborPatchIndex) {
-  if(_patches[updatedPatchIndex].isValid() && _patches[neighborPatchIndex].isValid()) {
-    double neighborTimeConstraint = _patches[neighborPatchIndex].getTimeIntervals().getTimeConstraint();
-
-    _patches[updatedPatchIndex].getTimeIntervals().updateMinimalNeighborTimeConstraint(
-      neighborTimeConstraint,
-      _patches[neighborPatchIndex].getCellDescriptionIndex()
-    );
-    _patches[updatedPatchIndex].getTimeIntervals().updateMaximalNeighborTimeInterval(
-      _patches[neighborPatchIndex].getTimeIntervals().getCurrentTime(),
-      _patches[neighborPatchIndex].getTimeIntervals().getTimestepSize()
-    );
-
-    if(_patches[neighborPatchIndex].isLeaf()) {
-      _patches[updatedPatchIndex].getTimeIntervals().updateMinimalLeafNeighborTimeConstraint(neighborTimeConstraint);
-    }
-  }
-}
-
 void peanoclaw::interSubgridCommunication::GhostLayerCompositor::fillGhostLayersAndUpdateNeighborTimes(
   int destinationSubgridIndex
 ) {

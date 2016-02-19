@@ -156,24 +156,24 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
   #ifdef PEANOCLAW_FULLSWOF2D
   assertion2(tarch::la::greater(maximumTimestepSize, 0.0), "Timestepsize == 0 should be checked outside.", subgrid.getTimeIntervals().getMinimalNeighborTimeConstraint());
 
-  for(int unknown = 0; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
-    dfor(subcellIndex, subgrid.getSubdivisionFactor()) {
-      peanoclaw::grid::SubgridAccessor& accessor = subgrid.getAccessor();
-      double newValue = 0.0;
-      for(int dimension = 0; dimension < DIMENSIONS; dimension++)
-      {
-        for(int direction = -1; direction < 2; direction+=2) {
-          tarch::la::Vector<DIMENSIONS, int> neighbor = subcellIndex;
-          subcellIndex[dimension] += direction;
-          newValue += accessor.getValueUOld(neighbor, unknown) / DIMENSIONS / 2.0;
-        }
-      }
-      accessor.setValueUNew(subcellIndex, unknown, newValue);
-    }
-  }
-  subgrid.getTimeIntervals().setTimestepSize(0.1);
-  subgrid.getTimeIntervals().advanceInTime();
-  return;
+//  for(int unknown = 0; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
+//    dfor(subcellIndex, subgrid.getSubdivisionFactor()) {
+//      peanoclaw::grid::SubgridAccessor& accessor = subgrid.getAccessor();
+//      double newValue = 0.0;
+//      for(int dimension = 0; dimension < DIMENSIONS; dimension++)
+//      {
+//        for(int direction = -1; direction < 2; direction+=2) {
+//          tarch::la::Vector<DIMENSIONS, int> neighbor = subcellIndex;
+//          subcellIndex[dimension] += direction;
+//          newValue += accessor.getValueUOld(neighbor, unknown) / DIMENSIONS / 2.0;
+//        }
+//      }
+//      accessor.setValueUNew(subcellIndex, unknown, newValue);
+//    }
+//  }
+//  subgrid.getTimeIntervals().setTimestepSize(0.1);
+//  subgrid.getTimeIntervals().advanceInTime();
+//  return;
 
   tarch::timing::Watch fullswof2dWatch("", "", false);
   fullswof2dWatch.startTimer();
@@ -261,7 +261,7 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
         gettimeofday(&stop, NULL);
 
         if (scheme->getVerif() == 0) {
-            std::cout << "scheme retry activated!" << std::endl;
+            //std::cout << "scheme retry activated!" << std::endl;
             scheme->setMaxTimestep(scheme->getTimestep());
             maximumTimestepSize = scheme->getTimestep();
         }
