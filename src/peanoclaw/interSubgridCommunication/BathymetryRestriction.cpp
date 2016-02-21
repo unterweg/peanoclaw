@@ -162,6 +162,8 @@ int peanoclaw::interSubgridCommunication::BathymetryRestriction::restrictSolutio
 
   transformation.transformWaterHeight(source, sourceRegion, true, true); //UOld
   transformation.transformWaterHeight(source, sourceRegion, false, true); //UNew
+
+  return numberOfRestrictedCells;
 }
 
 void peanoclaw::interSubgridCommunication::BathymetryRestriction::postProcessRestriction(

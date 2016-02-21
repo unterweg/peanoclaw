@@ -52,6 +52,7 @@ private:
   peanoclaw::native::scenarios::SWEScenario& _scenario;
 
   tarch::la::Vector<DIMENSIONS,int> _cachedSubdivisionFactor;
+  tarch::la::Vector<DIMENSIONS_TIMES_TWO,int> _cachedMargin;
   int _cachedGhostlayerWidth;
 
   #ifdef PEANOCLAW_FULLSWOF2D

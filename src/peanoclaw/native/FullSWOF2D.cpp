@@ -173,6 +173,7 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
 //  }
 //  subgrid.getTimeIntervals().setTimestepSize(0.1);
 //  subgrid.getTimeIntervals().advanceInTime();
+//  logTraceOut();
 //  return;
 
   tarch::timing::Watch fullswof2dWatch("", "", false);
@@ -218,10 +219,12 @@ void peanoclaw::native::FullSWOF2D::solveTimestep(
       #else
       if(
         _cachedSubdivisionFactor != subgrid.getSubdivisionFactor()
+        || _cachedMargin != margin
         || _cachedGhostlayerWidth != subgrid.getGhostlayerWidth()
       ) {
         _wrapperScheme.reset(new Choice_scheme(par));
         _cachedSubdivisionFactor = subgrid.getSubdivisionFactor();
+        _cachedMargin = margin;
         _cachedGhostlayerWidth = subgrid.getGhostlayerWidth();
       }
       #endif
@@ -347,7 +350,7 @@ void peanoclaw::native::FullSWOF2D::addPatchToSolution(Patch& patch) {
 }
 
 void peanoclaw::native::FullSWOF2D::fillBoundaryLayer(Patch& subgrid, int dimension, bool setUpper) {
-  logTraceInWith3Arguments("fillBoundaryLayerInPyClaw", subgrid, dimension, setUpper);
+  logTraceInWith3Arguments("fillBoundaryLayer", subgrid, dimension, setUpper);
 
   logDebug("fillBoundaryLayerInPyClaw", "Setting left boundary for " << subgrid.getPosition() << ", dim=" << dimension << ", setUpper=" << setUpper);
 
@@ -779,15 +782,15 @@ void peanoclaw::native::FullSWOF2D::interpolateSolution (
   peanoclaw::geometry::Region sourceRegion(tarch::la::Vector<DIMENSIONS,int>(0), sourceSubdivisionFactor);
 
   //TODO unterweg debug
-//  //Increase sourceRegion by one cell in each direction.
-//  for(int d = 0; d < DIMENSIONS; d++) {
-//    if(sourceRegion._offset[d] > 0) {
-//      sourceRegion._offset[d] = sourceRegion._offset[d]-1;
-//      sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._size[d] + 2);
-//    } else {
-//      sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._size[d] + 1);
-//    }
-//  }
+  //  //Increase sourceRegion by one cell in each direction.
+  //  for(int d = 0; d < DIMENSIONS; d++) {
+  //    if(sourceRegion._offset[d] > 0) {
+  //      sourceRegion._offset[d] = sourceRegion._offset[d]-1;
+  //      sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._size[d] + 2);
+  //    } else {
+  //      sourceRegion._size[d] = std::min(sourceSubdivisionFactor[d], sourceRegion._size[d] + 1);
+  //    }
+  //  }
 
   //Source: Water Height above Sea Floor -> Absolute Water Height
   transformToAbsoluteWaterHeightAndMomenta(source, sourceRegion, true); //UOld
