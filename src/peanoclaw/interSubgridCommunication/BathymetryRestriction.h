@@ -23,6 +23,11 @@ namespace peanoclaw {
 class peanoclaw::interSubgridCommunication::BathymetryRestriction : public Restriction {
 
   private:
+    /**
+     * Logging device.
+     */
+    static tarch::logging::Log _log;
+
     double _seaLevel;
 
     void restrictRegion (

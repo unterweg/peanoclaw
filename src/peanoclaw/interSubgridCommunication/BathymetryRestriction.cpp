@@ -11,6 +11,8 @@
 
 #include "tarch/Assertions.h"
 
+tarch::logging::Log peanoclaw::interSubgridCommunication::BathymetryRestriction::_log("peanoclaw::interSubgridCommunication::BathymetryRestriction");
+
 void peanoclaw::interSubgridCommunication::BathymetryRestriction::restrictRegion (
   peanoclaw::Patch&                     source,
   const peanoclaw::geometry::Region&    sourceRegion,

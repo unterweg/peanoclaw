@@ -143,7 +143,7 @@ void peanoclaw::native::FullSWOF2D::initializePatch(
 
   _scenario.initializePatch(patch);
  
-  logTraceOutWith1Argument( "initializePatch(...)", demandedMeshWidth);
+  logTraceOut( "initializePatch(...)");
 }
 
 void peanoclaw::native::FullSWOF2D::solveTimestep(

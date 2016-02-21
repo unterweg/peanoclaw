@@ -86,28 +86,20 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
     double sourceUNew = sourceAccessor.getValueUNew(linearSourceUNewIndex, unknown);
 
     logDebug("interpolateSolution(...)", "\tspatialFactorUNew=" << spatialFactor
-        << ", spatialFactorUNew=" << spatialFactor
-        << " due to destination position " << destination.getSubcellCenter(subcellIndexInDestinationPatch)
-        << " and source position " << source.getSubcellCenter(neighborIndexInSourcePatch)
-        << " and source.subcellsize=" << sourceSubcellSize << " and offset=" << offset);
-    logDebug("interpolateSolution(...)", "\ttimeFactor=" << timeFactor
-        << " due to destination time " << destination.getTimeIntervals().getCurrentTime()
-        << " and destination timestep size " << destination.getTimeIntervals().getTimestepSize()
-        << " and source time " << source.getTimeIntervals().getCurrentTime()
-        << " and source timestep size " << source.getTimeIntervals().getTimestepSize());
+        << ", spatialFactorUNew=" << spatialFactor << ", temporalFactor=" << temporalFactor);
 
     if(interpolateToUOld) {
       logDebug("", "\tAdding UOld value " << sourceUOld << " and UNew value " << sourceUNew
-          << " with spatialFactor " << spatialFactor << " and timeFactor "  << timeFactor
-          << " to value " << destination.getAccessor().getValueUOld(subcellIndexInDestinationPatch, unknown));
+          << " with spatialFactor " << spatialFactor << " and temporalFactor "  << temporalFactor
+          << " to value " << destinationAccessor.getValueUOld(subcellIndexInDestinationPatch, unknown));
 
       destinationAccessor.setValueUOld(linearDestinationIndex, unknown,
           destinationAccessor.getValueUOld(linearDestinationIndex, unknown)
           + spatialFactor * (sourceUOld * (1.0-temporalFactor) + sourceUNew * temporalFactor));
     } else {
       logDebug("interpolateSolution(...)", "\tAdding UNew value " << sourceUNew << " and UOld value " << sourceUOld
-          << " with spatialFactor " << spatialFactor << " and timeFactor " << timeFactor
-          << " to value " << destination.getAccessor().getValueUNew(subcellIndexInDestinationPatch, unknown));
+          << " with spatialFactor " << spatialFactor << " and temporalFactor " << temporalFactor
+          << " to value " << destinationAccessor.getValueUNew(subcellIndexInDestinationPatch, unknown));
 
       destinationAccessor.setValueUNew(linearDestinationIndex, unknown,
         destinationAccessor.getValueUNew(linearDestinationIndex, unknown)
@@ -224,9 +216,7 @@ void peanoclaw::interSubgridCommunication::DefaultInterpolationTemplate<NumberOf
     );
 
 
-    logDebug("", "Mapping source-point " << subcellPositionInSourcePatch
-        << " in source-cell " << subcellIndexInSourcePatch
-        << " to destination-cell " << destinationIterator.getCellIndex());
+    logDebug("", "Mapping source-cell " << subcellIndexInSourcePatch << " to destination-cell " << destinationIterator.getCellIndex());
 
     sourceIterator.restart(subcellIndexInSourcePatch, tarch::la::Vector<DIMENSIONS, int>(2));
 //    int lookupTableEntry = 0;
