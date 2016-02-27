@@ -1,12 +1,15 @@
 #include "peanoclaw/native/scenarios/BowlOcean.h"
 
 #include "peanoclaw/Patch.h"
+#include "peanoclaw/grid/boundaryConditions/ExtrapolateBoundaryCondition.h"
 
 peanoclaw::native::scenarios::BowlOcean::BowlOcean(
   std::vector<std::string> arguments
-) : _domainSize(1000){
-  if(arguments.size() != 9) {
-    std::cerr << "Expected arguments for Scenario 'BreakingDam': finestSubgridTopology coarsestSubgridTopology subdivisionFactor endTime globalTimestepSize numberOfRamps relDamCenterX relDamCenterY refinementType" << std::endl
+) : _domainSize(1000),
+    _domainOffset(0),
+    _shrinkedDomain(false) {
+  if(arguments.size() != 9 && arguments.size() != 10) {
+    std::cerr << "Expected arguments for Scenario 'BreakingDam': finestSubgridTopology coarsestSubgridTopology subdivisionFactor endTime globalTimestepSize numberOfRamps relDamCenterX relDamCenterY refinementType [--shrinkDomain]" << std::endl
         << "\tGot " << arguments.size() << " arguments." << std::endl
         << "Parameters:" << std::endl
         << " - numberOfRamps: 0-4" << std::endl
@@ -28,13 +31,23 @@ peanoclaw::native::scenarios::BowlOcean::BowlOcean(
 
   _numberOfRampSides = atoi(arguments[5].c_str());
 
-  _damCenter[0] = atof(arguments[6].c_str()) * _domainSize[1];
+  _damCenter[0] = atof(arguments[6].c_str()) * _domainSize[0];
   _damCenter[1] = atof(arguments[7].c_str()) * _domainSize[1];
 
   if(arguments[8] == "refineWave") {
     _refinementType = RefineWaveFront;
   } else if(arguments[8] == "refineCoast") {
     _refinementType = RefineCoastline;
+  }
+
+  if(arguments.size() > 9 && arguments[9] == "--shrinkDomain"){
+    _domainSize[0] *= (2.0/3.0);
+    _domainSize[1] *= (1.0/3.0);
+    _domainOffset[1] = _domainSize[1];
+
+    _subdivisionFactor[0] = _subdivisionFactor[0] * 2 / 3;
+    _subdivisionFactor[1] /= 3;
+    _shrinkedDomain = true;
   }
 
   _deepestDepth = 100;
@@ -161,7 +174,7 @@ tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BowlOcean::co
 }
 
 tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BowlOcean::getDomainOffset() const {
-  return tarch::la::Vector<DIMENSIONS, double>(0.0);
+  return _domainOffset;
 }
 
 tarch::la::Vector<DIMENSIONS,double> peanoclaw::native::scenarios::BowlOcean::getDomainSize() const {
@@ -234,12 +247,35 @@ float peanoclaw::native::scenarios::BowlOcean::getBathymetry(float xf, float yf)
 
 #ifdef PEANOCLAW_SWE
 float peanoclaw::native::scenarios::BowlOcean::getBoundaryPos(BoundaryEdge edge) {
-   if (edge==BND_LEFT || edge==BND_BOTTOM) {
-      return 0.0f;
-   } else {
-      return _domainSize[0];
+   if (edge==BND_LEFT) {
+     return _domainOffset[0];
    }
+   if(edge==BND_BOTTOM) {
+     return _domainOffset[1];
+   }
+   if(edge==BND_RIGHT) {
+     return _domainOffset [0]  + _domainSize[0];
+   }
+   if(edge==BND_TOP) {
+      return _domainOffset[1] + _domainSize[1];
+   }
+   return 0.0;
 };
+
+void peanoclaw::native::scenarios::BowlOcean::setBoundaryCondition(
+  peanoclaw::Patch& subgrid,
+  peanoclaw::grid::SubgridAccessor& accessor,
+  int dimension,
+  bool setUpper,
+  const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+  const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
+) {
+  if(_shrinkedDomain)
+  {
+    peanoclaw::grid::boundaryConditions::ExtrapolateBoundaryCondition boundaryCondition;
+    boundaryCondition.setBoundaryCondition(subgrid, accessor, dimension, setUpper, sourceSubcellIndex, destinationSubcellIndex);
+  }
+}
 #endif
 
 

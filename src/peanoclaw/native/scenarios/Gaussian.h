@@ -60,6 +60,15 @@ class peanoclaw::native::scenarios::GaussianSWEScenario
       #ifdef PEANOCLAW_SWE
       virtual BoundaryType getBoundaryType(BoundaryEdge edge) { return OUTFLOW; };
       #endif
+
+      virtual void setBoundaryCondition(
+        peanoclaw::Patch& subgrid,
+        peanoclaw::grid::SubgridAccessor& accessor,
+        int dimension,
+        bool setUpper,
+        const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+        const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
+      );
 };
 
 #endif // PEANOCLAW_NATIVE_SCENARIOS_BREAKINGDAM_H

@@ -183,9 +183,9 @@ void peanoclaw::native::SWEKernel::addPatchToSolution(Patch& patch) {
 }
 
 void peanoclaw::native::SWEKernel::fillBoundaryLayer(Patch& subgrid, int dimension, bool setUpper) {
-  logTraceInWith3Arguments("fillBoundaryLayerInPyClaw", patch, dimension, setUpper);
+  logTraceInWith3Arguments("fillBoundaryLayerInPyClaw", subgrid, dimension, setUpper);
 
-  logDebug("fillBoundaryLayerInPyClaw", "Setting left boundary for " << patch.getPosition() << ", dim=" << dimension << ", setUpper=" << setUpper);
+  logDebug("fillBoundaryLayerInPyClaw", "Setting left boundary for " << subgrid.getPosition() << ", dim=" << dimension << ", setUpper=" << setUpper);
 
   //std::cout << "------ setUpper " << setUpper << " dimension " << dimension << std::endl;
   //std::cout << patch << std::endl;

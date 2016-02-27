@@ -32,6 +32,7 @@ namespace peanoclaw {
 class peanoclaw::native::scenarios::BowlOcean : public peanoclaw::native::scenarios::SWEScenario {
 private:
   tarch::la::Vector<DIMENSIONS,double>  _domainSize;
+  tarch::la::Vector<DIMENSIONS,double>  _domainOffset;
   tarch::la::Vector<DIMENSIONS,double>  _demandedMeshWidth;
   tarch::la::Vector<DIMENSIONS,int>     _subdivisionFactor;
   double                                _endTime;
@@ -51,6 +52,7 @@ private:
   };
 
   RefinementType                        _refinementType;
+  bool                                  _shrinkedDomain;
 
 public:
   BowlOcean(
@@ -82,6 +84,15 @@ public:
   #ifdef PEANOCLAW_SWE
   float getBoundaryPos(BoundaryEdge edge);
   #endif
+
+  virtual void setBoundaryCondition(
+    peanoclaw::Patch& subgrid,
+    peanoclaw::grid::SubgridAccessor& accessor,
+    int dimension,
+    bool setUpper,
+    const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+    const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
+  );
 };
 
 

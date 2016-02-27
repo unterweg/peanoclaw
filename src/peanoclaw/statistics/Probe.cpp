@@ -9,6 +9,7 @@
 #include "peanoclaw/Patch.h"
 
 #include <sstream>
+#include <iomanip>
 
 tarch::logging::Log peanoclaw::statistics::Probe::_log("peanoclaw::statistics::Probe");
 
@@ -26,7 +27,7 @@ void peanoclaw::statistics::Probe::plotDataIfContainedInPatch(
   if(!tarch::la::oneGreater(subgrid.getPosition(), _position)
     && !tarch::la::oneGreater(_position, subgrid.getPosition() + subgrid.getSize())) {
     std::stringstream stringstream;
-    stringstream << _name << " " << _position << " " << (subgrid.getTimeIntervals().getCurrentTime() + subgrid.getTimeIntervals().getTimestepSize()) << " ";
+    stringstream << _name << " " << _position << " " << std::setprecision(15) << (subgrid.getTimeIntervals().getCurrentTime() + subgrid.getTimeIntervals().getTimestepSize()) << " ";
 
     peanoclaw::grid::SubgridAccessor accessor = subgrid.getAccessor();
 
@@ -36,10 +37,10 @@ void peanoclaw::statistics::Probe::plotDataIfContainedInPatch(
 
     if(_unknown == -1) {
       for(int unknown = 0; unknown < subgrid.getUnknownsPerSubcell(); unknown++) {
-        stringstream << accessor.getValueUNew(subcellIndex, unknown) << " ";
+        stringstream << std::setprecision(15) << accessor.getValueUNew(subcellIndex, unknown) << " ";
       }
     } else {
-      stringstream << accessor.getValueUNew(subcellIndex, _unknown) << " ";
+      stringstream << std::setprecision(15) << accessor.getValueUNew(subcellIndex, _unknown) << " ";
     }
 
     logInfo("plotDataIfContainedInPatch(Patch)", stringstream.str() << "   ");

@@ -66,7 +66,7 @@ public:
       bool setUpper,
       const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
       const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
-    ) {}
+    ) = 0;
 
     virtual tarch::la::Vector<DIMENSIONS,double> getDomainOffset() const = 0;
     virtual tarch::la::Vector<DIMENSIONS,double> getDomainSize() const = 0;

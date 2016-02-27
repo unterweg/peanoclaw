@@ -49,6 +49,15 @@ class peanoclaw::native::scenarios::CalmOcean : public peanoclaw::native::scenar
     virtual float getWaterHeight(float x, float y);
     virtual float waterHeightAtRest();
     virtual float endSimulation();
+
+    virtual void setBoundaryCondition(
+      peanoclaw::Patch& subgrid,
+      peanoclaw::grid::SubgridAccessor& accessor,
+      int dimension,
+      bool setUpper,
+      const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+      const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
+    ) {}
 };
 
 #endif /* PEANOCLAW_NATIVE_SCENARIOS_CALMOCEAN_H_ */

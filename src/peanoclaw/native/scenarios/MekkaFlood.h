@@ -61,6 +61,15 @@ class peanoclaw::native::scenarios::MekkaFloodSWEScenario : public peanoclaw::na
 
         double getInitialTimestepSize() const;
 
+        virtual void setBoundaryCondition(
+          peanoclaw::Patch& subgrid,
+          peanoclaw::grid::SubgridAccessor& accessor,
+          int dimension,
+          bool setUpper,
+          const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+          const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
+        ) {}
+
     private:
         tarch::la::Vector<DIMENSIONS, double> mapCoordinatesToMesh(double longitude, double latitude);
         tarch::la::Vector<DIMENSIONS, double> mapMeshToCoordinates(double x, double y);

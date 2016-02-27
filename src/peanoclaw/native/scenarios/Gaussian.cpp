@@ -1,5 +1,7 @@
 #include "peanoclaw/native/scenarios/Gaussian.h"
 
+#include "peanoclaw/grid/boundaryConditions/ExtrapolateBoundaryCondition.h"
+
 peanoclaw::native::scenarios::GaussianSWEScenario::GaussianSWEScenario(
   const tarch::la::Vector<DIMENSIONS, double>& domainOffset,
   const tarch::la::Vector<DIMENSIONS, double>& domainSize,
@@ -168,4 +170,16 @@ float peanoclaw::native::scenarios::GaussianSWEScenario::getWaterHeight(float x,
   const double y0=1/2.0;
   double r2 = (x-x0)*(x-x0) + (y-y0)*(y-y0);
   return exp(-10 * r2);
+}
+
+void peanoclaw::native::scenarios::GaussianSWEScenario::setBoundaryCondition(
+  peanoclaw::Patch& subgrid,
+  peanoclaw::grid::SubgridAccessor& accessor,
+  int dimension,
+  bool setUpper,
+  const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+  const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
+) {
+  peanoclaw::grid::boundaryConditions::ExtrapolateBoundaryCondition boundaryCondition;
+  boundaryCondition.setBoundaryCondition(subgrid, accessor, dimension, setUpper, sourceSubcellIndex, destinationSubcellIndex);
 }

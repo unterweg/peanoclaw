@@ -240,8 +240,8 @@ void peanoclaw::native::scenarios::ShockBubble::setBoundaryCondition(
   peanoclaw::grid::SubgridAccessor& accessor,
   int dimension,
   bool setUpper,
-  tarch::la::Vector<DIMENSIONS,int> sourceSubcellIndex,
-  tarch::la::Vector<DIMENSIONS,int> destinationSubcellIndex
+  const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+  const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
 ) {
   if(dimension == 0 && !setUpper) {
     setCellValues(

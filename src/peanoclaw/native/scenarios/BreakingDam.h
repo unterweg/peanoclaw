@@ -61,6 +61,15 @@ class peanoclaw::native::scenarios::BreakingDamSWEScenario
       virtual float getWaterHeight(float x, float y);
       virtual float waterHeightAtRest() { return getWaterHeight(0, 0); };
       virtual float endSimulation() { return (float)getEndTime(); };
+
+      virtual void setBoundaryCondition(
+        peanoclaw::Patch& subgrid,
+        peanoclaw::grid::SubgridAccessor& accessor,
+        int dimension,
+        bool setUpper,
+        const tarch::la::Vector<DIMENSIONS,int>& sourceSubcellIndex,
+        const tarch::la::Vector<DIMENSIONS,int>& destinationSubcellIndex
+      ) {}
 };
 
 #endif // __BREAKINGDAM_H__
