@@ -189,7 +189,7 @@ double peanoclaw::native::scenarios::GEBCO::getAveragedBathymetry(
   }
 
   if(tarch::la::equals(overlap, 0.0)) {
-    return -20000.0;
+    return -1000.0;
   }
 
   return bathymetry;// / numberOfCells;
